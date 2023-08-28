@@ -40,6 +40,36 @@
 | int32_t EnforceCodeSignForFile(const std::string &path, const ByteBuffer &signature); | 对文件使能代码签名 |
 | int32_t SignLocalCode(const std::string &filePath, ByteBuffer &signature); | 本地代码签名 |
 
+### 构建指导
+
+#### 构建环境
+
+- 拉取主干最新代码。
+
+- 构建环境: [RK3568默认环境](https://gitee.com/openharmony/docs/blob/master/zh-cn/device-dev/quick-start/Readme-CN.md)
+
+#### 修改代码
+
+1.拉取代码签名部件
+
+```
+cd base/security
+
+git clone https://gitee.com/openharmony-sig/security_code_signature.git
+
+mv security_code_signature code_signature
+```
+
+2.修改代码签名部件依赖的相关仓
+
+代码签名仓下的 [patches.json](patches/patches.json) 中详细描述了代码签名部件依赖的仓以及patch，根据文件中描述依次在对应仓打上对应的patch即可。
+
+#### 编译
+
+```
+./build.sh --product-name rk3568 --ccache
+```
+
 ### 签名工具使用指南
 
 参考测试示例：codesigntool/code\_sign\_appgallery\_lib/src/test/java/com/ohos/test/signclient/core
