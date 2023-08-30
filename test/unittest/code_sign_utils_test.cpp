@@ -20,80 +20,81 @@
 namespace OHOS {
 namespace Security {
 namespace CodeSign {
-
 using namespace testing::ext;
 using namespace std;
 
-#define TMP_BASE_PATH "/data/service/el1/public/bms/bundle_manager_service/tmp"
-#define APP_BASE_PATH "/data/app/el1/bundle/public/tmp"
+static const std::string TMP_BASE_PATH = "/data/service/el1/public/bms/bundle_manager_service/tmp";
+static const std::string APP_BASE_PATH = "/data/app/el1/bundle/public/tmp";
+
 static const EntryMap g_hapWithoutLibRetSuc = {
-    {"Hap", APP_BASE_PATH"/demo_without_lib/demo_without_lib.hap"},
+    {"Hap", APP_BASE_PATH + "/demo_without_lib/demo_without_lib.hap"},
 };
 static const std::string g_sigWithoutLibRetSucPath =
-    TMP_BASE_PATH"/demo_without_lib/demo_without_lib.sig";
+    TMP_BASE_PATH + "/demo_without_lib/demo_without_lib.sig";
 
 static EntryMap g_hapWithMultiLibRetSuc = {
     {"Hap",
-        APP_BASE_PATH"/demo_with_multi_lib/demo_with_multi_lib.hap"},
+        APP_BASE_PATH + "/demo_with_multi_lib/demo_with_multi_lib.hap"},
     {"libs/arm64-v8a/libc++_shared.so",
-        APP_BASE_PATH"/demo_with_multi_lib/libs/arm64-v8a/libc++_shared.so"},
+        APP_BASE_PATH + "/demo_with_multi_lib/libs/arm64-v8a/libc++_shared.so"},
     {"libs/arm64-v8a/libentry.so",
-        APP_BASE_PATH"/demo_with_multi_lib/libs/arm64-v8a/libentry.so"}
+        APP_BASE_PATH + "/demo_with_multi_lib/libs/arm64-v8a/libentry.so"}
 };
 static const std::string g_sigWithMultiLibRetSucPath =
-    TMP_BASE_PATH"/demo_with_multi_lib/demo_with_multi_lib.sig";
+    TMP_BASE_PATH + "/demo_with_multi_lib/demo_with_multi_lib.sig";
 
-//wrong hap and wrong lib
+// wrong hap and wrong lib
 static EntryMap g_wrongHapWithMultiLibRetFail = {
     {"Hap",
-        APP_BASE_PATH"/demo_with_multi_lib_error/demo_with_multi_lib.hap"},
+     APP_BASE_PATH + "/demo_with_multi_lib_error/demo_with_multi_lib.hap"},
     {"libs/arm64-v8a/libc++_shared.so",
-        APP_BASE_PATH"/demo_with_multi_lib_error/libs/arm64-v8a/libc++_shared.so"},
+     APP_BASE_PATH + "/demo_with_multi_lib_error/libs/arm64-v8a/libc++_shared.so"},
     {"libs/arm64-v8a/libentry.so",
-        APP_BASE_PATH"/demo_with_multi_lib_error/libs/arm64-v8a/libentry.so"}
-};
+     APP_BASE_PATH + "/demo_with_multi_lib_error/libs/arm64-v8a/libentry.so"}};
 
-//examples of Enforce code signature for app
+// examples of Enforce code signature for app
 static const std::vector<std::string> g_HapWithoutLibSigPkcs7ErrorPath({
-   TMP_BASE_PATH"/demo_without_lib/pkcs7_error/demo_without_lib_001.sig", //Ilegal pkcs7 format
-   TMP_BASE_PATH"/demo_without_lib/pkcs7_error/demo_without_lib_002.sig", //Disable to find cert chain
-   TMP_BASE_PATH"/demo_without_lib/pkcs7_error/demo_without_lib_003.sig", //Don't support digest algorithm
-   TMP_BASE_PATH"/demo_without_lib/pkcs7_error/demo_without_lib_004.sig", //Don't support signature algorithm
-   TMP_BASE_PATH"/demo_without_lib/pkcs7_error/demo_without_lib_005.sig", //Wrong signature
-   TMP_BASE_PATH"/demo_without_lib/pkcs7_error/demo_without_lib_006.sig", //Expired signature
-   TMP_BASE_PATH"/demo_without_lib/pkcs7_error/demo_without_lib_007.sig", //Cert chain validate fail
+    TMP_BASE_PATH + "/demo_without_lib/pkcs7_error/demo_without_lib_001.sig", // Ilegal pkcs7 format
+    TMP_BASE_PATH + "/demo_without_lib/pkcs7_error/demo_without_lib_002.sig", // Disable to find cert chain
+    TMP_BASE_PATH + "/demo_without_lib/pkcs7_error/demo_without_lib_003.sig", // Don't support digest algorithm
+    TMP_BASE_PATH + "/demo_without_lib/pkcs7_error/demo_without_lib_004.sig", // Don't support signature algorithm
+    TMP_BASE_PATH + "/demo_without_lib/pkcs7_error/demo_without_lib_005.sig", // Wrong signature
+    TMP_BASE_PATH + "/demo_without_lib/pkcs7_error/demo_without_lib_006.sig", // Expired signature
+    TMP_BASE_PATH + "/demo_without_lib/pkcs7_error/demo_without_lib_007.sig", // Cert chain validate fail
 });
 
 static const std::vector<std::string> g_HapWithMultiLibSigPkcs7ErrorPath({
-   TMP_BASE_PATH"/demo_with_multi_lib/pkcs7_error/demo_with_multi_lib_001.sig", //Ilegal pkcs7 format
-   TMP_BASE_PATH"/demo_with_multi_lib/pkcs7_error/demo_with_multi_lib_002.sig", //Disable to find cert chain
-   TMP_BASE_PATH"/demo_with_multi_lib/pkcs7_error/demo_with_multi_lib_003.sig", //Don't support digest algorithm
-   TMP_BASE_PATH"/demo_with_multi_lib/pkcs7_error/demo_with_multi_lib_004.sig", //Don't support signature algorithm
-   TMP_BASE_PATH"/demo_with_multi_lib/pkcs7_error/demo_with_multi_lib_005.sig", //Wrong signature
-   TMP_BASE_PATH"/demo_with_multi_lib/pkcs7_error/demo_with_multi_lib_006.sig", //Expired signature
-   TMP_BASE_PATH"/demo_with_multi_lib/pkcs7_error/demo_with_multi_lib_007.sig", //Cert chain validate fail
+    TMP_BASE_PATH + "/demo_with_multi_lib/pkcs7_error/demo_with_multi_lib_001.sig", // Ilegal pkcs7 format
+    TMP_BASE_PATH + "/demo_with_multi_lib/pkcs7_error/demo_with_multi_lib_002.sig", // Disable to find cert chain
+    TMP_BASE_PATH + "/demo_with_multi_lib/pkcs7_error/demo_with_multi_lib_003.sig", // Don't support digest algorithm
+    TMP_BASE_PATH + "/demo_with_multi_lib/pkcs7_error/demo_with_multi_lib_004.sig", // Don't support signature algorithm
+    TMP_BASE_PATH + "/demo_with_multi_lib/pkcs7_error/demo_with_multi_lib_005.sig", // Wrong signature
+    TMP_BASE_PATH + "/demo_with_multi_lib/pkcs7_error/demo_with_multi_lib_006.sig", // Expired signature
+    TMP_BASE_PATH + "/demo_with_multi_lib/pkcs7_error/demo_with_multi_lib_007.sig", // Cert chain validate fail
 });
 
-//examples of Enforce code signature for file
-static const std::string g_fileEnableSuc = APP_BASE_PATH"/demo_with_multi_lib/libs/arm64-v8a/libentry.so";
-static const std::string g_filesigEnablePath = TMP_BASE_PATH"/demo_with_multi_lib/libs/arm64-v8a/libentry.so.fsv-sig";
+// examples of Enforce code signature for file
+static const std::string g_fileEnableSuc = APP_BASE_PATH + "/demo_with_multi_lib/libs/arm64-v8a/libentry.so";
+static const std::string g_filesigEnablePath =
+    TMP_BASE_PATH + "/demo_with_multi_lib/libs/arm64-v8a/libentry.so.fsv-sig";
 
-//wrong format file
-static const std::string g_wrongFileEnableFail = APP_BASE_PATH"/demo_with_multi_lib_error/libs/arm64-v8a/libentry.so";
+// wrong format file
+static const std::string g_wrongFileEnableFail =
+    APP_BASE_PATH + "/demo_with_multi_lib_error/libs/arm64-v8a/libentry.so";
 
 static const std::vector<std::string> g_fileSigEnableFailPath({
-   TMP_BASE_PATH"/demo_with_multi_lib/pkcs7_error/file/libentry_01.so.fsv-sig", //ilegal pkcs7 format
-   TMP_BASE_PATH"/demo_with_multi_lib/pkcs7_error/file/libentry_02.so.fsv-sig", //Disable to find cert chain
-   TMP_BASE_PATH"/demo_with_multi_lib/pkcs7_error/file/libentry_03.so.fsv-sig", //Don't support digest algorithm
-   TMP_BASE_PATH"/demo_with_multi_lib/pkcs7_error/file/libentry_04.so.fsv-sig", //Don't support signature algorithm
-   TMP_BASE_PATH"/demo_with_multi_lib/pkcs7_error/file/libentry_05.so.fsv-sig", //Wrong signature
-   TMP_BASE_PATH"/demo_with_multi_lib/pkcs7_error/file/libentry_06.so.fsv-sig", //Expired signature
-   TMP_BASE_PATH"/demo_with_multi_lib/pkcs7_error/file/libentry_07.so.fsv-sig", //Cert chain validate fail
+    TMP_BASE_PATH + "/demo_with_multi_lib/pkcs7_error/file/libentry_01.so.fsv-sig", // ilegal pkcs7 format
+    TMP_BASE_PATH + "/demo_with_multi_lib/pkcs7_error/file/libentry_02.so.fsv-sig", // Disable to find cert chain
+    TMP_BASE_PATH + "/demo_with_multi_lib/pkcs7_error/file/libentry_03.so.fsv-sig", // Don't support digest algorithm
+    TMP_BASE_PATH + "/demo_with_multi_lib/pkcs7_error/file/libentry_04.so.fsv-sig", // Don't support signature algorithm
+    TMP_BASE_PATH + "/demo_with_multi_lib/pkcs7_error/file/libentry_05.so.fsv-sig", // Wrong signature
+    TMP_BASE_PATH + "/demo_with_multi_lib/pkcs7_error/file/libentry_06.so.fsv-sig", // Expired signature
+    TMP_BASE_PATH + "/demo_with_multi_lib/pkcs7_error/file/libentry_07.so.fsv-sig", // Cert chain validate fail
 });
 
-//examples of can't find the signature file
+// examples of can't find the signature file
 static const EntryMap g_hapSigNotExist = {
-    {"sigNotExist", APP_BASE_PATH"/demo_without_lib/demo_without_lib.hap"},
+    {"sigNotExist", APP_BASE_PATH + "/demo_without_lib/demo_without_lib.hap"},
 };
 
 class CodeSignUtilsTest : public testing::Test {
@@ -128,8 +129,8 @@ static bool ReadSignatureFromFile(const std::string &path, ByteBuffer &data)
     return ret == fileSize;
 }
 
-//excute the exceptional examples first, because of it's always successful
-//once the same file signature verified successfully
+// excute the exceptional examples first, because of it's always successful
+// once the same file signature verified successfully
 
 /**
  * @tc.name: CodeSignUtilsTest_0001
@@ -139,8 +140,8 @@ static bool ReadSignatureFromFile(const std::string &path, ByteBuffer &data)
  */
 HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0001, TestSize.Level0)
 {
-    int ret = CodeSignUtils::EnforceCodeSignForApp(g_hapWithoutLibRetSuc,
-           TMP_BASE_PATH"/demo_with_multi_lib/pkcs7_error/file/libentry_01.so.fsv-sig");
+    std::string sigPath = TMP_BASE_PATH + "/demo_with_multi_lib/pkcs7_error/file/libentry_01.so.fsv-sig";
+    int ret = CodeSignUtils::EnforceCodeSignForApp(g_hapWithoutLibRetSuc, sigPath);
     EXPECT_EQ(ret, CS_ERR_EXTRACT_FILES);
 }
 
@@ -320,6 +321,6 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0012, TestSize.Level0)
     ret = CodeSignUtils::EnforceCodeSignForApp(g_hapWithMultiLibRetSuc, g_sigWithMultiLibRetSucPath);
     EXPECT_EQ(ret, CS_SUCCESS);
 }
-} //namespace CodeSign
-} //namespace Security
-} //namespace OHOS
+}  // namespace CodeSign
+}  // namespace Security
+}  // namespace OHOS

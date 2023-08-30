@@ -17,7 +17,6 @@
 #define CODE_SIGN_KEY_UTILS_H
 
 #include <sys/types.h>
-#include <cstdint>
 
 typedef int32_t KeySerial;
 
