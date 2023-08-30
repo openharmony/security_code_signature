@@ -33,16 +33,16 @@ using namespace std;
 namespace OHOS {
 namespace Security {
 namespace CodeSign {
-
-#define AN_BASE_PATH "/data/local/ark-cache/tmp/"
-
-static const std::string DEMO_AN_PATH = AN_BASE_PATH"demo.an";
-static const std::string DEMO_TAMPER_AN_PATH = AN_BASE_PATH"fake_demo.an";
+static const std::string AN_BASE_PATH = "/data/local/ark-cache/tmp/";
+static const std::string DEMO_AN_PATH = AN_BASE_PATH + "demo.an";
+static const std::string DEMO_TAMPER_AN_PATH = AN_BASE_PATH + "fake_demo.an";
 
 static const char *g_validCaller = "installs";
 
 static const std::string FAKE_SERIAL_NUMBER = "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 static const std::string FAKE_CONTENT = "FAKE";
+
+static const int MAX_TEST_BUF_LEN = 1024;
 
 static void ModifySignatureFormat(ByteBuffer &pkcs7Data)
 {
@@ -54,12 +54,15 @@ static void ModifySignatureValue(PKCS7_SIGNER_INFO *p7info)
 {
     const uint8_t *data = ASN1_STRING_get0_data(p7info->enc_digest);
     int len = ASN1_STRING_length(p7info->enc_digest);
+    if (len <= 0 || len > MAX_TEST_BUF_LEN) {
+        return;
+    }
     uint8_t *fdata = static_cast<uint8_t *>(malloc(len));
     if (fdata == nullptr) {
         return;
     }
-    (void) memcpy_s(fdata, len, data, len);
-    (void) memcpy_s(fdata, len, FAKE_CONTENT.c_str(), FAKE_CONTENT.length());
+    (void)memcpy_s(fdata, len, data, len);
+    (void)memcpy_s(fdata, len, FAKE_CONTENT.c_str(), FAKE_CONTENT.length());
     ASN1_STRING_set0(p7info->enc_digest, fdata, len);
 }
 
@@ -237,6 +240,6 @@ HWTEST_F(SignAndEnforceTest, SignAndEnforceTest_0006, TestSize.Level0)
     int32_t ret = CodeSignUtils::EnforceCodeSignForFile(DEMO_AN_PATH, sig);
     EXPECT_EQ(ret, CS_SUCCESS);
 }
-} //namespace CodeSign
-} //namespace Security
-} //namespace OHOS
+} // namespace CodeSign
+} // namespace Security
+} // namespace OHOS

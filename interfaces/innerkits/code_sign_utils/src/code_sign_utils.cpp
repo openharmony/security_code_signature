@@ -19,14 +19,14 @@
 #include <cstdlib>
 #include <cstdint>
 #include <cstdio>
-#include <fcntl.h>
 #include <iostream>
+#include <sys/types.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include <linux/fs.h>
 #include <linux/fsverity.h>
 #include <linux/stat.h>
 #include <linux/types.h>
-#include <sys/types.h>
-#include <unistd.h>
 
 #include "cs_hisysevent.h"
 #include "cs_hitrace.h"

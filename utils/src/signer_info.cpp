@@ -14,9 +14,6 @@
  */
 
 #include "signer_info.h"
-
-#include <string>
-
 #include "log.h"
 #include "openssl/asn1.h"
 #include "openssl/pem.h"
@@ -142,6 +139,9 @@ bool SignerInfo::AddSignatureInSignerInfo(const ByteBuffer &signature)
     }
     uint32_t signatureSize = signature.GetSize();
     // tmp will be free when freeing p7info_
+    if (signatureSize == 0) {
+        return false;
+    }
     uint8_t *tmp = static_cast<uint8_t *>(malloc(signatureSize));
     if (tmp == nullptr) {
         return false;

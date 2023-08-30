@@ -116,6 +116,6 @@ HWMTEST_F(MultiThreadLocalSignTest, MultiThreadLocalSignTest_0001, TestSize.Leve
 {
     LocalCodeSignAndEnforce();
 }
-} //namespace CodeSign
-} //namespace Security
-} //namespace OHOS
+} // namespace CodeSign
+} // namespace Security
+} // namespace OHOS

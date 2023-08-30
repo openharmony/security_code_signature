@@ -30,9 +30,8 @@ using namespace std;
 namespace OHOS {
 namespace Security {
 namespace CodeSign {
-
-#define AN_BASE_PATH "/data/local/ark-cache/tmp/"
-static const std::string DEMO_AN_PATH = AN_BASE_PATH"demo.an";
+static const std::string AN_BASE_PATH = "/data/local/ark-cache/tmp/";
+static const std::string DEMO_AN_PATH = AN_BASE_PATH + "demo.an";
 
 class LocalCodeSignTest : public testing::Test {
 public:
@@ -116,6 +115,6 @@ HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0005, TestSize.Level0)
     NativeTokenReset(selfTokenId);
     EXPECT_EQ(ret, CS_ERR_FILE_PATH);
 }
-} //namespace CodeSign
-} //namespace Security
-} //namespace OHOS
+} // namespace CodeSign
+} // namespace Security
+} // namespace OHOS

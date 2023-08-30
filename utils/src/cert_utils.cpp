@@ -23,7 +23,6 @@
 namespace OHOS {
 namespace Security {
 namespace CodeSign {
-
 static const uint32_t CERT_DATA_SIZE = 8192;
 static const uint32_t CERT_COUNT = 4;
 

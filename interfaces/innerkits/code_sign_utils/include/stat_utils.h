@@ -16,9 +16,9 @@
 #ifndef CODE_SIGN_STAT_UTILS_H
 #define CODE_SIGN_STAT_UTILS_H
 
+#include <string>
 #include <asm/unistd.h>
 #include <linux/stat.h>
-#include <string>
 #include <unistd.h>
 
 namespace OHOS {

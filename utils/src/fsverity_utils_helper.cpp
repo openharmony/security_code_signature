@@ -12,16 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include "fsverity_utils_helper.h"
 #include <common_defs.h>
 #include <fcntl.h>
 #include <fsverity_uapi.h>
 #include <sys/types.h>
 #include <unistd.h>
-
 #include "errcode.h"
 #include "file_helper.h"
-#include "fsverity_utils_helper.h"
 #include "log.h"
 
 namespace OHOS {

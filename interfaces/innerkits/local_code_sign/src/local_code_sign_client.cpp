@@ -14,12 +14,7 @@
  */
 
 #include "local_code_sign_client.h"
-
-#include <cstring>
-#include <iostream>
 #include <iservice_registry.h>
-#include <unistd.h>
-
 #include "cs_hisysevent.h"
 #include "local_code_sign_proxy.h"
 #include "local_code_sign_load_callback.h"
@@ -192,7 +187,6 @@ LocalCodeSignClient *GetLocalCodeSignClient()
 {
     return &LocalCodeSignClient::GetInstance();
 }
-
 }
 }
 }
