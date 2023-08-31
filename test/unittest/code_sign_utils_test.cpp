@@ -125,7 +125,7 @@ static bool ReadSignatureFromFile(const std::string &path, ByteBuffer &data)
         return false;
     }
     size_t ret = fread(data.GetBuffer(), 1, fileSize, file);
-    fclose(file);
+    (void)fclose(file);
     return ret == fileSize;
 }
 

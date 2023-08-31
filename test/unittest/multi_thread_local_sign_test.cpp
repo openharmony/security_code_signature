@@ -33,7 +33,6 @@ using namespace testing::mt;
 namespace OHOS {
 namespace Security {
 namespace CodeSign {
-
 static constexpr uint32_t MULTI_THREAD_NUM = 10;
 static constexpr int64_t BUFFER_SIZE = 1024;
 static const std::string AN_BASE_PATH = "/data/local/ark-cache/tmp/multi_thread/";

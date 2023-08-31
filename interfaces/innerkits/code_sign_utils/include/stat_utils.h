@@ -17,9 +17,9 @@
 #define CODE_SIGN_STAT_UTILS_H
 
 #include <string>
+#include <unistd.h>
 #include <asm/unistd.h>
 #include <linux/stat.h>
-#include <unistd.h>
 
 namespace OHOS {
 namespace Security {
