@@ -83,8 +83,8 @@ int32_t CodeSignUtils::EnforceCodeSignForApp(const EntryMap &entryPath,
             CS_ERR_FILE_PATH, "App file is invalid.");
 
         const std::string &signatureEntry = entryName + Constants::FSV_SIG_SUFFIX;
-        NOT_SATISFIED_RETURN(
-            std::find(signatureFileList.begin(), signatureFileList.end(), signatureEntry) != signatureFileList.end(),
+        NOT_SATISFIED_RETURN(std::find(signatureFileList.begin(), signatureFileList.end(), signatureEntry) !=
+            signatureFileList.end(),
             CS_ERR_NO_SIGNATURE, "Fail to find signature for %{public}s", entryName.c_str());
 
         std::unique_ptr<uint8_t[]> signatureBuffer = nullptr;

@@ -24,6 +24,7 @@ namespace OHOS {
 namespace Security {
 namespace CodeSign {
 static constexpr int INVALID_SIGN_ALGORITHM_NID = -1;
+static constexpr int MAX_SIGNATURE_SIZE = 1024; // 1024: max signature length
 
 bool SignerInfo::InitSignerInfo(X509 *cert, const EVP_MD *md,
     const ByteBuffer &contentData, bool carrySigningTime)
@@ -139,7 +140,7 @@ bool SignerInfo::AddSignatureInSignerInfo(const ByteBuffer &signature)
     }
     uint32_t signatureSize = signature.GetSize();
     // tmp will be free when freeing p7info_
-    if (signatureSize == 0) {
+    if (signatureSize == 0 || signatureSize > MAX_SIGNATURE_SIZE) {
         return false;
     }
     uint8_t *tmp = static_cast<uint8_t *>(malloc(signatureSize));
