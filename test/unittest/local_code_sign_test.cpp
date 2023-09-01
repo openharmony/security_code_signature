@@ -20,7 +20,9 @@
 #include "access_token_setter.h"
 #include "byte_buffer.h"
 #include "code_sign_utils.h"
+#include "local_code_sign_client.h"
 #include "local_code_sign_kit.h"
+#include "local_code_sign_load_callback.h"
 #include "log.h"
 
 using namespace OHOS::Security::CodeSign;
@@ -114,6 +116,60 @@ HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0005, TestSize.Level0)
     int ret = LocalCodeSignKit::SignLocalCode(DEMO_AN_PATH + "invalid", sig);
     NativeTokenReset(selfTokenId);
     EXPECT_EQ(ret, CS_ERR_FILE_PATH);
+}
+
+/**
+ * @tc.name: LocalCodeSignTest_0006
+ * @tc.desc: local codesignsvr died
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0006, TestSize.Level0)
+{
+    LocalCodeSignClient *client = GetLocalCodeSignClient();
+    EXPECT_NE(client, nullptr);
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    EXPECT_NE(systemAbilityManager, nullptr);
+    sptr<IRemoteObject> remoteObject =
+        systemAbilityManager->GetSystemAbility(LOCAL_CODE_SIGN_SA_ID);
+    client->OnRemoteLocalCodeSignSvrDied(remoteObject);
+}
+
+/**
+ * @tc.name: LocalCodeSignTest_0007
+ * @tc.desc: load sa fail
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0007, TestSize.Level0)
+{
+    LocalCodeSignLoadCallback cb;
+    cb.OnLoadSystemAbilityFail(LOCAL_CODE_SIGN_SA_ID);
+}
+
+/**
+ * @tc.name: LocalCodeSignTest_0008
+ * @tc.desc: load sa success and return sa id not code sign sa id
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0008, TestSize.Level0)
+{
+    LocalCodeSignLoadCallback cb;
+    cb.OnLoadSystemAbilitySuccess(LOCAL_CODE_SIGN_SA_ID - 1, nullptr);
+}
+
+/**
+ * @tc.name: LocalCodeSignTest_0009
+ * @tc.desc: load sa success and return remote object is null
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0009, TestSize.Level0)
+{
+    LocalCodeSignLoadCallback cb;
+    cb.OnLoadSystemAbilitySuccess(LOCAL_CODE_SIGN_SA_ID, nullptr);
 }
 } // namespace CodeSign
 } // namespace Security
