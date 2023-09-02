@@ -50,8 +50,6 @@
         <licensefile></licensefile>
         <filefilterlist>
             <filefilter name="binaryFileTypePolicyFilter" desc="Filters for binary file policies">
-                <filteritem type="filepath" name="codesigntool/code_sign_appgallery_lib/src/test/.*" desc="self-test the sample and dependent binary library"/>
-                <filteritem type="filepath" name="codesigntool/code_sign_tool_lib/src/test/.*" desc="self-test the sample and dependent binary library"/>
                 <filteritem type="filepath" name="test/.*" desc="self-test the sample and dependent binary library"/>
             </filefilter>
         </filefilterlist>

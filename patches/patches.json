@@ -29,6 +29,11 @@
             "project":"security_selinux_adapter",
             "path":"base/security/selinux_adapter",
             "pr_url":"https://gitee.com/openharmony/security_selinux_adapter/pulls/2825"
+        },
+        {
+            "project":"developtools_hapsigner",
+            "path":"developtools/hapsigner",
+            "pr_url":"https://gitee.com/openharmony/developtools_hapsigner/pulls/101"
         }
     ]
 }
