@@ -37,38 +37,6 @@ The code signature component provides the following features:
 | int32_t EnforceCodeSignForFile(const std::string &path, const ByteBuffer &signature); | Enforces code signing for an file |
 | int32_t SignLocalCode(const std::string &filePath, ByteBuffer &signature); | Signs the local code |
 
-### Building
-
-#### Setting up the environment
-
-- Pull the latest code of the trunk.
-
-- Set up the [RK3568 default environment](https://gitee.com/openharmony/docs/blob/master/en/device-dev/quick-start/Readme-EN.md)
-
-#### Modify the code
-
-1. Pull the code signature component
-
-```
-cd base/security
-
-git clone https://gitee.com/openharmony-sig/security_code_signature.git
-
-mv security_code_signature code_signature
-```
-
-2. Modify the repositories on which the code signature component depends
-
-The [patches.json](patches/patches.json) file in the current repository describes the repositories and patches on which
-
-the code signature component depends. Install the required patches in the corresponding repositories base on the description in the file.
-
-#### Building
-
-```
-./build.sh --product-name rk3568 --ccache
-```
-
 ### Signing Tool User Guide
 
 **[User Guide](https://gitee.com/openharmony/developtools_hapsigner/blob/master/codesigntool/README.md)**
