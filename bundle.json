@@ -33,7 +33,8 @@
         "huks",
         "eventhandler",
         "build_framework",
-        "access_token"
+        "access_token",
+        "common"
       ],
       "third_party": [
         "openssl",
