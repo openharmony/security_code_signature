@@ -53,7 +53,7 @@ static EntryMap g_wrongHapWithMultiLibRetFail = {
      APP_BASE_PATH + "/demo_with_multi_lib_error/libs/arm64-v8a/libentry.so"}};
 
 // examples of Enforce code signature for app
-static const std::vector<std::string> g_HapWithoutLibSigPkcs7ErrorPath({
+static const std::vector<std::string> g_HapWithoutLibSigPkcs7ErrorPath = {
     TMP_BASE_PATH + "/demo_without_lib/pkcs7_error/demo_without_lib_001.sig", // Ilegal pkcs7 format
     TMP_BASE_PATH + "/demo_without_lib/pkcs7_error/demo_without_lib_002.sig", // Disable to find cert chain
     TMP_BASE_PATH + "/demo_without_lib/pkcs7_error/demo_without_lib_003.sig", // Don't support digest algorithm
@@ -61,9 +61,9 @@ static const std::vector<std::string> g_HapWithoutLibSigPkcs7ErrorPath({
     TMP_BASE_PATH + "/demo_without_lib/pkcs7_error/demo_without_lib_005.sig", // Wrong signature
     TMP_BASE_PATH + "/demo_without_lib/pkcs7_error/demo_without_lib_006.sig", // Expired signature
     TMP_BASE_PATH + "/demo_without_lib/pkcs7_error/demo_without_lib_007.sig", // Cert chain validate fail
-});
+};
 
-static const std::vector<std::string> g_HapWithMultiLibSigPkcs7ErrorPath({
+static const std::vector<std::string> g_HapWithMultiLibSigPkcs7ErrorPath = {
     TMP_BASE_PATH + "/demo_with_multi_lib/pkcs7_error/demo_with_multi_lib_001.sig", // Ilegal pkcs7 format
     TMP_BASE_PATH + "/demo_with_multi_lib/pkcs7_error/demo_with_multi_lib_002.sig", // Disable to find cert chain
     TMP_BASE_PATH + "/demo_with_multi_lib/pkcs7_error/demo_with_multi_lib_003.sig", // Don't support digest algorithm
@@ -71,7 +71,7 @@ static const std::vector<std::string> g_HapWithMultiLibSigPkcs7ErrorPath({
     TMP_BASE_PATH + "/demo_with_multi_lib/pkcs7_error/demo_with_multi_lib_005.sig", // Wrong signature
     TMP_BASE_PATH + "/demo_with_multi_lib/pkcs7_error/demo_with_multi_lib_006.sig", // Expired signature
     TMP_BASE_PATH + "/demo_with_multi_lib/pkcs7_error/demo_with_multi_lib_007.sig", // Cert chain validate fail
-});
+};
 
 // examples of Enforce code signature for file
 static const std::string g_fileEnableSuc = APP_BASE_PATH + "/demo_with_multi_lib/libs/arm64-v8a/libentry.so";
@@ -82,7 +82,7 @@ static const std::string g_filesigEnablePath =
 static const std::string g_wrongFileEnableFail =
     APP_BASE_PATH + "/demo_with_multi_lib_error/libs/arm64-v8a/libentry.so";
 
-static const std::vector<std::string> g_fileSigEnableFailPath({
+static const std::vector<std::string> g_fileSigEnableFailPath = {
     TMP_BASE_PATH + "/demo_with_multi_lib/pkcs7_error/file/libentry_01.so.fsv-sig", // ilegal pkcs7 format
     TMP_BASE_PATH + "/demo_with_multi_lib/pkcs7_error/file/libentry_02.so.fsv-sig", // Disable to find cert chain
     TMP_BASE_PATH + "/demo_with_multi_lib/pkcs7_error/file/libentry_03.so.fsv-sig", // Don't support digest algorithm
@@ -90,7 +90,7 @@ static const std::vector<std::string> g_fileSigEnableFailPath({
     TMP_BASE_PATH + "/demo_with_multi_lib/pkcs7_error/file/libentry_05.so.fsv-sig", // Wrong signature
     TMP_BASE_PATH + "/demo_with_multi_lib/pkcs7_error/file/libentry_06.so.fsv-sig", // Expired signature
     TMP_BASE_PATH + "/demo_with_multi_lib/pkcs7_error/file/libentry_07.so.fsv-sig", // Cert chain validate fail
-});
+};
 
 // examples of can't find the signature file
 static const EntryMap g_hapSigNotExist = {

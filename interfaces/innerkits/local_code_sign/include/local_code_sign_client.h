@@ -59,7 +59,7 @@ private:
 
     std::mutex proxyMutex_;
     std::condition_variable proxyConVar_;
-    sptr<ILocalCodeSign> localCodeSignProxy_ = nullptr;
+    sptr<LocalCodeSignInterface> localCodeSignProxy_ = nullptr;
     sptr<LocalCodeSignSvrRecipient> localCodeSignSvrRecipient_ = nullptr;
 };
 

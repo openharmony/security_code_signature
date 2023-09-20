@@ -23,10 +23,10 @@
 namespace OHOS {
 namespace Security {
 namespace CodeSign {
-class LocalCodeSignProxy : public IRemoteProxy<ILocalCodeSign> {
+class LocalCodeSignProxy : public IRemoteProxy<LocalCodeSignInterface> {
 public:
     explicit LocalCodeSignProxy(const sptr<IRemoteObject> &impl)
-        : IRemoteProxy<ILocalCodeSign>(impl) {}
+        : IRemoteProxy<LocalCodeSignInterface>(impl) {}
     ~LocalCodeSignProxy() {}
     int32_t InitLocalCertificate(ByteBuffer &cert) override;
     int32_t SignLocalCode(const std::string &filePath, ByteBuffer &signature) override;

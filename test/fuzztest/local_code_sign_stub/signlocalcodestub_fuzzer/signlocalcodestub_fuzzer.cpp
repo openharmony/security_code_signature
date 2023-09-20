@@ -49,7 +49,7 @@ namespace OHOS {
         }
         std::string testName(reinterpret_cast<const char *>(data), size);
         MessageParcel datas;
-        datas.WriteInterfaceToken(ILocalCodeSign::GetDescriptor());
+        datas.WriteInterfaceToken(LocalCodeSignInterface::GetDescriptor());
         if (!datas.WriteString(testName)) {
             return false;
         }

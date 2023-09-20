@@ -26,9 +26,9 @@ namespace Security {
 namespace CodeSign {
 constexpr int LOCAL_CODE_SIGN_SA_ID = 3507;
 
-class ILocalCodeSign : public OHOS::IRemoteBroker {
+class LocalCodeSignInterface : public OHOS::IRemoteBroker {
 public:
-    DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Security.ILocalCodeSign");
+    DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Security.LocalCodeSignInterface");
     virtual int32_t InitLocalCertificate(ByteBuffer &cert) = 0;
     virtual int32_t SignLocalCode(const std::string &filePath, ByteBuffer &signature) = 0;
 };

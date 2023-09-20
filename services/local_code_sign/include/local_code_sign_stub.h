@@ -22,7 +22,7 @@
 namespace OHOS {
 namespace Security {
 namespace CodeSign {
-class LocalCodeSignStub : public IRemoteStub<ILocalCodeSign> {
+class LocalCodeSignStub : public IRemoteStub<LocalCodeSignInterface> {
 public:
     LocalCodeSignStub();
     ~LocalCodeSignStub();

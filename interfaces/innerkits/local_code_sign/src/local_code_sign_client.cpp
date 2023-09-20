@@ -84,7 +84,7 @@ void LocalCodeSignClient::FinishStartSA(const sptr<IRemoteObject> &remoteObject)
     if (!remoteObject->AddDeathRecipient(localCodeSignSvrRecipient_)) {
         LOG_ERROR(LABEL, "AddDeathRecipient failed");
     }
-    localCodeSignProxy_ = iface_cast<ILocalCodeSign>(remoteObject);
+    localCodeSignProxy_ = iface_cast<LocalCodeSignInterface>(remoteObject);
     if ((localCodeSignProxy_ == nullptr) || (localCodeSignProxy_->AsObject() == nullptr)) {
         LOG_ERROR(LABEL, "Get code sign proxy failed.");
         return;
@@ -113,7 +113,7 @@ void LocalCodeSignClient::CheckLocalCodeSignProxy()
         }
         auto remoteObject = samgr->CheckSystemAbility(LOCAL_CODE_SIGN_SA_ID);
         if (remoteObject != nullptr) {
-            localCodeSignProxy_ = iface_cast<ILocalCodeSign>(remoteObject);
+            localCodeSignProxy_ = iface_cast<LocalCodeSignInterface>(remoteObject);
             return;
         }
     }
