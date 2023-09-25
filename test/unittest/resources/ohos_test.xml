@@ -99,5 +99,19 @@
             <option name="shell" value="rm -rf /data/test/tmp"/>
         </cleaner>
     </target>
+    <target name="rust_key_enable_unittest">
+        <preparer>
+            <option name="shell" value="mkdir -p /data/test/tmp"/>
+            <option name="push" value="demo_cert/cert/valid_pem_cert.json -> /data/test/tmp" src="res"/>
+            <option name="push" value="demo_cert/cert/invalid_structure_pem_cert.json -> /data/test/tmp" src="res"/>
+            <option name="push" value="demo_cert/cert/empty_pem_cert.json -> /data/test/tmp" src="res"/>
+            <option name="push" value="demo_cert/cert_path/valid_cert_path.json -> /data/test/tmp" src="res"/>
+            <option name="push" value="demo_cert/cert_path/invalid_structure_cert_path.json -> /data/test/tmp" src="res"/>
+            <option name="push" value="demo_cert/cert_path/empty_cert_path.json -> /data/test/tmp" src="res"/>
+        </preparer>
+        <cleaner>
+            <option name="shell" value="rm -rf /data/test/tmp"/>
+        </cleaner>
+    </target>
 </configuration>
 

@@ -16,6 +16,7 @@ import("../../../code_signature.gni")
 
 ohos_static_library("libkey_enable_utils") {
   sources = [
+    "src/cert_utils.cpp",
     "src/key_utils.cpp",
     "src/local_code_sign_utils.cpp",
   ]

@@ -13,16 +13,17 @@
  * limitations under the License.
  */
 
-use hisysevent::{EventType};
+use hisysevent::EventType;
 
 /// report add key err by hisysevent
-pub fn report_add_key_err(cert_type: &str, errcode: i32)
-{
+pub fn report_add_key_err(cert_type: &str, errcode: i32) {
     hisysevent::write(
         "CODE_SIGN",
         "CS_ADD_KEY",
         EventType::Fault,
-        &[hisysevent::build_str_param!("STRING_SINGLE", cert_type),
-            hisysevent::build_number_param!("INT32_SINGLE", errcode)]
+        &[
+            hisysevent::build_str_param!("STRING_SINGLE", cert_type),
+            hisysevent::build_number_param!("INT32_SINGLE", errcode),
+        ],
     );
 }

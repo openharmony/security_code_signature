@@ -13,22 +13,20 @@
  * limitations under the License.
  */
 
-use std::fs::File;
+use super::cert_utils;
+use super::cs_hisysevent;
+use hilog_rust::{error, hilog, HiLogLabel, LogType};
 use std::ffi::{c_char, CString};
+use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::option::Option;
 use std::ptr;
 use std::thread::sleep_ms;
-use std::vec::Vec;
-
-use hilog_rust::{error, hilog, HiLogLabel, LogType};
-use super::cs_hisysevent;
-use super::cert_utils;
 
 const LOG_LABEL: HiLogLabel = HiLogLabel {
     log_type: LogType::LogCore,
     domain: 0xd002f00, // security domain
-    tag: "CODE_SIGN"
+    tag: "CODE_SIGN",
 };
 
 const CERT_DATA_MAX_SIZE: usize = 8192;
@@ -45,16 +43,39 @@ const SLEEP_MILLI_SECONDS: u32 = 50;
 
 type KeySerial = i32;
 
-extern "C" {
-    fn InitLocalCertificate(cert_data: *mut u8, cert_size: *mut usize) -> i32;
-    fn AddKey(type_name: *const u8, description: *const u8, payload: *const u8,
-        plen: usize, ring_id: KeySerial) -> KeySerial;
-    fn KeyctlRestrictKeyring(ring_id: KeySerial, type_name: *const u8,
-        restriction: *const u8) -> KeySerial;
+#[repr(C)]
+pub struct CertPathInfo {
+    /// signing_length
+    pub signing_length: u32,
+    /// issuer_length
+    pub issuer_length: u32,
+    /// signing
+    pub signing: u64,
+    /// issuer
+    pub issuer: u64,
+    /// path
+    pub path_len: u32,
+    __reserved: [u8; 36],
 }
 
-fn get_local_key() -> Option<Vec<u8>>
-{
+extern "C" {
+    fn InitLocalCertificate(cert_data: *mut u8, cert_size: *mut usize) -> i32;
+    fn AddKey(
+        type_name: *const u8,
+        description: *const u8,
+        payload: *const u8,
+        plen: usize,
+        ring_id: KeySerial,
+    ) -> KeySerial;
+    fn KeyctlRestrictKeyring(
+        ring_id: KeySerial,
+        type_name: *const u8,
+        restriction: *const u8,
+    ) -> KeySerial;
+    fn AddCertPath(info: *const CertPathInfo) -> i32;
+}
+
+fn get_local_key() -> Option<Vec<u8>> {
     let mut cert_size = CERT_DATA_MAX_SIZE;
     let mut cert_data = Vec::with_capacity(cert_size);
     let pcert = cert_data.as_mut_ptr();
@@ -72,8 +93,7 @@ fn get_local_key() -> Option<Vec<u8>>
 /// [Serial][Flags][Usage][Expiry][Permissions][UID][GID][TypeName][Description]: [Summary]
 ///   [0]     [1]    [2]    [3]       [4]       [5]  [6]     [7]        [8]         [9]
 /// 3985ad4c I------  1    perm     082f0000     0    0    keyring  .fs-verity:   empty
-fn parse_key_info(line: String) -> Option<KeySerial>
-{
+fn parse_key_info(line: String) -> Option<KeySerial> {
     let attrs: Vec<&str> = line.split_whitespace().collect();
     if attrs.len() != 10 {
         return None;
@@ -91,19 +111,23 @@ fn parse_key_info(line: String) -> Option<KeySerial>
     }
 }
 
-fn enable_key(key_id: KeySerial, key_name: &str, cert_data: &Vec<u8>) -> i32
-{
+fn enable_key(key_id: KeySerial, key_name: &str, cert_data: &Vec<u8>) -> i32 {
     let type_name = CString::new("asymmetric").expect("type name is invalid");
     let keyname = CString::new(key_name).expect("keyname is invalid");
     unsafe {
-        let ret: i32 = AddKey(type_name.as_ptr(), keyname.as_ptr(), cert_data.as_ptr(), cert_data.len(), key_id);
+        let ret: i32 = AddKey(
+            type_name.as_ptr(),
+            keyname.as_ptr(),
+            cert_data.as_ptr(),
+            cert_data.len(),
+            key_id,
+        );
         ret
     }
 }
 
-fn enable_key_list(key_id: KeySerial, certs: Vec<Vec<u8>>) -> i32
-{
-    let prefix = String::from(CODE_SIGN_KEY_NAME_PREFIX);
+fn enable_key_list(key_id: KeySerial, certs: Vec<Vec<u8>>, key_name_prefix: &str) -> i32 {
+    let prefix = String::from(key_name_prefix);
     for (i, cert_data) in certs.iter().enumerate() {
         let key_name = prefix.clone() + &i.to_string();
         let ret = enable_key(key_id, key_name.as_str(), cert_data);
@@ -115,8 +139,7 @@ fn enable_key_list(key_id: KeySerial, certs: Vec<Vec<u8>>) -> i32
 }
 
 /// parse proc_key_file to get keyring id
-fn get_keyring_id() -> Result<KeySerial, ()>
-{
+fn get_keyring_id() -> Result<KeySerial, ()> {
     let file = File::open(PROC_KEY_FILE_PATH).expect("Open /proc/keys failed");
     let lines = BufReader::new(file).lines();
     for line in lines.flatten() {
@@ -131,10 +154,13 @@ fn get_keyring_id() -> Result<KeySerial, ()>
 }
 
 // enable all trusted keys
-fn enable_trusted_keys(key_id: KeySerial) -> Result<(), ()>
-{
+fn enable_trusted_keys(key_id: KeySerial) -> Result<(), ()> {
     let certs = cert_utils::get_trusted_certs();
-    let ret = enable_key_list(key_id, certs);
+    if certs.is_empty() {
+        error!(LOG_LABEL, "empty trusted certs!");
+        return Err(());
+    }
+    let ret = enable_key_list(key_id, certs, CODE_SIGN_KEY_NAME_PREFIX);
     if ret < 0 {
         cs_hisysevent::report_add_key_err("code_sign_keys", ret);
         return Err(());
@@ -143,14 +169,13 @@ fn enable_trusted_keys(key_id: KeySerial) -> Result<(), ()>
 }
 
 // enable local key from local code sign SA
-fn enable_local_key(key_id: KeySerial) -> Result<(), ()>
-{
+fn enable_local_key(key_id: KeySerial) -> Result<(), ()> {
     let mut times = 0;
     let cert_data = loop {
         match get_local_key() {
             Some(key) => {
                 break key;
-            },
+            }
             None => {
                 error!(LOG_LABEL, "Get local key failed, may try again.");
             }
@@ -172,8 +197,7 @@ fn enable_local_key(key_id: KeySerial) -> Result<(), ()>
 }
 
 // restrict fs-verity keyring, don't allow to add more keys
-fn restrict_keys(key_id: KeySerial) -> Result<(), ()>
-{
+fn restrict_keys(key_id: KeySerial) -> Result<(), ()> {
     unsafe {
         if KeyctlRestrictKeyring(key_id, ptr::null(), ptr::null()) < 0 {
             error!(LOG_LABEL, "Restrict keyring err");
@@ -183,12 +207,43 @@ fn restrict_keys(key_id: KeySerial) -> Result<(), ()>
     Ok(())
 }
 
+/// Add ca path from json file
+fn add_cert_path() -> Result<(), ()> {
+    let cert_paths = cert_utils::get_cert_path();
+    if cert_paths.is_empty() {
+        error!(LOG_LABEL, "empty cert paths!");
+        return Err(());
+    }
+    for cert_path in &cert_paths {
+        let signing_clone = cert_path.signing.clone();
+        let issuer_clone = cert_path.issuer.clone();
+        unsafe {
+            let cert_info = CertPathInfo {
+                signing_length: signing_clone.as_bytes().len() as u32,
+                issuer_length: issuer_clone.as_bytes().len() as u32,
+                signing: signing_clone.as_ptr() as u64,
+                issuer: issuer_clone.as_ptr() as u64,
+                path_len: cert_path.path_len as u32,
+                __reserved: [0; 36],
+            };
+
+            let ret = AddCertPath(&cert_info);
+            if ret < 0 {
+                cs_hisysevent::report_add_key_err("cert_path", ret);
+                error!(LOG_LABEL, "add cert path error!");
+                return Err(());
+            }
+        }
+    }
+    Ok(())
+}
+
 /// enable trusted and local keys, and then restrict keyring
-pub fn enable_all_keys() -> Result<(), ()>
-{
+pub fn enable_all_keys() -> Result<(), ()> {
     let key_id = get_keyring_id()?;
     enable_trusted_keys(key_id)?;
     enable_local_key(key_id)?;
     restrict_keys(key_id)?;
+    add_cert_path()?;
     Ok(())
 }

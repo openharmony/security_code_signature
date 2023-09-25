@@ -121,6 +121,38 @@ ohos_unittest("multi_thread_local_sign_unittest") {
   ]
 }
 
+ohos_rust_static_library("rust_key_enable_lib") {
+  sources = [ "${code_signature_root_dir}/services/key_enable/src/lib.rs" ]
+  deps = [
+    "${code_signature_root_dir}/services/key_enable/utils:libkey_enable_utils",
+    "${rust_openssl_dir}/openssl:lib",
+  ]
+  external_deps = [
+    "hilog:hilog_rust",
+    "hisysevent:hisysevent_rust",
+    "ylong_json:lib",
+  ]
+  if (build_variant == "root") {
+    rustenv = [ "code_signature_debuggable=on" ]
+  } else {
+    rustenv = [ "code_signature_debuggable=off" ]
+  }
+  crate_name = "key_enable"
+  crate_type = "rlib"
+  subsystem_name = "security"
+  part_name = "code_signature"
+}
+
+ohos_rust_unittest("rust_key_enable_unittest") {
+  module_out_path = "security/code_signature"
+  resource_config_file = "resources/ohos_test.xml"
+  crate_root = "./rust_key_enable_test.rs"
+  sources = [ "./rust_key_enable_test.rs" ]
+  deps = [ ":rust_key_enable_lib" ]
+  subsystem_name = "security"
+  part_name = "code_signature"
+}
+
 group("unittest_group") {
   testonly = true
   if (!defined(ohos_lite)) {
@@ -128,6 +160,7 @@ group("unittest_group") {
       ":code_sign_utils_unittest",
       ":local_code_sign_unittest",
       ":multi_thread_local_sign_unittest",
+      ":rust_key_enable_unittest",
       ":sign_and_enforce_unittest",
     ]
   }

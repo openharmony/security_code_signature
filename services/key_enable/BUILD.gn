@@ -17,12 +17,13 @@ import("../../code_signature.gni")
 ohos_rust_executable("key_enable") {
   sources = [ "src/main.rs" ]
   deps = [
+    "${rust_openssl_dir}/openssl:lib",
     "utils:libkey_enable_utils",
-    "${rust_openssl_dir}/openssl:lib"
   ]
   external_deps = [
-    "hisysevent:hisysevent_rust",
     "hilog:hilog_rust",
+    "hisysevent:hisysevent_rust",
+    "ylong_json:lib",
   ]
   if (build_variant == "root") {
     rustenv = [ "code_signature_debuggable=on" ]
@@ -33,20 +34,6 @@ ohos_rust_executable("key_enable") {
   crate_type = "bin"
   subsystem_name = "security"
   part_name = "code_signature"
-}
-
-ohos_prebuilt_etc("trusted_code_signature_certs") {
-  source = "config/trusted_code_signature_certs.cer"
-  part_name = "code_signature"
-  subsystem_name = "security"
-  relative_install_dir = "security"
-}
-
-ohos_prebuilt_etc("trusted_code_signature_test_certs") {
-  source = "config/trusted_code_signature_test_certs.cer"
-  part_name = "code_signature"
-  subsystem_name = "security"
-  relative_install_dir = "security"
 }
 
 ohos_prebuilt_etc("key_enable.cfg") {
@@ -60,7 +47,5 @@ group("key_enable_targets") {
   deps = [
     ":key_enable",
     ":key_enable.cfg",
-    ":trusted_code_signature_certs",
-    ":trusted_code_signature_test_certs"
   ]
 }

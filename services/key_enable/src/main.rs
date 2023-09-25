@@ -14,27 +14,25 @@
  */
 
 //! enable keys for code signature
-use hilog_rust::{info, error, hilog, HiLogLabel, LogType};
+use hilog_rust::{error, hilog, info, HiLogLabel, LogType};
 use std::ffi::{c_char, CString};
 
 mod cert_chain_utils;
 mod cert_utils;
 mod cs_hisysevent;
-mod file_utils;
 mod key_enable;
 
 const LOG_LABEL: HiLogLabel = HiLogLabel {
     log_type: LogType::LogCore,
     domain: 0xd002f00, // security domain
-    tag: "CODE_SIGN"
+    tag: "CODE_SIGN",
 };
 
-fn main()
-{
+fn main() {
     match key_enable::enable_all_keys() {
         Ok(()) => {
             info!(LOG_LABEL, "Succeed to enable all keys.");
-        },
+        }
         Err(()) => {
             error!(LOG_LABEL, "Enable keys failed.");
         }
