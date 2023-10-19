@@ -21,7 +21,6 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <unordered_map>
-
 #include "byte_buffer.h"
 #include "errcode.h"
 
@@ -54,6 +53,13 @@ public:
      * @return err code, see err_code.h
      */
     static int32_t EnforceCodeSignForFile(const std::string &path, const ByteBuffer &signature);
+    /**
+     * @brief Get owner ID from signature file
+     * @param sigbuffer buffer of the signature file
+     * @param ownerID string to abtain owner ID from the signature file
+     * @return err code, see err_code.h
+     */
+    static int ParseOwnerIdFromSignature(const ByteBuffer &sigbuffer, std::string &ownerID);
 private:
     static int32_t IsSupportFsVerity(const std::string &path);
     static int32_t IsFsVerityEnabled(int fd);

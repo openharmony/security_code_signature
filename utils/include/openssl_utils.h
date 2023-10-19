@@ -20,12 +20,21 @@
 
 #include "byte_buffer.h"
 #include "openssl/x509.h"
+#include "openssl/err.h"
+#include "log.h"
 
 namespace OHOS {
 namespace Security {
 namespace CodeSign {
-void ErrLogWithOpenSSLMsg(const char *msg);
+constexpr int OPENSSL_ERR_MESSAGE_MAX_LEN = 1024;
+
 void GetOpensslErrorMessage();
+
+#define ErrLogWithOpenSSLMsg(msg) do { \
+    LOG_ERROR(LABEL, "%{public}s", msg); \
+    GetOpensslErrorMessage(); \
+} while (0)
+
 X509 *LoadCertFromBuffer(const uint8_t *buffer, const uint32_t size);
 STACK_OF(X509) *MakeStackOfCerts(const std::vector<ByteBuffer> &certChain);
 }

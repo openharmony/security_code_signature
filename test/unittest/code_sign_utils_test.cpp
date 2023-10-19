@@ -321,6 +321,22 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0012, TestSize.Level0)
     ret = CodeSignUtils::EnforceCodeSignForApp(g_hapWithMultiLibRetSuc, g_sigWithMultiLibRetSucPath);
     EXPECT_EQ(ret, CS_SUCCESS);
 }
+
+/**
+ * @tc.name: CodeSignUtilsTest_0013
+ * @tc.desc: parse owner ID from signature failed, reason = invalid signature
+ * @tc.type: Func
+ * @tc.require: issueI88PPA
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0013, TestSize.Level0)
+{
+    ByteBuffer buffer;
+    std::string ownerID;
+    std::string invalid = "invalid msg";
+    buffer.CopyFrom((const uint8_t *)invalid.c_str(), invalid.length());
+    int ret = CodeSignUtils::ParseOwnerIdFromSignature(buffer, ownerID);
+    EXPECT_EQ(ret, CS_ERR_OPENSSL_PKCS7);
+}
 }  // namespace CodeSign
 }  // namespace Security
 }  // namespace OHOS

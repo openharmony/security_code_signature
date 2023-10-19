@@ -37,6 +37,8 @@ static constexpr uint32_t MULTI_THREAD_NUM = 10;
 static constexpr int64_t BUFFER_SIZE = 1024;
 static const std::string AN_BASE_PATH = "/data/local/ark-cache/tmp/multi_thread/";
 static const std::string ORIGIN_AN_FILE = AN_BASE_PATH + "demo.an";
+static const std::string DemoWithownerID = AN_BASE_PATH + "demoWithownerID.an";
+
 static const char *g_validCaller = "installs";
 
 uint64_t GetFileSize(int32_t fd)
@@ -95,6 +97,24 @@ void LocalCodeSignAndEnforce()
     EXPECT_EQ(ret, CS_SUCCESS);
 }
 
+void LocalCodeSignAndEnforceWithOwnerID()
+{
+    ByteBuffer sig;
+    uint64_t selfTokenId = NativeTokenSet(g_validCaller);
+    std::string ownerID = "AppName123";
+    int ret = LocalCodeSignKit::SignLocalCode(ownerID, DemoWithownerID, sig);
+    std::thread::id thisId = std::this_thread::get_id();
+    std::ostringstream oss;
+    oss << thisId;
+    std::string thisIdStr = oss.str();
+    std::string tmpFileName = AN_BASE_PATH + thisIdStr + "demoWithownerID.an";
+    EXPECT_EQ(DupFile(tmpFileName), true);
+    NativeTokenReset(selfTokenId);
+    EXPECT_EQ(ret, CS_SUCCESS);
+    ret = CodeSignUtils::EnforceCodeSignForFile(tmpFileName, sig);
+    EXPECT_EQ(ret, CS_SUCCESS);
+}
+
 class MultiThreadLocalSignTest : public testing::Test {
 public:
     MultiThreadLocalSignTest() {};
@@ -114,6 +134,17 @@ public:
 HWMTEST_F(MultiThreadLocalSignTest, MultiThreadLocalSignTest_0001, TestSize.Level1, MULTI_THREAD_NUM)
 {
     LocalCodeSignAndEnforce();
+}
+
+/**
+ * @tc.name: MultiThreadLocalSignTest_0002
+ * @tc.desc: sign AN files with owner ID and enforce using multi threads
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWMTEST_F(MultiThreadLocalSignTest, MultiThreadLocalSignTest_0002, TestSize.Level1, MULTI_THREAD_NUM)
+{
+    LocalCodeSignAndEnforceWithOwnerID();
 }
 } // namespace CodeSign
 } // namespace Security

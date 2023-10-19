@@ -36,7 +36,7 @@ static const uint32_t CHALLENGE_LEN = 32;
 static const uint32_t SIGNATURE_COMMON_SIZE = 512;
 
 static const std::string SUPPORTED_SIGN_ALGORITHM = "ECDSA256";
-static constexpr uint32_t MAX_SIGN_SIZE = 128;
+static constexpr uint32_t MAX_SIGN_SIZE = 65535;
 
 static const struct HksParam ECC_KEY_PRARAM[] = {
     { .tag = HKS_TAG_KEY_STORAGE_FLAG, .uint32Param = HKS_STORAGE_PERSISTENT },

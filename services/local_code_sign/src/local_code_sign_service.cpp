@@ -113,7 +113,8 @@ int32_t LocalCodeSignService::InitLocalCertificate(ByteBuffer &cert)
     return CS_SUCCESS;
 }
 
-int32_t LocalCodeSignService::SignLocalCode(const std::string &filePath, ByteBuffer &signature)
+int32_t LocalCodeSignService::SignLocalCode(const std::string &ownerID, const std::string &filePath,
+                                            ByteBuffer &signature)
 {
     ByteBuffer digest;
     std::string realPath;
@@ -125,7 +126,7 @@ int32_t LocalCodeSignService::SignLocalCode(const std::string &filePath, ByteBuf
         LOG_ERROR(LABEL, "Generate formatted fsverity digest failed.");
         return CS_ERR_COMPUTE_DIGEST;
     }
-    return PKCS7Generator::GenerateSignature(LocalSignKey::GetInstance(), DEFAULT_HASH_ALGORITHM.c_str(),
+    return PKCS7Generator::GenerateSignature(ownerID, LocalSignKey::GetInstance(), DEFAULT_HASH_ALGORITHM.c_str(),
         digest, signature);
 }
 }

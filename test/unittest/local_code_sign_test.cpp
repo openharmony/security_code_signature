@@ -23,6 +23,7 @@
 #include "local_code_sign_client.h"
 #include "local_code_sign_kit.h"
 #include "local_code_sign_load_callback.h"
+#include "signer_info.h"
 #include "log.h"
 
 using namespace OHOS::Security::CodeSign;
@@ -34,6 +35,7 @@ namespace Security {
 namespace CodeSign {
 static const std::string AN_BASE_PATH = "/data/local/ark-cache/tmp/";
 static const std::string DEMO_AN_PATH = AN_BASE_PATH + "demo.an";
+static const std::string DEMO_AN_PATH2 = AN_BASE_PATH + "demo2.an";
 
 class LocalCodeSignTest : public testing::Test {
 public:
@@ -75,7 +77,7 @@ HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0002, TestSize.Level0)
 
 /**
  * @tc.name: LocalCodeSignTest_0003
- * @tc.desc: sign local code successfully
+ * @tc.desc: sign local code successfully, owner ID is empty
  * @tc.type: Func
  * @tc.require:
  */
@@ -86,6 +88,10 @@ HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0003, TestSize.Level0)
     int ret = LocalCodeSignKit::SignLocalCode(DEMO_AN_PATH, sig);
     NativeTokenReset(selfTokenId);
     EXPECT_EQ(ret, CS_SUCCESS);
+    std::string retOwnerID;
+    ret = CodeSignUtils::ParseOwnerIdFromSignature(sig, retOwnerID);
+    EXPECT_EQ(ret, CS_ERR_NO_OWNER_ID);
+    EXPECT_EQ(retOwnerID, "");
     ret = CodeSignUtils::EnforceCodeSignForFile(DEMO_AN_PATH, sig);
     EXPECT_EQ(ret, CS_SUCCESS);
 }
@@ -170,6 +176,78 @@ HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0009, TestSize.Level0)
 {
     LocalCodeSignLoadCallback cb;
     cb.OnLoadSystemAbilitySuccess(LOCAL_CODE_SIGN_SA_ID, nullptr);
+}
+
+/**
+ * @tc.name: LocalCodeSignTest_0010
+ * @tc.desc: sign local code with owner ID successfully, parse owner ID from signature success
+ * @tc.type: Func
+ * @tc.require: issueI88PPA
+ */
+HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0010, TestSize.Level0)
+{
+    ByteBuffer sig;
+    uint64_t selfTokenId = NativeTokenSet("installs");
+    std::string ownerID = "AppName123";
+    int ret = LocalCodeSignKit::SignLocalCode(ownerID, DEMO_AN_PATH2, sig);
+    NativeTokenReset(selfTokenId);
+    EXPECT_EQ(ret, CS_SUCCESS);
+    
+    std::string retOwnerID;
+    ret = CodeSignUtils::ParseOwnerIdFromSignature(sig, retOwnerID);
+    EXPECT_EQ(ownerID, retOwnerID);
+    ret = CodeSignUtils::EnforceCodeSignForFile(DEMO_AN_PATH2, sig);
+    EXPECT_EQ(ret, CS_SUCCESS);
+}
+
+/**
+ * @tc.name: LocalCodeSignTest_0011
+ * @tc.desc: sign local code with empty owner ID successfully
+ * @tc.type: Func
+ * @tc.require: issueI88PPA
+ */
+HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0011, TestSize.Level0)
+{
+    ByteBuffer sig;
+    uint64_t selfTokenId = NativeTokenSet("installs");
+    std::string ownerID = "";
+    int ret = LocalCodeSignKit::SignLocalCode(ownerID, DEMO_AN_PATH2, sig);
+    NativeTokenReset(selfTokenId);
+    EXPECT_EQ(ret, CS_SUCCESS);
+    std::string retOwnerID;
+    ret = CodeSignUtils::ParseOwnerIdFromSignature(sig, retOwnerID);
+    EXPECT_EQ(ret, CS_ERR_NO_OWNER_ID);
+    EXPECT_EQ(retOwnerID, "");
+}
+
+/**
+ * @tc.name: LocalCodeSignTest_0012
+ * @tc.desc: sign local code with owner ID failed, reason = invalid path
+ * @tc.type: Func
+ * @tc.require: issueI88PPA
+ */
+HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0012, TestSize.Level0)
+{
+    ByteBuffer sig;
+    uint64_t selfTokenId = NativeTokenSet("installs");
+    std::string ownerID = "AppName123";
+    int ret = LocalCodeSignKit::SignLocalCode(ownerID, DEMO_AN_PATH2 + "invalid", sig);
+    NativeTokenReset(selfTokenId);
+    EXPECT_EQ(ret, CS_ERR_FILE_PATH);
+}
+
+/**
+ * @tc.name: LocalCodeSignTest_0013
+ * @tc.desc: sign local code failed with invalid caller
+ * @tc.type: Func
+ * @tc.require: issueI88PPA
+ */
+HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0013, TestSize.Level0)
+{
+    ByteBuffer sig;
+    std::string ownerID = "AppName123";
+    int ret = LocalCodeSignKit::SignLocalCode(ownerID, DEMO_AN_PATH2, sig);
+    EXPECT_EQ(ret, CS_ERR_NO_PERMISSION);
 }
 } // namespace CodeSign
 } // namespace Security

@@ -43,7 +43,8 @@ int32_t LocalCodeSignProxy::InitLocalCertificate(ByteBuffer &cert)
     return ReadResultFromReply(reply, cert);
 }
 
-int32_t LocalCodeSignProxy::SignLocalCode(const std::string &filePath, ByteBuffer &signature)
+int32_t LocalCodeSignProxy::SignLocalCode(const std::string &ownerID, const std::string &filePath,
+                                          ByteBuffer &signature)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -59,6 +60,13 @@ int32_t LocalCodeSignProxy::SignLocalCode(const std::string &filePath, ByteBuffe
     if (!data.WriteString(filePath)) {
         LOG_ERROR(LABEL, "Write string failed.");
         return CS_ERR_IPC_WRITE_DATA;
+    }
+    
+    if (!ownerID.empty()) {
+        if (!data.WriteString(ownerID)) {
+            LOG_ERROR(LABEL, "Write ownerID string failed.");
+            return CS_ERR_IPC_WRITE_DATA;
+        }
     }
     if (remote->SendRequest(static_cast<uint32_t>(LocalCodeSignInterfaceCode::SIGN_LOCAL_CODE),
         data, reply, option) != NO_ERROR) {

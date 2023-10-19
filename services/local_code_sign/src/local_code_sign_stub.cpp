@@ -85,9 +85,13 @@ int32_t LocalCodeSignStub::SignLocalCodeInner(MessageParcel &data, MessageParcel
         return CS_ERR_NO_PERMISSION;
     }
     std::string filePath = data.ReadString();
+    std::string ownerID;
+    if (data.GetReadableBytes() > 0) {
+        ownerID = data.ReadString();
+    }
     StartTrace(HITRACE_TAG_ACCESS_CONTROL, CODE_SIGN_ENABLE_START);
     ByteBuffer signature;
-    int32_t result = SignLocalCode(filePath, signature);
+    int32_t result = SignLocalCode(ownerID, filePath, signature);
     FinishTrace(HITRACE_TAG_ACCESS_CONTROL);
     if (!reply.WriteInt32(result)) {
         return CS_ERR_IPC_WRITE_DATA;

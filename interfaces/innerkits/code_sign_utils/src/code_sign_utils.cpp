@@ -36,6 +36,7 @@
 #include "file_helper.h"
 #include "log.h"
 #include "stat_utils.h"
+#include "signer_info.h"
 
 namespace OHOS {
 namespace Security {
@@ -191,6 +192,11 @@ int32_t CodeSignUtils::EnforceCodeSignForFile(const std::string &path, const uin
     close(fd);
     LOG_INFO(LABEL, "Enforcing file complete");
     return ret;
+}
+
+int CodeSignUtils::ParseOwnerIdFromSignature(const ByteBuffer &sigbuffer, std::string &ownerID)
+{
+    return SignerInfo::ParseOwnerIdFromSignature(sigbuffer, ownerID);
 }
 }
 }

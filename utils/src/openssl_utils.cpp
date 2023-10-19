@@ -14,20 +14,12 @@
  */
 
 #include "openssl_utils.h"
-#include "openssl/err.h"
+
 #include "log.h"
 
 namespace OHOS {
 namespace Security {
 namespace CodeSign {
-constexpr int OPENSSL_ERR_MESSAGE_MAX_LEN = 1024;
-
-void ErrLogWithOpenSSLMsg(const char *msg)
-{
-    LOG_ERROR(LABEL, "%{public}s", msg);
-    GetOpensslErrorMessage();
-}
-
 void GetOpensslErrorMessage()
 {
     unsigned long retOpenssl;

@@ -28,8 +28,8 @@
 namespace OHOS {
 namespace Security {
 namespace CodeSign {
-int32_t PKCS7Generator::GenerateSignature(SignKey &key, const char *hashAlg,
-    const ByteBuffer &contentData, ByteBuffer &out)
+int32_t PKCS7Generator::GenerateSignature(const std::string &ownerID, SignKey &key, const char *hashAlg,
+                                          const ByteBuffer &contentData, ByteBuffer &out)
 {
     LOG_INFO(LABEL, "GenerateSignature called.");
     int32_t ret = CS_ERR_OPENSSL_PKCS7;
@@ -54,7 +54,7 @@ int32_t PKCS7Generator::GenerateSignature(SignKey &key, const char *hashAlg,
             break;
         }
         SignerInfo signerInfo;
-        if (!signerInfo.InitSignerInfo(cert, md, contentData)) {
+        if (!signerInfo.InitSignerInfo(ownerID, cert, md, contentData)) {
             break;
         }
         if (!pkcs7.AddSignerInfo(signerInfo.GetSignerInfo())) {
@@ -82,6 +82,7 @@ int32_t PKCS7Generator::SignData(SignKey &key, SignerInfo &signerInfo)
     uint32_t dataSize = 0;
     uint8_t *data = signerInfo.GetDataToSign(dataSize);
     if (data == nullptr) {
+        LOG_ERROR(LABEL, "GetDataToSign fail");
         return CS_ERR_OPENSSL_PKCS7;
     }
     ByteBuffer unsignedData;
@@ -93,6 +94,7 @@ int32_t PKCS7Generator::SignData(SignKey &key, SignerInfo &signerInfo)
         return CS_ERR_HUKS_SIGN;
     }
     if (!signerInfo.AddSignatureInSignerInfo(rawSignature)) {
+        LOG_ERROR(LABEL, "AddSignatureInSignerInfo fail");
         return CS_ERR_OPENSSL_PKCS7;
     }
     return CS_SUCCESS;

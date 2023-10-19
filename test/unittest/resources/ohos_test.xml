@@ -67,6 +67,7 @@
             <option name="shell" value="mkdir -p /data/test/tmp"/>
             <option name="shell" value="mkdir -p /data/local/ark-cache/tmp"/>
             <option name="push" value="demo_an/demo.an -> /data/test/tmp" src="res"/>
+            <option name="shell" value="cp /data/test/tmp/demo.an /data/test/tmp/demo2.an"/>
             <option name="shell" value="cp /data/test/tmp/* /data/local/ark-cache/tmp"/>
         </preparer>
         <cleaner>
@@ -92,6 +93,7 @@
             <option name="shell" value="mkdir -p /data/test/tmp"/>
             <option name="shell" value="mkdir -p /data/local/ark-cache/tmp/multi_thread"/>
             <option name="push" value="demo_an/demo.an -> /data/test/tmp" src="res"/>
+            <option name="shell" value="cp /data/test/tmp/demo.an /data/test/tmp/demoWithownerID.an"/>
             <option name="shell" value="cp /data/test/tmp/* /data/local/ark-cache/tmp/multi_thread"/>
         </preparer>
         <cleaner>

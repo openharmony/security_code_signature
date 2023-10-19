@@ -28,7 +28,10 @@ ohos_unittest("code_sign_utils_unittest") {
     "${code_signature_root_dir}/interfaces/innerkits/code_sign_utils/include",
   ]
 
-  external_deps = [ "hilog:libhilog" ]
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
 }
 
 ohos_unittest("local_code_sign_unittest") {

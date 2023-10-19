@@ -139,7 +139,7 @@ int32_t LocalCodeSignClient::InitLocalCertificate(ByteBuffer &cert)
     return CS_SUCCESS;
 }
 
-int32_t LocalCodeSignClient::SignLocalCode(const std::string &path, ByteBuffer &signature)
+int32_t LocalCodeSignClient::SignLocalCode(const std::string &ownerID, const std::string &path, ByteBuffer &signature)
 {
     LOG_DEBUG(LABEL, "SignLocalCode called");
     CheckLocalCodeSignProxy();
@@ -147,7 +147,7 @@ int32_t LocalCodeSignClient::SignLocalCode(const std::string &path, ByteBuffer &
     if (localCodeSignProxy_ == nullptr) {
         return CS_ERR_SA_GET_PROXY;
     }
-    int32_t ret = localCodeSignProxy_->SignLocalCode(path, signature);
+    int32_t ret = localCodeSignProxy_->SignLocalCode(ownerID, path, signature);
     if (ret != CS_SUCCESS) {
         LOG_ERROR(LABEL, "SignLocalCode err, error code = %{public}d", ret);
         return ret;

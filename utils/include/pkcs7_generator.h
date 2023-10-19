@@ -27,7 +27,7 @@ namespace Security {
 namespace CodeSign {
 class PKCS7Generator {
 public:
-    static int32_t GenerateSignature(SignKey &key, const char *hashAlg,
+    static int32_t GenerateSignature(const std::string& ownerID, SignKey &key, const char *hashAlg,
         const ByteBuffer &contentData, ByteBuffer &out);
 private:
     static int32_t SignData(SignKey &key, SignerInfo &signerInfo);

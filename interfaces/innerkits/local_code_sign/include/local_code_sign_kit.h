@@ -42,6 +42,14 @@ public:
      * @return err code, see err_code.h
      */
     static int32_t SignLocalCode(const std::string &filePath, ByteBuffer &signature);
+    /**
+     * @brief sign local code with owner ID to the signature, so we can identify signature files using owner ID
+     * @param ownerID owner ID written to the signature
+     * @param filePath file path to sign
+     * @param signature signature from local code sign SA
+     * @return err code, see err_code.h
+     */
+    static int32_t SignLocalCode(const std::string &ownerID, const std::string &filePath, ByteBuffer &signature);
 };
 }
 }

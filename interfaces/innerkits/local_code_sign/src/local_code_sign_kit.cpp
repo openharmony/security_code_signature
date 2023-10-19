@@ -27,7 +27,12 @@ int32_t LocalCodeSignKit::InitLocalCertificate(ByteBuffer &cert)
 
 int32_t LocalCodeSignKit::SignLocalCode(const std::string &filePath, ByteBuffer &signature)
 {
-    return LocalCodeSignClient::GetInstance().SignLocalCode(filePath, signature);
+    return LocalCodeSignClient::GetInstance().SignLocalCode("", filePath, signature);
+}
+
+int32_t LocalCodeSignKit::SignLocalCode(const std::string &ownerID, const std::string &filePath, ByteBuffer &signature)
+{
+    return LocalCodeSignClient::GetInstance().SignLocalCode(ownerID, filePath, signature);
 }
 }
 }

@@ -17,23 +17,32 @@
 #define CODE_SIGN_SIGNER_INFO_H
 
 #include <vector>
-
+#include <string>
 #include "byte_buffer.h"
 #include "openssl/evp.h"
 #include "openssl/pkcs7.h"
 #include "openssl/x509.h"
+
 
 namespace OHOS {
 namespace Security {
 namespace CodeSign {
 class SignerInfo {
 public:
-    bool InitSignerInfo(X509 *cert, const EVP_MD *md, const ByteBuffer &contentData, bool carrySigningTime = false);
+    static const std::string SIGNER_OID;
+    static const std::string SIGNER_OID_SHORT_NAME;
+    static const std::string SIGNER_OID_LONG_NAME;
+    
+    static int ParseOwnerIdFromSignature(const ByteBuffer &sigbuffer, std::string &ownerID);
+    bool InitSignerInfo(const std::string &ownerID, X509 *cert, const EVP_MD *md, const ByteBuffer &contentData,
+                        bool carrySigningTime = false);
     bool AddSignatureInSignerInfo(const ByteBuffer &signature);
     uint8_t *GetDataToSign(uint32_t &len);
     PKCS7_SIGNER_INFO *GetSignerInfo();
+    int AddOwnerID(const std::string &ownerID);
+     
 private:
-    bool AddAttrsToSignerInfo(const ByteBuffer &contentData);
+    bool AddAttrsToSignerInfo(const std::string &ownerID, const ByteBuffer &contentData);
     bool ComputeDigest(const ByteBuffer &data, ByteBuffer &digest);
     int GetSignAlgorithmID(const X509 *cert);
 
