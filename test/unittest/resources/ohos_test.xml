@@ -33,6 +33,7 @@
             <option name="push" value="demo_without_lib/pkcs7_error/demo_without_lib_005.sig -> /data/service/el1/public/bms/bundle_manager_service/tmp/demo_without_lib/pkcs7_error" src="res"/>
             <option name="push" value="demo_without_lib/pkcs7_error/demo_without_lib_006.sig -> /data/service/el1/public/bms/bundle_manager_service/tmp/demo_without_lib/pkcs7_error" src="res"/>
             <option name="push" value="demo_without_lib/pkcs7_error/demo_without_lib_007.sig -> /data/service/el1/public/bms/bundle_manager_service/tmp/demo_without_lib/pkcs7_error" src="res"/>
+            <option name="push" value="demo_without_lib/pkcs7_error/demo_without_lib_008.sig -> /data/service/el1/public/bms/bundle_manager_service/tmp/demo_without_lib/pkcs7_error" src="res"/>
             <option name="push" value="demo_with_multi_lib/demo_with_multi_lib.hap ->  /data/app/el1/bundle/public/tmp/demo_with_multi_lib" src="res"/>
             <option name="push" value="demo_with_multi_lib/demo_with_multi_lib.sig -> /data/service/el1/public/bms/bundle_manager_service/tmp/demo_with_multi_lib" src="res"/>
             <option name="push" value="demo_with_multi_lib/libs/arm64-v8a/libc++_shared.so ->  /data/app/el1/bundle/public/tmp/demo_with_multi_lib/libs/arm64-v8a" src="res"/>

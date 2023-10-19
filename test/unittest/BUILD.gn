@@ -14,6 +14,13 @@
 import("//build/test.gni")
 import("../../code_signature.gni")
 
+ohos_unittest("code_sign_ioctl_unittest") {
+  module_out_path = "security/code_signature"
+  sources = [ "code_sign_ioctl_test.cpp" ]
+
+  deps = [ "${googletest_dir}:gtest" ]
+}
+
 ohos_unittest("code_sign_utils_unittest") {
   module_out_path = "security/code_signature"
   resource_config_file = "resources/ohos_test.xml"
@@ -160,6 +167,7 @@ group("unittest_group") {
   testonly = true
   if (!defined(ohos_lite)) {
     deps = [
+      ":code_sign_ioctl_unittest",
       ":code_sign_utils_unittest",
       ":local_code_sign_unittest",
       ":multi_thread_local_sign_unittest",
