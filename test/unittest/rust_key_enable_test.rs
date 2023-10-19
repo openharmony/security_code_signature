@@ -99,12 +99,12 @@ fn test_successful_load_cert_path() {
     );
     assert_eq!(
         cert_paths[0].signing.to_str().unwrap(),
-        "C=CN, O=Huawei, OU=HOS AppGallery, CN=HOS AppGallery Application Release",
+        "Huawei: HOS AppGallery Application Release",
         "Unexpected app-signing-cert for the first entry"
     );
     assert_eq!(
         cert_paths[0].issuer.to_str().unwrap(),
-        "C=CN, O=Huawei, OU=Huawei CBG, CN=Huawei CBG Software Signing Service CA Test",
+        "Huawei CBG Software Signing Service CA Test",
         "Unexpected issuer-ca for the first entry"
     );
 
@@ -114,12 +114,12 @@ fn test_successful_load_cert_path() {
     );
     assert_eq!(
         cert_paths[1].signing.to_str().unwrap(),
-        "C=CN, O=Huawei CBG, OU=HOS Development Team, CN=HOS Application Provision Dev",
+        "Huawei CBG: HOS Application Provision Dev",
         "Unexpected app-signing-cert for the second entry"
     );
     assert_eq!(
         cert_paths[1].issuer.to_str().unwrap(),
-        "C=CN, O=Huawei, OU=Huawei CBG, CN=Huawei CBG Software Signing Service CA Test",
+        "Huawei CBG Software Signing Service CA Test",
         "Unexpected issuer-ca for the second entry"
     );
 
@@ -129,12 +129,12 @@ fn test_successful_load_cert_path() {
     );
     assert_eq!(
         cert_paths[2].signing.to_str().unwrap(),
-        "C=CN, O=Huawei, OU=HOS Open Platform, CN=HOS Preload Service",
+        "Huawei: HOS Preload Service",
         "Unexpected app-signing-cert for the third entry"
     );
     assert_eq!(
         cert_paths[2].issuer.to_str().unwrap(),
-        "C=CN, O=Huawei, OU=Huawei CBG, CN=Huawei CBG Software Signing Service CA Test",
+        "Huawei CBG Software Signing Service CA Test",
         "Unexpected issuer-ca for the third entry"
     );
 }
@@ -161,31 +161,31 @@ fn test_invalid_cert_path_json_structure() {
 
     assert_eq!(
         cert_paths[0].signing.to_str().unwrap(),
-        "C=CN, O=Huawei, OU=HOS AppGallery, CN=HOS AppGallery Application Release"
+        "Huawei: HOS AppGallery Application Release"
     );
     assert_eq!(
         cert_paths[0].issuer.to_str().unwrap(),
-        "C=CN, O=Huawei, OU=Huawei CBG, CN=Huawei CBG Software Signing Service CA Test"
+        "Huawei CBG Software Signing Service CA Test"
     );
     assert_eq!(cert_paths[0].path_len, 3);
 
     assert_eq!(
         cert_paths[1].signing.to_str().unwrap(),
-        "C=CN, O=Huawei CBG, OU=HOS Development Team, CN=HOS Application Provision Dev"
+        "Huawei CBG: HOS Application Provision Dev"
     );
     assert_eq!(
         cert_paths[1].issuer.to_str().unwrap(),
-        "C=CN, O=Huawei, OU=Huawei CBG, CN=Huawei CBG Software Signing Service CA Test"
+        "Huawei CBG Software Signing Service CA Test"
     );
     assert_eq!(cert_paths[1].path_len, 3);
 
     assert_eq!(
         cert_paths[2].signing.to_str().unwrap(),
-        "C=CN, O=Huawei, OU=HOS Open Platform, CN=HOS Preload Service"
+        "Huawei: HOS Preload Service"
     );
     assert_eq!(
         cert_paths[2].issuer.to_str().unwrap(),
-        "C=CN, O=Huawei, OU=Huawei CBG, CN=Huawei CBG Software Signing Service CA Test"
+        "Huawei CBG Software Signing Service CA Test"
     );
     assert_eq!(cert_paths[2].path_len, 3);
 }
