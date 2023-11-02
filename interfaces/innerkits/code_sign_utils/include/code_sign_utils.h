@@ -57,6 +57,17 @@ public:
     static int32_t EnforceCodeSignForApp(const std::string &path, const EntryMap &entryPathMap, FileType type);
 
     /**
+     * @brief Enforce code signature for app with ownerID
+     * @param ownerId app-identifier of the signature
+     * @param path hap real path on disk
+     * @param entryPath map from entryname in hap to real path on disk
+     * @param type signature file type
+     * @return err code, see err_code.h
+     */
+    static int32_t EnforceCodeSignForAppWithOwnerId(std::string ownerId, const std::string &path,
+        const EntryMap &entryPathMap, FileType type);
+
+    /**
      * @brief Enforce code signature for file with signature
      * @param path file path
      * @param signature buffer carring signature of the target file

@@ -233,7 +233,7 @@ int SignerInfo::AddOwnerID(const std::string &ownerID)
 
     ASN1_STRING *ownerIDAsn1 = ASN1_STRING_new();
     ASN1_STRING_set(ownerIDAsn1, ownerID.c_str(), ownerID.length());
-    int ret = PKCS7_add_signed_attribute(p7info_, nid, V_ASN1_OCTET_STRING, ownerIDAsn1);
+    int ret = PKCS7_add_signed_attribute(p7info_, nid, V_ASN1_UTF8STRING, ownerIDAsn1);
     if (ret == 0) {
         ASN1_STRING_free(ownerIDAsn1);
         ErrLogWithOpenSSLMsg("PKCS7_add_signed_attribute failed");
@@ -273,7 +273,7 @@ int SignerInfo::ParseOwnerIdFromSignature(const ByteBuffer &sigbuffer, std::stri
     for (int i = 0; i < sk_PKCS7_SIGNER_INFO_num(signerInfosk); i++) {
         PKCS7_SIGNER_INFO *signerInfo = sk_PKCS7_SIGNER_INFO_value(signerInfosk, i);
         ASN1_TYPE *asn1Type = PKCS7_get_signed_attribute(signerInfo, nid);
-        if (asn1Type != nullptr && asn1Type->type == V_ASN1_OCTET_STRING) {
+        if (asn1Type != nullptr && asn1Type->type == V_ASN1_UTF8STRING) {
             ASN1_STRING *result = asn1Type->value.asn1_string;
             ownerID.assign((const char *)ASN1_STRING_get0_data(result), ASN1_STRING_length(result));
             break;

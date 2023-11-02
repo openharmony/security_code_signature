@@ -48,6 +48,8 @@ static const std::string APP_BASE_PATH = "/data/app/el1/bundle/public/tmp";
 static const string DEV_NAME = "/dev/code_sign";
 static const string SUBJECT = "Huawei: HarmonyOS Application Code Signature";
 static const string ISSUER = "Huawei CBG Software Signing Service CA Test";
+static const string OH_SUBJECT = "OpenHarmony Application Release";
+static const string OH_ISSUER = "OpenHarmony Application CA";
 
 static const EntryMap g_hapWithoutLibRetSuc = {
     {"Hap", APP_BASE_PATH + "/demo_without_lib/demo_without_lib.hap"},
@@ -486,6 +488,70 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0016, TestSize.Level0)
 
     ret = CodeSignUtils::EnforceCodeSignForApp(hapRealPath, entryMap, FILE_ALL);
     EXPECT_EQ(ret, CS_ERR_TARGET_FILE_PATH);
+}
+
+/**
+ * @tc.name: CodeSignUtilsTest_0017
+ * @tc.desc: enable code signature for debug app with libs
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0017, TestSize.Level0)
+{
+    std::string hapRealPath = APP_BASE_PATH + "/demo_with_multi_lib/entry-default-signed-debug.hap";
+    EntryMap entryMap;
+    int ret = CallIoctl(OH_SUBJECT.c_str(), OH_ISSUER.c_str(), MAX_CERT_CHAIN);
+    EXPECT_EQ(ret, 0);
+    ret = CodeSignUtils::EnforceCodeSignForAppWithOwnerId("DEBUG_LIB_ID", hapRealPath, entryMap, FILE_SELF);
+    EXPECT_EQ(ret, CS_SUCCESS);
+}
+
+/**
+ * @tc.name: CodeSignUtilsTest_0018
+ * @tc.desc: enable code signature for release app with libs
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0018, TestSize.Level0)
+{
+    std::string hapRealPath = APP_BASE_PATH + "/demo_with_multi_lib/entry-default-signed-release.hap";
+    EntryMap entryMap;
+    int ret = CallIoctl(OH_SUBJECT.c_str(), OH_ISSUER.c_str(), MAX_CERT_CHAIN);
+    EXPECT_EQ(ret, 0);
+    ret = CodeSignUtils::EnforceCodeSignForAppWithOwnerId("test-app-identifier", hapRealPath, entryMap, FILE_SELF);
+    EXPECT_EQ(ret, CS_SUCCESS);
+}
+
+/**
+ * @tc.name: CodeSignUtilsTest_0019
+ * @tc.desc: enable code signature for debug app with libs
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0019, TestSize.Level0)
+{
+    std::string hapRealPath = APP_BASE_PATH + "/demo_with_multi_lib/entry-default-signed-debug.hap";
+    EntryMap entryMap;
+    int ret = CallIoctl(OH_SUBJECT.c_str(), OH_ISSUER.c_str(), MAX_CERT_CHAIN);
+    EXPECT_EQ(ret, 0);
+    ret = CodeSignUtils::EnforceCodeSignForAppWithOwnerId("INVALID_ID", hapRealPath, entryMap, FILE_SELF);
+    EXPECT_EQ(ret, CS_ERR_INVALID_OWNER_ID);
+}
+
+/**
+ * @tc.name: CodeSignUtilsTest_0020
+ * @tc.desc: enable code signature for release app with libs
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0020, TestSize.Level0)
+{
+    std::string hapRealPath = APP_BASE_PATH + "/demo_with_multi_lib/entry-default-signed-release.hap";
+    EntryMap entryMap;
+    int ret = CallIoctl(OH_SUBJECT.c_str(), OH_ISSUER.c_str(), MAX_CERT_CHAIN);
+    EXPECT_EQ(ret, 0);
+    ret = CodeSignUtils::EnforceCodeSignForAppWithOwnerId("INVALID_ID", hapRealPath, entryMap, FILE_SELF);
+    EXPECT_EQ(ret, CS_ERR_INVALID_OWNER_ID);
 }
 }  // namespace CodeSign
 }  // namespace Security
