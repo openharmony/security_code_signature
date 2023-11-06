@@ -14,26 +14,61 @@
 import("//build/ohos.gni")
 import("../../code_signature.gni")
 
+common_deps = [
+  "${rust_openssl_dir}/openssl:lib",
+  "utils:libkey_enable_utils",
+]
+common_external_deps = [
+  "hilog:hilog_rust",
+  "hisysevent:hisysevent_rust",
+  "ylong_json:lib",
+]
+
+config("key_enable_rust_interface_config") {
+  include_dirs = [ "include" ]
+}
+
 ohos_rust_executable("key_enable") {
   sources = [ "src/main.rs" ]
-  deps = [
-    "${rust_openssl_dir}/openssl:lib",
-    "utils:libkey_enable_utils",
-  ]
-  external_deps = [
-    "hilog:hilog_rust",
-    "hisysevent:hisysevent_rust",
-    "ylong_json:lib",
-  ]
+  deps = common_deps
+  external_deps = common_external_deps
+  crate_name = "key_enable"
+  crate_type = "bin"
+  subsystem_name = "security"
+  part_name = "code_signature"
   if (build_variant == "root") {
     rustenv = [ "code_signature_debuggable=on" ]
   } else {
     rustenv = [ "code_signature_debuggable=off" ]
   }
+}
+
+ohos_rust_shared_ffi("key_enable_lib") {
+  sources = [ "src/lib.rs" ]
+  deps = common_deps
+  external_deps = common_external_deps
   crate_name = "key_enable"
-  crate_type = "bin"
   subsystem_name = "security"
   part_name = "code_signature"
+  if (build_variant == "root") {
+    rustenv = [ "code_signature_debuggable=on" ]
+  } else {
+    rustenv = [ "code_signature_debuggable=off" ]
+  }
+}
+
+ohos_prebuilt_etc("trusted_cert_path") {
+  source = "config/trusted_cert_path.json"
+  part_name = "code_signature"
+  subsystem_name = "security"
+  relative_install_dir = "security"
+}
+
+ohos_prebuilt_etc("trusted_cert_path_test") {
+  source = "config/trusted_cert_path_test.json"
+  part_name = "code_signature"
+  subsystem_name = "security"
+  relative_install_dir = "security"
 }
 
 ohos_prebuilt_etc("key_enable.cfg") {
@@ -47,5 +82,8 @@ group("key_enable_targets") {
   deps = [
     ":key_enable",
     ":key_enable.cfg",
+    ":key_enable_lib",
+    ":trusted_cert_path",
+    ":trusted_cert_path_test",
   ]
 }

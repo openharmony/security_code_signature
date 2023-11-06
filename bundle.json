@@ -35,7 +35,8 @@
         "build_framework",
         "access_token",
         "ylong_json",
-        "appverify"
+        "appverify",
+        "init"
       ],
       "third_party": [
         "openssl",

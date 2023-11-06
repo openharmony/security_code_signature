@@ -52,10 +52,13 @@ enum OpenSSLErrCode {
     CS_ERR_OPENSSL_BIO = -0x214,
 };
 
-enum FsverityErrCode {
+enum VerifyErrCode {
     CS_ERR_ENABLE = -0x300,
     CS_ERR_FSVREITY_NOT_SUPPORTED = -0x301,
-    CS_ERR_FSVERITY_NOT_ENABLED = -0x302
+    CS_ERR_FSVERITY_NOT_ENABLED = -0x302,
+    CS_ERR_INVALID_OWNER_ID = -0x303,
+    CS_CODE_SIGN_NOT_EXISTS = -0x304,
+    CS_ERR_PROFILE = -0x305,
 };
 
 enum IPCErrCode {
@@ -95,8 +98,6 @@ enum SignBlockErrCode {
     CS_ERR_SIGN_ADDR_ALIGN = -0x621,
     CS_ERR_SIGN_EXTENSION_OFFSET_ALIGN = -0x622,
     CS_ERR_TARGET_FILE_PATH = -0x623,
-    CS_ERR_INVALID_OWNER_ID = -0x624,
-    CS_CODE_SIGN_NOT_EXISTS = -0x625,
 };
 }
 }

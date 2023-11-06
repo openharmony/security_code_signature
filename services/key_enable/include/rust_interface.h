@@ -13,17 +13,18 @@
  * limitations under the License.
  */
 
-//!crate key_enable
+#ifndef CODE_SIGN_RUST_INTERFACE_H
+#define CODE_SIGN_RUST_INTERFACE_H
 
-/// module contains cert chain func
-pub mod cert_chain_utils;
-/// module contains cert path func
-pub mod cert_path_utils;
-/// module contains cert utils func
-pub mod cert_utils;
-/// module contains rust hisysevent
-pub mod cs_hisysevent;
-/// module contains file func
-pub mod file_utils;
-/// module contains profile func
-pub mod profile_utils;
+#include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+    int32_t EnableKeyInProfileByRust(const char* bundle_name, const uint8_t* profile, uint32_t profile_size);
+    int32_t RemoveKeyInProfileByRust(const char* bundle_name);
+#ifdef __cplusplus
+}
+#endif
+
+#endif

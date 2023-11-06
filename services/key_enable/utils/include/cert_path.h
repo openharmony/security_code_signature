@@ -27,14 +27,18 @@ struct CertPathInfo {
     uint64_t signing;
     uint64_t issuer;
     uint32_t path_len;
-    uint8_t __reserved[36];
+    uint32_t path_type;
+    uint8_t __reserved[32];
 };
 
-#define CERT_IOCTL_CMD _IOW(CERT_IOCTL_MAGIC_NUMBER, 1, CertPathInfo)
+#define ADD_CERT_PATH_CMD _IOW(CERT_IOCTL_MAGIC_NUMBER, 1, CertPathInfo)
+#define REMOVE_CERT_PATH_CMD _IOW(CERT_IOCTL_MAGIC_NUMBER, 2, CertPathInfo)
 #ifdef __cplusplus
 extern "C" {
 #endif
     int AddCertPath(const CertPathInfo &info);
+    int RemoveCertPath(const CertPathInfo &info);
+    bool IsDeveloperModeOn();
 #ifdef __cplusplus
 }
 #endif

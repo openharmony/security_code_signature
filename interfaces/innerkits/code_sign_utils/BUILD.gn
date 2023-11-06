@@ -27,15 +27,16 @@ ohos_shared_library("libcode_sign_utils") {
   ]
   public_configs = [
     "${code_signature_root_dir}:common_public_config",
+    "${code_signature_root_dir}/services/key_enable:key_enable_rust_interface_config",
     ":public_code_sign_utils_configs",
   ]
   configs = [ "${code_signature_root_dir}:common_utils_config" ]
 
   deps = [
+    "${code_signature_root_dir}/services/key_enable:key_enable_lib",
     "${code_signature_root_dir}/utils:fsverity_sign_src_set",
     "${openssl_dir}:libcrypto_shared",
   ]
-
   external_deps = [
     "ability_base:extractortool",
     "appverify:libhapverify",

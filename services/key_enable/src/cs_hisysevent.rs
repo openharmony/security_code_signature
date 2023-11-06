@@ -27,3 +27,15 @@ pub fn report_add_key_err(cert_type: &str, errcode: i32) {
         ],
     );
 }
+
+/// report parse local profile err by hisysevent
+pub fn report_parse_profile_err(profile_path: &str) {
+    hisysevent::write(
+        "CODE_SIGN",
+        "CSS_ERR_PROFILE",
+        EventType::Fault,
+        &[
+            hisysevent::build_str_param!("STRING_SINGLE", profile_path),
+        ],
+    );
+}

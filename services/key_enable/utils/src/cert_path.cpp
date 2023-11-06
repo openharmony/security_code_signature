@@ -19,27 +19,48 @@
 #include <cstring>
 #include <unistd.h>
 #include <sys/ioctl.h>
+#include <parameters.h>
 #include "log.h"
 #include "errcode.h"
 #include "cert_path.h"
 
 using namespace OHOS::Security::CodeSign;
 
-int AddCertPath(const CertPathInfo &info)
+static int IoctlCertPathOperation(const CertPathInfo &info, int cmd, const char *operation)
 {
     int fd = open(CERT_DEVICE_PATH, O_WRONLY);
     if (fd == -1) {
         LOG_ERROR(LABEL, "Error opening device, errno = <%{public}d, %{public}s>", errno, strerror(errno));
         return CS_ERR_FILE_OPEN;
     }
-    
-    int ret = ioctl(fd, CERT_IOCTL_CMD, &info);
+
+    int ret = ioctl(fd, cmd, &info);
     if (ret < 0) {
-        LOG_ERROR(LABEL, "ioctl error, errno = <%{public}d, %{public}s>", errno, strerror(errno));
+        LOG_ERROR(
+            LABEL, "%s cert path ioctl error, errno = <%{public}d, %{public}s>", operation, errno, strerror(errno));
         close(fd);
         return ret;
     }
 
     close(fd);
     return CS_SUCCESS;
+}
+
+int AddCertPath(const CertPathInfo &info)
+{
+    return IoctlCertPathOperation(info, ADD_CERT_PATH_CMD, "add");
+}
+
+int RemoveCertPath(const CertPathInfo &info)
+{
+    return IoctlCertPathOperation(info, REMOVE_CERT_PATH_CMD, "remove");
+}
+
+bool IsDeveloperModeOn()
+{
+    bool ret = false;
+    if (OHOS::system::GetBoolParameter("const.security.developermode.state", false)) {
+        ret = true;
+    }
+    return ret;
 }

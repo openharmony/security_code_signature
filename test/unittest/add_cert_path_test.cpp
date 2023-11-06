@@ -33,12 +33,14 @@ struct cert_chain_info {
     uint64_t signing;
     uint64_t issuer;
     uint32_t max_cert_chain;
-    uint8_t reserved[36];
+    uint32_t cert_path_type;
+    uint8_t reserved[32];
 };
 
 #define WRITE_CERT_CHAIN _IOW('k', 1, cert_chain_info)
 
 static const uint32_t MAX_CERT_CHAIN = 3;
+static const uint32_t CERT_PATH_TYPE = 0x103;
 static const uint32_t GREATER_THAN_MAX_CERT_CHAIN = 4;
 static const uint32_t LESS_THAN_MIN_CERT_CHAIN = -1;
 
@@ -56,7 +58,7 @@ public:
     void TearDown() {};
 };
 
-static bool CallIoctl(const char *signing, const char *issuer, uint32_t max_cert_chain)
+static bool CallIoctl(const char *signing, const char *issuer, uint32_t max_cert_chain, uint32_t cert_path_type)
 {
     int fd = open(DEV_NAME.c_str(), O_WRONLY);
     EXPECT_GE(fd, 0);
@@ -67,6 +69,7 @@ static bool CallIoctl(const char *signing, const char *issuer, uint32_t max_cert
     arg.signing_length = strlen(signing) + 1;
     arg.issuer_length = strlen(issuer) + 1;
     arg.max_cert_chain = max_cert_chain;
+    arg.cert_path_type = cert_path_type;
     int ret = ioctl(fd, WRITE_CERT_CHAIN, &arg);
 
     close(fd);
@@ -81,7 +84,7 @@ static bool CallIoctl(const char *signing, const char *issuer, uint32_t max_cert
  */
 HWTEST_F(AddCertPathTest, AddCertPathTest_0001, TestSize.Level0)
 {
-    int ret = CallIoctl(TEST_SUBJECT.c_str(), TEST_ISSUER.c_str(), MAX_CERT_CHAIN);
+    int ret = CallIoctl(TEST_SUBJECT.c_str(), TEST_ISSUER.c_str(), MAX_CERT_CHAIN, CERT_PATH_TYPE);
     EXPECT_EQ(ret, 0);
 }
 
@@ -93,7 +96,7 @@ HWTEST_F(AddCertPathTest, AddCertPathTest_0001, TestSize.Level0)
  */
 HWTEST_F(AddCertPathTest, AddCertPathTest_0002, TestSize.Level0)
 {
-    int ret = CallIoctl(TEST_SUBJECT.c_str(), TEST_ISSUER.c_str(), GREATER_THAN_MAX_CERT_CHAIN);
+    int ret = CallIoctl(TEST_SUBJECT.c_str(), TEST_ISSUER.c_str(), GREATER_THAN_MAX_CERT_CHAIN, CERT_PATH_TYPE);
     EXPECT_NE(ret, 0);
 }
 
@@ -105,7 +108,7 @@ HWTEST_F(AddCertPathTest, AddCertPathTest_0002, TestSize.Level0)
  */
 HWTEST_F(AddCertPathTest, AddCertPathTest_0003, TestSize.Level0)
 {
-    int ret = CallIoctl(TEST_SUBJECT.c_str(), TEST_ISSUER.c_str(), LESS_THAN_MIN_CERT_CHAIN);
+    int ret = CallIoctl(TEST_SUBJECT.c_str(), TEST_ISSUER.c_str(), LESS_THAN_MIN_CERT_CHAIN, CERT_PATH_TYPE);
     EXPECT_NE(ret, 0);
 }
 } // namespace CodeSign

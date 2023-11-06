@@ -58,3 +58,7 @@ CS_SA_INVALID_CALLER:
   __BASE: {type: SECURITY, level: CRITICAL, desc: invalid caller event}
   INTERFACE: {type: STRING, desc: 'interface type, Cert or Sign'}
   TOKEN_ID : {type: UINT32, desc: token id of invalid caller}
+
+CS_ERR_PROFILE:
+  __BASE: {type: FAULT, level: CRITICAL, desc: parsing local profile failure event}
+  PROFILE_PATH: {type: STRING, desc: profile path at local sotrage}

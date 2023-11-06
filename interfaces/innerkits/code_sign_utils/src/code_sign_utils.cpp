@@ -38,6 +38,7 @@
 #include "stat_utils.h"
 #include "signer_info.h"
 #include "code_sign_block.h"
+#include "rust_interface.h"
 
 namespace OHOS {
 namespace Security {
@@ -290,6 +291,28 @@ int32_t CodeSignUtils::EnforceCodeSignForAppWithOwnerId(std::string ownerId, con
 int32_t CodeSignUtils::EnforceCodeSignForApp(const std::string &path, const EntryMap &entryPathMap, FileType type)
 {
     return EnforceCodeSignForAppWithOwnerId("", path, entryPathMap, type);
+}
+
+int32_t CodeSignUtils::EnableKeyInProfile(const std::string &bundleName, const ByteBuffer &profileBuffer)
+{
+    int ret = EnableKeyInProfileByRust(bundleName.c_str(), profileBuffer.GetBuffer(), profileBuffer.GetSize());
+    if (ret == CS_SUCCESS) {
+        return ret;
+    }
+    LOG_ERROR(
+        LABEL, "Enable key in profile failed. errno = <%{public}d, %{public}s>", errno, strerror(errno));
+    return CS_ERR_PROFILE;
+}
+
+int32_t CodeSignUtils::RemoveKeyInProfile(const std::string &bundleName)
+{
+    int ret = RemoveKeyInProfileByRust(bundleName.c_str());
+    if (ret == CS_SUCCESS) {
+        return ret;
+    }
+    LOG_ERROR(
+        LABEL, "Remove key in profile failed. errno = <%{public}d, %{public}s>", errno, strerror(errno));
+    return CS_ERR_PROFILE;
 }
 }
 }

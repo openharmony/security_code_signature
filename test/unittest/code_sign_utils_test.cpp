@@ -38,6 +38,7 @@ static const string SUBJECT = "Huawei: HarmonyOS Application Code Signature";
 static const string ISSUER = "Huawei CBG Software Signing Service CA Test";
 static const string OH_SUBJECT = "OpenHarmony Application Release";
 static const string OH_ISSUER = "OpenHarmony Application CA";
+static const std::string PROFILE_BASE_PATH = "/data/service/el0/profiles/tmp";
 
 static const EntryMap g_hapWithoutLibRetSuc = {
     {"Hap", APP_BASE_PATH + "/demo_without_lib/demo_without_lib.hap"},
@@ -514,6 +515,50 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0020, TestSize.Level0)
     EntryMap entryMap;
     int32_t ret = CodeSignUtils::EnforceCodeSignForAppWithOwnerId("INVALID_ID", hapRealPath, entryMap, FILE_SELF);
     EXPECT_EQ(ret, CS_ERR_INVALID_OWNER_ID);
+}
+
+/**
+ * @tc.name: CodeSignUtilsTest_0021
+ * @tc.desc: Enable key in profile successfully
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0021, TestSize.Level0)
+{
+    std::string profileEnablePath = PROFILE_BASE_PATH + "/demo_cert/pkcs7/verify_test_profile.p7b";
+    std::string hapEnablePath = APP_BASE_PATH + "/verify_test_profile.hap";
+    ByteBuffer buffer;
+    bool flag = ReadSignatureFromFile(profileEnablePath, buffer);
+    EXPECT_EQ(flag, true);
+
+    string bundlName = "CodeSignUtilsTest";
+    int32_t ret = CodeSignUtils::EnableKeyInProfile(bundlName, buffer);
+    EXPECT_EQ(ret, CS_SUCCESS);
+
+    EntryMap entryMap;
+    ret = CodeSignUtils::EnforceCodeSignForApp(hapEnablePath, entryMap, FILE_SELF);
+    EXPECT_EQ(ret, CS_SUCCESS);
+}
+
+/**
+ * @tc.name: CodeSignUtilsTest_0022
+ * @tc.desc: Remove key in profile successfully
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0022, TestSize.Level0)
+{
+    std::string profileEnablePath = PROFILE_BASE_PATH + "/demo_cert/pkcs7/verify_test_profile.p7b";
+    ByteBuffer buffer;
+    bool flag = ReadSignatureFromFile(profileEnablePath, buffer);
+    EXPECT_EQ(flag, true);
+
+    string bundlName = "CodeSignUtilsTest";
+    int32_t ret = CodeSignUtils::EnableKeyInProfile(bundlName, buffer);
+    EXPECT_EQ(ret, CS_SUCCESS);
+
+    ret = CodeSignUtils::RemoveKeyInProfile(bundlName);
+    EXPECT_EQ(ret, CS_SUCCESS);
 }
 }  // namespace CodeSign
 }  // namespace Security

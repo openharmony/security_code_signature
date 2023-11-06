@@ -12,211 +12,87 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 use hilog_rust::{error, hilog, HiLogLabel, LogType};
-use openssl::error::ErrorStack;
+use openssl::x509::store::{X509Store, X509StoreBuilder};
+use openssl::x509::X509PurposeId;
+use openssl::x509::verify::X509VerifyFlags;
 use openssl::x509::X509;
 use std::ffi::{c_char, CString};
 use ylong_json::JsonValue;
-
-const ALLOWED_APP_SOURCE_MEMBERNAMES: &[&str] = &[
-    "huawei app gallery",
-    "huawei system apps",
-    "third_party app preload",
-];
-const TRUST_APP_SOURCE_KEY: &str = "trust-app-source";
-const CERT_NAME_KEY: &str = "name";
-const APP_SIGNING_CERT_KEY: &str = "app-signing-cert";
-const ISSUER_CA_KEY: &str = "issuer-ca";
-const MAX_CERT_PATH: &str = "max-certs-path";
 
 const LOG_LABEL: HiLogLabel = HiLogLabel {
     log_type: LogType::LogCore,
     domain: 0xd002f00, // security domain
     tag: "CODE_SIGN",
 };
-
-/// data of trust app source
-pub struct TrustAppSource {
-    /// signing
-    pub signing: CString,
-    /// issuer
-    pub issuer: CString,
-    /// path
-    pub path_len: i32,
+/// collection to contain pem data
+pub struct PemCollection {
+    /// vector to store pem data
+    pub pem_data: Vec<String>,
 }
-
-fn print_openssl_error_stack(error_stack: ErrorStack) {
-    for error in error_stack.errors() {
-        error!(LOG_LABEL, "{}", @public(error.to_string()));
+impl Default for PemCollection {
+    fn default() -> Self {
+        Self::new()
     }
 }
-
-fn load_certs_from_json_file(file_path: &str, member_names: &[&str]) -> Option<Vec<X509>> {
-    let pem: Vec<u8> = load_pem_cert_from_json_file(file_path, member_names);
-    match X509::stack_from_pem(&pem) {
-        Ok(certs) => Some(certs),
-        Err(e) => {
-            print_openssl_error_stack(e);
-            None
+impl PemCollection {
+    /// init object
+    pub fn new() -> Self {
+        PemCollection {
+            pem_data: Vec::new(),
         }
     }
-}
-
-fn dump_cert_in_der(cert: X509) -> Option<Vec<u8>> {
-    match cert.to_der() {
-        Ok(der) => Some(der),
-        Err(e) => {
-            print_openssl_error_stack(e);
-            None
-        }
+    /// add pem string into self.pem_data
+    pub fn add(&mut self, data: String) {
+        self.pem_data.push(data);
     }
-}
-
-/// get root cert from json file
-pub fn get_root_cert_from_json_file(certs: &mut Vec<Vec<u8>>, path: &str, member_names: &[&str]) {
-    let pem_certs: Vec<X509> = load_certs_from_json_file(path, member_names).unwrap();
-    for pem_cert in pem_certs {
-        let der_cert = dump_cert_in_der(pem_cert).unwrap();
-        certs.push(der_cert);
+    fn pem_to_x509(&self, pem: &str) -> Result<X509, openssl::error::ErrorStack> {
+        X509::from_pem(pem.as_bytes())
     }
-}
-
-/// load pem certs from json file
-pub fn load_pem_cert_from_json_file(file_path: &str, member_names: &[&str]) -> Vec<u8> {
-    let value = match JsonValue::from_file(file_path) {
-        Ok(v) => v,
-        Err(e) => {
-            error!(
-                LOG_LABEL,
-                "Error loading JSON from file {}: {}", file_path, e
-            );
-            return Vec::new();
-        }
-    };
-
-    let cert_vec: Vec<String> = member_names
-        .iter()
-        .filter_map(|subject| {
-            let cert_value = &value[subject];
-            match cert_value.try_as_string() {
-                Ok(s) => Some(s.to_string()),
-                Err(_) => None,
-            }
-        })
-        .collect();
-    cert_vec.join("\n").into_bytes()
-}
-
-fn fabricate_name(subject: &str) -> String {
-    let mut common_name = String::new();
-    let mut orgnazition = String::new();
-    let mut email = String::new();
-    let mut ret = String::new();
-
-    let parts: Vec<&str> = subject.split(',').collect();
-    for part in parts {
-        let inner: Vec<&str> = part.split('=').collect();
-        if inner.len() < 2 {
-            continue;
-        }
-        let inner_trimmed: Vec<&str> = inner.iter().map(|s| s.trim()).collect();
-        if inner_trimmed[0] == "CN" {
-            common_name = inner_trimmed[1].into();
-        } else if inner_trimmed[0] == "O" {
-            orgnazition = inner_trimmed[1].into();
-        } else if inner_trimmed[0] == "E" {
-            email = inner_trimmed[1].into();
-        }
+    /// convert pem data to X509 object
+    pub fn to_x509(&self) -> Result<Vec<X509>, openssl::error::ErrorStack> {
+        self.pem_data
+            .iter()
+            .map(|pem| self.pem_to_x509(pem))
+            .collect()
     }
-    if !common_name.is_empty() && !orgnazition.is_empty() {
-        if common_name.len() >= 6
-            && orgnazition.len() >= 6
-            && common_name[0..6] == orgnazition[0..6]
-        {
-            ret = common_name;
-        } else {
-            ret = orgnazition + ": " + &common_name;
+    /// convert pem data to X509 store
+    pub fn to_x509_store(&self) -> Result<X509Store, openssl::error::ErrorStack> {
+        let x509_certs = self.to_x509()?;
+        let mut store_builder = X509StoreBuilder::new()?;
+        for cert in x509_certs {
+            store_builder.add_cert(cert).unwrap();
         }
-    } else if !common_name.is_empty() {
-        ret = common_name;
-    } else if !orgnazition.is_empty() {
-        ret = orgnazition;
-    } else if !email.is_empty() {
-        ret = email;
+        store_builder.set_flags(X509VerifyFlags::NO_CHECK_TIME)?;
+        store_builder.set_purpose(X509PurposeId::ANY)?;
+        Ok(store_builder.build())
     }
-    ret
-}
-
-/// load cert path from json file
-pub fn load_cert_path_from_json_file(cert_paths: &mut Vec<TrustAppSource>, file_path: &str) {
-    let value = match JsonValue::from_file(file_path) {
-        Ok(v) => v,
-        Err(e) => {
-            error!(
-                LOG_LABEL,
-                "Error loading JSON from file {}: {}", file_path, e
-            );
-            return;
-        }
-    };
-
-    let cert_path_array = match value[TRUST_APP_SOURCE_KEY].try_as_array() {
-        Ok(array) => array,
-        Err(_) => {
-            error!(
-                LOG_LABEL,
-                "Cannot get preset key TRUST_APP_SOURCE_KEY from file {}", file_path
-            );
-            return;
-        }
-    };
-
-    for cert_path in cert_path_array.iter() {
-        let cert_name = match cert_path[CERT_NAME_KEY].try_as_string() {
-            Ok(name) => name,
+    /// convert pem data to der data
+    pub fn to_der(&self) -> Result<Vec<Vec<u8>>, openssl::error::ErrorStack> {
+        let x509_certs = self.to_x509()?;
+        x509_certs.iter().map(|cert| cert.to_der()).collect()
+    }
+    /// load pem certs from json file
+    pub fn load_pem_certs_from_json_file(
+        &mut self,
+        file_path: &str,
+        member_names: &[&str]
+    ) {
+        let value = match JsonValue::from_file(file_path) {
+            Ok(v) => v,
             Err(e) => {
                 error!(
                     LOG_LABEL,
-                    "Error trying to interpret CERT_NAME_KEY as string: {:?}", e
+                    "Error loading JSON from file {}: {}", file_path, e
                 );
                 return;
             }
         };
-        if !ALLOWED_APP_SOURCE_MEMBERNAMES.contains(&cert_name.as_str()) {
-            continue;
+        for &subject in member_names.iter() {
+            if let Ok(cert_str) = value[subject].try_as_string() {
+                self.add(cert_str.to_string());
+            }
         }
-
-        let signing = match cert_path[APP_SIGNING_CERT_KEY].try_as_string() {
-            Ok(s) => s,
-            Err(_) => continue,
-        };
-
-        let issuer = match cert_path[ISSUER_CA_KEY].try_as_string() {
-            Ok(s) => s,
-            Err(_) => continue,
-        };
-
-        let path_len = match cert_path[MAX_CERT_PATH]
-            .try_as_number()
-            .and_then(|n| n.try_as_i64())
-        {
-            Ok(num) => num,
-            Err(_) => continue,
-        };
-
-        let f_signing = fabricate_name(signing);
-        let f_issuer = fabricate_name(issuer);
-        if f_signing.is_empty() || f_issuer.is_empty() {
-            continue;
-        }
-
-        let signing_cstring = CString::new(f_signing.as_str()).expect("app-signing-cert is invalid");
-        let issuer_cstring = CString::new(f_issuer.as_str()).expect("issuer-ca is invalid");
-        cert_paths.push(TrustAppSource {
-            signing: signing_cstring,
-            issuer: issuer_cstring,
-            path_len: path_len as i32,
-        });
     }
 }
+

@@ -27,7 +27,10 @@ ohos_source_set("key_enable_src_set") {
     "${code_signature_root_dir}:common_utils_config",
     "${code_signature_root_dir}:common_public_config",
   ]
-  external_deps = [ "hilog:libhilog" ]
+  external_deps = [
+    "hilog:libhilog",
+    "init:libbegetutil",
+  ]
   part_name = "code_signature"
   subsystem_name = "security"
 }

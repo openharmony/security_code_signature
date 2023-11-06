@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-use super::cert_chain_utils;
-
+use super::cert_chain_utils::PemCollection;
+use super::cert_path_utils::TrustCertPath;
 const TRUSTED_ROOT_CERT: &str = "/system/etc/security/trusted_root_ca.json";
 const ALLOWED_ROOT_CERT_MEMBER_NAMES: &[&str] = &[
     "C=CN, O=Huawei, OU=Huawei CBG, CN=Huawei CBG Root CA G2",
@@ -23,33 +23,28 @@ const ALLOWED_ROOT_CERT_MEMBER_NAMES: &[&str] = &[
 const TRUSTED_ROOT_CERT_TEST: &str = "/system/etc/security/trusted_root_ca_test.json";
 const ALLOWED_ROOT_CERT_MEMBER_NAMES_TEST: &[&str] =
     &["C=CN, O=Huawei, OU=Huawei CBG, CN=Huawei CBG Root CA G2 Test"];
-const TRUSTED_APP_SOURCES: &str = "/system/etc/security/trusted_apps_sources.json";
-const TRUSTED_APP_SOURCES_TEST: &str = "/system/etc/security/trusted_apps_sources_test.json";
+const TRUSTED_CERT_PATH: &str = "/system/etc/security/trusted_cert_path.json";
+const TRUSTED_CERT_PATH_TEST: &str = "/system/etc/security/trusted_cert_path_test.json";
 
 /// get trusted certs form json file
-pub fn get_trusted_certs() -> Vec<Vec<u8>> {
-    let mut certs = Vec::new();
-    cert_chain_utils::get_root_cert_from_json_file(
-        &mut certs,
-        TRUSTED_ROOT_CERT,
-        ALLOWED_ROOT_CERT_MEMBER_NAMES
-    );
+pub fn get_trusted_certs() -> PemCollection {
+    let mut root_cert = PemCollection::new();
+    root_cert.load_pem_certs_from_json_file(TRUSTED_ROOT_CERT, ALLOWED_ROOT_CERT_MEMBER_NAMES);
     if env!("code_signature_debuggable") == "on" {
-        cert_chain_utils::get_root_cert_from_json_file(
-            &mut certs,
+        root_cert.load_pem_certs_from_json_file(
             TRUSTED_ROOT_CERT_TEST,
             ALLOWED_ROOT_CERT_MEMBER_NAMES_TEST
         );
     }
-    certs
+    root_cert
 }
 
 /// get cert path form json file
-pub fn get_cert_path() -> Vec<cert_chain_utils::TrustAppSource> {
-    let mut cert_paths = Vec::new();
-    cert_chain_utils::load_cert_path_from_json_file(&mut cert_paths, TRUSTED_APP_SOURCES);
+pub fn get_cert_path() -> TrustCertPath {
+    let mut cert_paths = TrustCertPath::new();
+    cert_paths.load_cert_path_from_json_file(TRUSTED_CERT_PATH);
     if env!("code_signature_debuggable") == "on" {
-        cert_chain_utils::load_cert_path_from_json_file(&mut cert_paths, TRUSTED_APP_SOURCES_TEST);
+        cert_paths.load_cert_path_from_json_file(TRUSTED_CERT_PATH_TEST);
     }
     cert_paths
 }

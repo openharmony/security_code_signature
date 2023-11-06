@@ -1,69 +1,39 @@
-{
-    "version": "1.0.1",
-    "release-time":"2021-01-01 10:01:01",
-    "trust-app-source":[
-        {
-            "name":"huawei app gallery",
-            "app-signing-cert":"C=CN, O=Huawei, OU=HOS AppGallery, CN=HOS AppGallery Application Release",
-            "profile-signing-certificate":"C=CN, O=Huawei, OU=HOS AppGallery, CN=HOS Profile Management",
-            "profile-debug-signing-certificate":"C=CN, O=Huawei, OU=HOS AppGallery, CN=HOS Profile Management Debug",
-            "issuer-ca":"C=CN, O=Huawei, OU=Huawei CBG, CN=Huawei CBG Software Signing Service CA Test",
-            "max-certs-path":3,
-            "critialcal-cert-extension":["keyusage","huawei-signing-capability"]
-        },
-        {
-            "name":"huawei system apps",
-            "app-signing-cert":"C=CN, O=Huawei CBG, OU=HOS Development Team, CN=HOS Application Provision Dev",
-            "profile-signing-certificate":"C=CN, O=Huawei CBG, OU=HOS Development Team, CN=HOS Application Provision Profile Dev",
-            "profile-debug-signing-certificate":"C=CN, O=Huawei CBG, OU=HOS Development Team, CN=HOS Application Provision Profile Dev_Debug",
-            "issuer-ca":"C=CN, O=Huawei, OU=Huawei CBG, CN=Huawei CBG Software Signing Service CA Test",
-            "max-certs-path":3,
-            "critialcal-cert-extension":["keyusage","huawei-signing-capability"]
-        },
-        {
-            "name":"third_party app preload",
-            "app-signing-cert":"C=CN, O=Huawei, OU=HOS Open Platform, CN=HOS Preload Service",
-            "profile-signing-certificate":"",
-            "profile-debug-signing-certificate":"",
-            "issuer-ca":"C=CN, O=Huawei, OU=Huawei CBG, CN=Huawei CBG Software Signing Service CA Test",
-            "max-certs-path":3,
-            "critialcal-cert-extension":["keyusage","huawei-signing-capability"]
-        },
-        {
-            "name":"huawei app gallery",
-            "wrong_app-signing-cert":"C=CN, O=Huawei CBG, OU=HOS Development Team, CN=HOS Application Provision Dev",
-            "profile-signing-certificate":"C=CN, O=Huawei CBG, OU=HOS Development Team, CN=HOS Application Provision Profile Dev",
-            "profile-debug-signing-certificate":"C=CN, O=Huawei CBG, OU=HOS Development Team, CN=HOS Application Provision Profile Dev_Debug",
-            "issuer-ca":"C=CN, O=Huawei, OU=Huawei CBG, CN=Huawei CBG Software Signing Service CA Test",
-            "max-certs-path":3,
-            "critialcal-cert-extension":["keyusage","huawei-signing-capability"]
-        },
-        {
-            "name":"huawei app gallery",
-            "app-signing-cert":"C=CN, O=Huawei, OU=HOS Open Platform, CN=HOS Preload Service",
-            "profile-signing-certificate":"",
-            "profile-debug-signing-certificate":"",
-            "wrong_issuer-ca":"C=CN, O=Huawei, OU=Huawei CBG, CN=Huawei CBG Software Signing Service CA Test",
-            "max-certs-path":3,
-            "critialcal-cert-extension":["keyusage","huawei-signing-capability"]
-        },
-        {
-            "name":"huawei app gallery",
-            "app-signing-cert":"C=CN, O=Huawei, OU=HOS Open Platform, CN=HOS Preload Service",
-            "profile-signing-certificate":"",
-            "profile-debug-signing-certificate":"",
-            "issuer-ca":"C=CN, O=Huawei, OU=Huawei CBG, CN=Huawei CBG Software Signing Service CA Test",
-            "wrong_max-certs-path":3,
-            "critialcal-cert-extension":["keyusage","huawei-signing-capability"]
-        },
-        {
-            "name":"not included name",
-            "app-signing-cert":"C=CN, O=Huawei, OU=HOS Open Platform, CN=HOS Preload Service",
-            "profile-signing-certificate":"",
-            "profile-debug-signing-certificate":"",
-            "issuer-ca":"C=CN, O=Huawei, OU=Huawei CBG, CN=Huawei CBG Software Signing Service CA Test",
-            "max-certs-path":3,
-            "critialcal-cert-extension":["keyusage","huawei-signing-capability"]
+{   
+    "trust-profile-path":[
+        {   
+            "mode":"developer",
+            "wrong-type":"",
+            "subject":"C=CN, O=Huawei, OU=HOS AppGallery, CN=HOS Profile Management",
+            "issuer":"C=CN, O=Huawei, OU=Huawei CBG, CN=Huawei CBG Software Signing Service CA",
+            "max-certs-path":3
         }
-    ]
+    ],
+    "trust-cert-path":[
+        {   
+            "mode":"Release",
+            "type":"Authed",
+            "wrong-subject":"C=CN, O=Huawei, OU=HOS AppGallery, CN=HOS AppGallery Application Release",
+            "issuer":"C=CN, O=Huawei, OU=Huawei CBG, CN=Huawei CBG Software Signing Service CA",
+            "max-certs-path":3
+        },
+        {   
+            "mode":"Release",
+            "type":"Authed",
+            "subject":"ALL",
+            "wrong-issuer":"C=CN, O=Huawei, OU=Huawei CBG, CN=Huawei CBG Software Signing Service CA",
+            "max-certs-path":3
+        },{   
+            "mode":"Release",
+            "type":"Block",
+            "subject":"C=CN, O=Huawei, OU=Huawei CBG, CN=HOS Application Provision Debug V2",
+            "issuer":"C=CN, O=Huawei, OU=Huawei CBG, CN=Huawei CBG Software Signing Service CA",
+            "wrong-max-certs-path":3
+        },{   
+            "wrong-mode":"Release",
+            "type":"Block",
+            "subject":"",
+            "issuer":"",
+            "max-certs-path":3
+        }
+   ]
 }

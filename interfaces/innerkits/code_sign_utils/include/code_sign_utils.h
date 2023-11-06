@@ -90,6 +90,19 @@ public:
      * @return err code, see err_code.h
      */
     static int ParseOwnerIdFromSignature(const ByteBuffer &sigbuffer, std::string &ownerID);
+    /**
+     * @brief Enable key in profile content data and dump profile buffer
+     * @param bundleName bundleName
+     * @param profileBuffer profile bytebuffer carring signer info and signed cert info
+     * @return err code, see err_code.h
+     */
+    static int32_t EnableKeyInProfile(const std::string &bundleName, const ByteBuffer &profileBuffer);
+    /**
+     * @brief Remove key in profile content data and remove profile
+     * @param bundleName bundleName
+     * @return err code, see err_code.h
+     */
+    static int32_t RemoveKeyInProfile(const std::string &bundleName);
 private:
     static int32_t IsSupportFsVerity(const std::string &path);
     static int32_t IsFsVerityEnabled(int fd);
