@@ -127,6 +127,7 @@
             <option name="shell" value="mkdir -p /data/test/tmp/file_4M"/>
             <option name="shell" value="mkdir -p /data/test/tmp/file_4M_less"/>
             <option name="shell" value="mkdir -p /data/test/tmp/file_4M_greater"/>
+            <option name="shell" value="mkdir -p /data/test/tmp/elf"/>
             <option name="push" value="demo_verity/file_4K/file_4K -> /data/test/tmp/file_4K" src="res"/>
             <option name="push" value="demo_verity/file_4K/file_4K.tree -> /data/test/tmp/file_4K" src="res"/>
             <option name="push" value="demo_verity/file_4K/file_4K.hash -> /data/test/tmp/file_4K" src="res"/>
@@ -157,6 +158,11 @@
             <option name="push" value="demo_verity/file_4M_greater/file_4M_greater.hash -> /data/test/tmp/file_4M_greater" src="res"/>
             <option name="push" value="demo_verity/file_4M_greater/file_4M_greater_no_tree.sig -> /data/test/tmp/file_4M_greater" src="res"/>
             <option name="push" value="demo_verity/file_4M_greater/file_4M_greater_inside_tree.sig -> /data/test/tmp/file_4M_greater" src="res"/>
+            <option name="push" value="demo_verity/elf/elf -> /data/test/tmp/elf" src="res"/>
+            <option name="push" value="demo_verity/elf/elf.tree -> /data/test/tmp/elf" src="res"/>
+            <option name="push" value="demo_verity/elf/elf.hash -> /data/test/tmp/elf" src="res"/>
+            <option name="push" value="demo_verity/elf/elf_no_tree.sig -> /data/test/tmp/elf" src="res"/>
+            <option name="push" value="demo_verity/elf/elf_inside_tree.sig -> /data/test/tmp/elf" src="res"/>
         </preparer>
         <cleaner>
             <option name="shell" value="rm -rf /data/test/tmp"/>

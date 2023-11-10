@@ -16,13 +16,13 @@
 #include <asm/unistd.h>
 #include <cstdint>
 #include <cstdlib>
-#include <fstream>
 #include <gtest/gtest.h>
 #include <fcntl.h>
 #include <iostream>
 #include <cstdio>
 #include <cstring>
 #include <string>
+#include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <linux/fs.h>
@@ -34,6 +34,7 @@
 #include "directory_ex.h"
 #include "enable_key_utils.h"
 #include "log.h"
+#include "xpm_common.h"
 
 using namespace testing::ext;
 
@@ -59,6 +60,12 @@ const std::string FAKE_STRING = "AAAAA";
 const std::string TEST_SUBJECT = "OpenHarmony Application Release";
 const std::string TEST_ISSUER = "OpenHarmony Application CA";
 
+const std::string DROP_CACHE_PROC_PATH = "/proc/sys/vm/drop_caches";
+const std::string DROP_ALL_CACHE_LEVEL = "3";
+
+
+static bool g_isXpmOn;
+
 class EnableVerityTest : public testing::Test {
 public:
     EnableVerityTest() {};
@@ -66,8 +73,15 @@ public:
     static void SetUpTestCase()
     {
         EXPECT_EQ(EnableTestKey(TEST_SUBJECT.c_str(), TEST_ISSUER.c_str()), 0);
+        g_isXpmOn = AllocXpmRegion();
+        SaveStringToFile(SELINUX_MODE_PATH, PERMISSIVE_MODE);
+        SaveStringToFile(XPM_DEBUG_FS_MODE_PATH, ENFORCE_MODE);
     };
-    static void TearDownTestCase() {};
+    static void TearDownTestCase()
+    {
+        SaveStringToFile(XPM_DEBUG_FS_MODE_PATH, PERMISSIVE_MODE);
+        SaveStringToFile(SELINUX_MODE_PATH, ENFORCE_MODE);
+    };
     void SetUp() {};
     void TearDown() {};
 };
@@ -123,7 +137,7 @@ static void CopyData(const std::string &srcPath, FILE *fout)
     EXPECT_EQ(ReadDataFromFile(srcPath, data), true);
     if (data.GetSize() > 0) {
         int32_t ret = fwrite(data.GetBuffer(), 1, data.GetSize(), fout);
-        EXPECT_EQ(ret, data.GetSize());
+        EXPECT_EQ(static_cast<uint32_t>(ret), data.GetSize());
     }
 }
 
@@ -173,17 +187,10 @@ static bool ExpandFile(const std::string &srcPath, const std::string &expandData
     return true;
 }
 
-static void DropAllCaches()
-{
-    std::fstream fout;
-    fout.open("/proc/sys/vm/drop_caches", std::ios::out);
-    fout << "3";
-    fout.close();
-}
-
 static void CheckEnableSuccess(const std::string &filePath)
 {
-    DropAllCaches();
+    // drop all caches
+    SaveStringToFile(DROP_CACHE_PROC_PATH, DROP_ALL_CACHE_LEVEL);
     FILE *fout = fopen(filePath.c_str(), "wb");
     EXPECT_EQ(fout, nullptr);
 
@@ -193,7 +200,8 @@ static void CheckEnableSuccess(const std::string &filePath)
 
 static inline size_t GetRoundUp(size_t fileSize)
 {
-    return ceil((double)fileSize / HASH_PAGE_SIZE) * HASH_PAGE_SIZE;
+    return ceil(static_cast<double>(fileSize) / HASH_PAGE_SIZE)
+        * HASH_PAGE_SIZE;
 }
 
 static bool TamperFileTail(const std::string &filePath)
@@ -481,6 +489,129 @@ HWTEST_F(EnableVerityTest, EnableVerityTest_0007, TestSize.Level0)
     EnableExpandedTamperFile(filePath, TamperFileHead);
 
     EnableExpandedTamperFile(filePath, TamperFileTail);
+}
+
+/**
+ * @tc.name: CodeSignUtilsTest_0008
+ * @tc.desc: mmap signed data in xpm region success
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(EnableVerityTest, EnableVerityTest_0008, TestSize.Level0)
+{
+    if (!g_isXpmOn) {
+        return;
+    }
+    std::string filePath = TEST_DEFAULT_FILE;
+    struct code_sign_enable_arg arg = {};
+    ByteBuffer signature;
+    FillCommonArgs(filePath, true, &arg, signature);
+    FillOptional(filePath, &arg);
+    std::string expandFilePath = MakeExpandTreeFile(filePath, &arg);
+    EXPECT_EQ(EnableVerityOnOneFile(expandFilePath, &arg), 0);
+
+    int fd = open(expandFilePath.c_str(), O_RDONLY);
+    // mmap with MAP_XPM flag, success
+    void *addr = mmap(NULL, PAGE_SIZE, PROT_READ, MAP_PRIVATE | MAP_XPM,
+        fd, 0);
+    EXPECT_NE(MAP_FAILED, addr);
+
+    // release resource
+    munmap(addr, PAGE_SIZE);
+    close(fd);
+    CleanFile(expandFilePath);
+}
+
+/**
+ * @tc.name: CodeSignUtilsTest_0009
+ * @tc.desc: mmap unsigned data in xpm region failed
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(EnableVerityTest, EnableVerityTest_0009, TestSize.Level0)
+{
+    if (!g_isXpmOn) {
+        return;
+    }
+    std::string filePath = TEST_DEFAULT_FILE;
+    struct code_sign_enable_arg arg = {};
+    ByteBuffer signature;
+    FillCommonArgs(filePath, true, &arg, signature);
+    FillOptional(filePath, &arg);
+    std::string expandFilePath = MakeExpandTreeFile(filePath, &arg);
+    EXPECT_EQ(EnableVerityOnOneFile(expandFilePath, &arg), 0);
+
+    int fd = open(expandFilePath.c_str(), O_RDONLY);
+    // mmap with MAP_XPM flag, over verity range
+    void *addr = mmap(NULL, PAGE_SIZE, PROT_READ, MAP_PRIVATE | MAP_XPM,
+        fd, arg.tree_offset & PAGE_MASK);
+    EXPECT_EQ(MAP_FAILED, addr);
+
+    close(fd);
+    CleanFile(expandFilePath);
+}
+
+/**
+ * @tc.name: CodeSignUtilsTest_0010
+ * @tc.desc: mmap signed data as executable success
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(EnableVerityTest, EnableVerityTest_0010, TestSize.Level0)
+{
+    if (!g_isXpmOn) {
+        return;
+    }
+    std::string filePath = TEST_FILES_DIR + "elf/elf";
+    struct code_sign_enable_arg arg = {};
+    ByteBuffer signature;
+    FillCommonArgs(filePath, true, &arg, signature);
+    FillOptional(filePath, &arg);
+    std::string expandFilePath = MakeExpandTreeFile(filePath, &arg);
+    EXPECT_EQ(EnableVerityOnOneFile(expandFilePath, &arg), 0);
+
+    int fd = open(expandFilePath.c_str(), O_RDONLY);
+    // readelf from elf
+    // [19] .text             PROGBITS        000063ec 0053ec 002168 00  AX  0   0  4
+    int codeOffset = 0x53ec;
+    // mmap success at enforce mode
+    void *addr = mmap(NULL, PAGE_SIZE, PROT_READ | PROT_EXEC, MAP_PRIVATE,
+        fd, codeOffset & PAGE_MASK);
+    EXPECT_NE(MAP_FAILED, addr);
+
+    // release resource
+    munmap(addr, PAGE_SIZE);
+
+    close(fd);
+    CleanFile(expandFilePath);
+}
+
+/**
+ * @tc.name: CodeSignUtilsTest_00011
+ * @tc.desc: mmap unsigned data as executable failed
+ * @tc.type: Func
+ * @tc.require
+ */
+HWTEST_F(EnableVerityTest, EnableVerityTest_0011, TestSize.Level0)
+{
+    if (!g_isXpmOn) {
+        return;
+    }
+    std::string filePath = TEST_FILES_DIR + "elf/elf";
+    struct code_sign_enable_arg arg = {};
+    ByteBuffer signature;
+    FillCommonArgs(filePath, true, &arg, signature);
+    FillOptional(filePath, &arg);
+    std::string expandFilePath = MakeExpandTreeFile(filePath, &arg);
+    EXPECT_EQ(EnableVerityOnOneFile(expandFilePath, &arg), 0);
+
+    int fd = open(expandFilePath.c_str(), O_RDONLY);
+    void *addr = mmap(NULL, PAGE_SIZE, PROT_READ | PROT_EXEC, MAP_PRIVATE,
+        fd, arg.tree_offset & PAGE_MASK);
+    EXPECT_EQ(MAP_FAILED, addr);
+
+    close(fd);
+    CleanFile(expandFilePath);
 }
 }  // namespace CodeSign
 }  // namespace Security

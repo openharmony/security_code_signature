@@ -188,7 +188,10 @@ ohos_rust_unittest("rust_key_enable_unittest") {
 ohos_unittest("enable_verity_ioctl_unittest") {
   module_out_path = "security/code_signature"
   resource_config_file = "resources/ohos_test.xml"
-  sources = [ "enable_verity_test.cpp" ]
+  sources = [
+    "enable_verity_test.cpp",
+    "utils/src/xpm_common.cpp",
+  ]
 
   include_dirs = [ "utils/include" ]
   configs = [
