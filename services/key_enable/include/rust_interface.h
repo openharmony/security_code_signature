@@ -21,8 +21,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-    int32_t EnableKeyInProfileByRust(const char* bundle_name, const uint8_t* profile, uint32_t profile_size);
-    int32_t RemoveKeyInProfileByRust(const char* bundle_name);
+    int32_t EnableKeyInProfileByRust(const char* bundleName, const uint8_t* profile, uint32_t profileSize);
+    int32_t RemoveKeyInProfileByRust(const char* bundleName);
 #ifdef __cplusplus
 }
 #endif

@@ -108,6 +108,8 @@ private:
     static int32_t IsFsVerityEnabled(int fd);
     static int32_t EnableCodeSignForFile(const std::string &path, const struct code_sign_enable_arg &arg);
     static void ShowCodeSignInfo(const std::string &path, const struct code_sign_enable_arg &arg);
+    static int32_t CheckOwnerId(const std::string &path, const std::string &ownerId,
+        const uint8_t *sigPtr, uint32_t sigSize);
 };
 }
 }

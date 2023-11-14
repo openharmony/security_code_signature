@@ -227,6 +227,29 @@ void CodeSignUtils::ShowCodeSignInfo(const std::string &path, const struct code_
         rootHashPtr[0], rootHashPtr[1], rootHashPtr[2], rootHashPtr[32], rootHashPtr[63]); // 2, 32, 63 data index
 }
 
+int32_t CodeSignUtils::CheckOwnerId(const std::string &path, const std::string &ownerId,
+    const uint8_t *sigPtr, uint32_t sigSize)
+{
+    if (ownerId.empty()) {
+        return CS_SUCCESS;
+    }
+
+    int32_t ret;
+    ByteBuffer sigBuffer;
+    sigBuffer.CopyFrom(reinterpret_cast<const uint8_t *>(sigPtr), sigSize);
+    std::string retId;
+    ret = SignerInfo::ParseOwnerIdFromSignature(sigBuffer, retId);
+    if (ret != CS_SUCCESS) {
+        ReportInvalidOwner(path, ownerId, "invalid");
+        LOG_ERROR(LABEL, "get ownerId from signature failed, ret %{public}d", ret);
+    } else if (retId != ownerId) {
+        ret = CS_ERR_INVALID_OWNER_ID;
+        ReportInvalidOwner(path, ownerId, retId);
+        LOG_ERROR(LABEL, "invalid ownerId retId %{public}s ownerId %{public}s", retId.c_str(), ownerId.c_str());
+    }
+    return ret;
+}
+
 int32_t CodeSignUtils::EnforceCodeSignForAppWithOwnerId(std::string ownerId, const std::string &path,
                                                         const EntryMap &entryPathMap, FileType type)
 {
@@ -249,9 +272,11 @@ int32_t CodeSignUtils::EnforceCodeSignForAppWithOwnerId(std::string ownerId, con
     CodeSignBlock codeSignBlock;
     ret = codeSignBlock.ParseCodeSignBlock(realPath, entryPathMap, type);
     if (ret != CS_SUCCESS) {
+        if (ret != CS_CODE_SIGN_NOT_EXISTS) {
+            ReportParseCodeSig(realPath, ret);
+        }
         return ret;
     }
-
     do {
         std::string targetFile;
         struct code_sign_enable_arg arg = {0};
@@ -263,23 +288,12 @@ int32_t CodeSignUtils::EnforceCodeSignForAppWithOwnerId(std::string ownerId, con
             return ret;
         }
 
-        if (!ownerId.empty()) {
-            ByteBuffer sigBuffer;
-            sigBuffer.CopyFrom(reinterpret_cast<const uint8_t *>(arg.sig_ptr), arg.sig_size);
-            std::string retId;
-            ret = SignerInfo::ParseOwnerIdFromSignature(sigBuffer, retId);
-            if (ret != CS_SUCCESS) {
-                LOG_ERROR(LABEL, "get ownerId from signature failed, ret %{public}d", ret);
-                break;
-            } else if (retId != ownerId) {
-                ret = CS_ERR_INVALID_OWNER_ID;
-                LOG_ERROR(LABEL, "invalid ownerId retId %{public}s ownerId %{public}s", retId.c_str(), ownerId.c_str());
-                break;
-            }
+        ret = CheckOwnerId(path, ownerId, reinterpret_cast<const uint8_t *>(arg.sig_ptr), arg.sig_size);
+        if (ret != CS_SUCCESS) {
+            break;
         }
 
         ShowCodeSignInfo(targetFile, arg);
-
         if (!CheckFilePathValid(targetFile, Constants::ENABLE_APP_BASE_PATH)) {
             return CS_ERR_TARGET_FILE_PATH;
         }

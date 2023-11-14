@@ -41,6 +41,19 @@ inline void ReportInvalidCaller(const std::string &interfaceType, uint32_t token
         HiviewDFX::HiSysEvent::EventType::SECURITY,
         "INTERFACE", interfaceType, "TOKEN_ID", tokenId);
 }
+inline void ReportParseCodeSig(const std::string &fileInfo, uint32_t errCode)
+{
+    HiSysEventWrite(HiviewDFX::HiSysEvent::Domain::CODE_SIGN, "CS_PARSE_CODE_SIG",
+        HiviewDFX::HiSysEvent::EventType::FAULT,
+        "FILE_INFO", fileInfo, "ERR_TYPE", errCode);
+}
+inline void ReportInvalidOwner(const std::string &fileInfo, const std::string &ownerID,
+    const std::string &parsedOwnerID)
+{
+    HiSysEventWrite(HiviewDFX::HiSysEvent::Domain::CODE_SIGN, "CS_INVALID_OWNER",
+        HiviewDFX::HiSysEvent::EventType::SECURITY,
+        "FILE_INFO", fileInfo, "OWNER_ID", ownerID, "PARSED_OWNER_ID", parsedOwnerID);
+}
 }
 }
 }

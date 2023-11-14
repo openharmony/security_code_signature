@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <parameters.h>
+#include <parameter.h>
 #include "log.h"
 #include "errcode.h"
 #include "cert_path.h"
@@ -63,4 +64,9 @@ bool IsDeveloperModeOn()
         ret = true;
     }
     return ret;
+}
+
+int CodeSignGetUdid(char *udid)
+{
+    return GetDevUdid(udid, UDID_SIZE);
 }

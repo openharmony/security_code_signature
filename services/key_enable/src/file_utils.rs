@@ -12,9 +12,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use std::fs::{remove_dir_all , create_dir_all, File};
+use std::fs::{create_dir_all, remove_dir_all, File};
 use std::io::{Read, Write};
 use std::path::Path;
+use cxx::let_cxx_string;
+use utils_rust::directory_ex;
+// rw-r--r--
+const PROFILE_FILE_MODE: u32 = 0o644; 
+// rw-r-xr-x
+const PROFILE_PATH_MODE: u32 = 0o655; 
+/// code sign file error
+pub enum CodeSignFileError {
+        /// change file mode error
+        ChangeFileModError,
+        /// change path mode error
+        ChangePathModError,
+    }
+/// change default mode of file
+pub fn change_default_mode_file(path_file: &str) -> Result<(), CodeSignFileError> {
+    let_cxx_string!(dirpath = path_file);
+    let mode = PROFILE_FILE_MODE;
+    let ret = directory_ex::ffi::ChangeModeFile(&dirpath, &mode);
+    if !ret {
+        return Err(CodeSignFileError::ChangeFileModError);
+    }
+    Ok(())
+}
+/// change default mode of directory
+pub fn change_default_mode_directory(path_file: &str) -> Result<(), CodeSignFileError> {
+    let_cxx_string!(dirpath = path_file);
+    let mode = PROFILE_PATH_MODE;
+    let ret = directory_ex::ffi::ChangeModeDirectory(&dirpath, &mode);
+    if !ret {
+        return Err(CodeSignFileError::ChangePathModError);
+    }
+    Ok(())
+}
+/// format storage file path
+pub fn fmt_store_path(prefix: &str, tail: &str) -> String {
+    format!("{}/{}", prefix, tail)
+}
 /// create file path with path name
 pub fn create_file_path(path_name: &str) -> Result<(), std::io::Error> {
     let path = Path::new(path_name);
@@ -33,7 +70,7 @@ pub fn load_bytes_from_file(filename: &str, buffer: &mut Vec<u8>) -> Result<(), 
     file.read_to_end(buffer)?;
     Ok(())
 }
-/// find file 
+/// find file
 pub fn file_exists(file_path: &str) -> bool {
     Path::new(file_path).exists()
 }

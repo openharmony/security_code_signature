@@ -15,14 +15,15 @@
 
 use super::cert_chain_utils::PemCollection;
 use super::cert_path_utils::{
-    add_cert_path_info, remove_cert_path_info, DebugCertPathType, ReleaseCertPathType,
-    TrustCertPath,
+    add_cert_path_info, remove_cert_path_info,
+    DebugCertPathType, ReleaseCertPathType, TrustCertPath,
 };
 use super::cs_hisysevent::report_parse_profile_err;
 use super::file_utils::{
-    create_file_path, delete_file_path, file_exists, load_bytes_from_file, write_bytes_to_file,
+    create_file_path, delete_file_path, file_exists, fmt_store_path,
+    load_bytes_from_file, write_bytes_to_file, change_default_mode_file, change_default_mode_directory
 };
-use hilog_rust::{error, hilog, HiLogLabel, LogType};
+use hilog_rust::{error, info, hilog, HiLogLabel, LogType};
 use openssl::pkcs7::{Pkcs7, Pkcs7Flags};
 use openssl::stack::Stack;
 use openssl::x509::store::{X509Store, X509StoreBuilder};
@@ -43,22 +44,34 @@ const PROFILE_STORE_PREFIX: &str = "/data/service/el0/profiles/developer";
 const DEBUG_PROFILE_STORE_PREFIX: &str = "/data/service/el0/profiles/debug";
 const PROFILE_STORE_TAIL: &str = "profile.p7b";
 const PROFILE_TYPE_KEY: &str = "type";
+const PROFILE_DEVICE_ID_TYPE_KEY: &str = "device-id-type";
+const PROFILE_DEBUG_INFO_KEY: &str = "debug-info";
+const PROFILE_DEVICE_IDS_KEY: &str = "device-ids";
 const PROFILE_BUNDLE_INFO_KEY: &str = "bundle-info";
 const PROFILE_BUNDLE_INFO_RELEASE_KEY: &str = "distribution-certificate";
 const PROFILE_BUNDLE_INFO_DEBUG_KEY: &str = "development-certificate";
 const DEFAULT_MAX_CERT_PATH_LEN: u32 = 3;
 const PROFILE_RELEASE_TYPE: &str = "release";
 const PROFILE_DEBUG_TYPE: &str = "debug";
-
 /// profile error
 pub enum ProfileError {
     /// add cert path error
     AddCertPathError,
 }
+/// profile error report to hisysevent
+pub enum HisyseventProfileError {
+    /// release platform code
+    VerifySigner = 1,
+    /// release authed code
+    ParsePkcs7 = 2,
+    /// release developer code
+    AddCertPath = 3,
+}
 
 extern "C" {
     /// if developer state on return true
     pub fn IsDeveloperModeOn() -> bool;
+    fn CodeSignGetUdid(udid: *mut u8) -> i32;
 }
 
 #[no_mangle]
@@ -84,36 +97,24 @@ pub extern "C" fn RemoveKeyInProfileByRust(bundle_name: *const c_char) -> i32 {
 }
 
 fn parse_pkcs7_data(
-    profile_data: &[u8],
+    pkcs7: &Pkcs7,
     root_store: &X509Store,
-    profile_signer: &[(&String, &String)],
-    verify: bool,
+    flags: Pkcs7Flags,
 ) -> Result<(String, String, u32), Box<dyn Error>> {
-    let pkcs7 = Pkcs7::from_der(profile_data)?;
     let stack_of_certs = Stack::<X509>::new()?;
-
-    let flags = if verify {
-        let signers_result = pkcs7.signers(&stack_of_certs, Pkcs7Flags::empty())?;
-        for signer in signers_result {
-            let subject_name = format_x509name_to_string(signer.subject_name());
-            let issuer_name = format_x509name_to_string(signer.issuer_name());
-            if !profile_signer.contains(&(&subject_name, &issuer_name)) {
-                return Err("Verification failed.".into());
-            }
-        }
-        Pkcs7Flags::empty()
-    } else {
-        Pkcs7Flags::NOVERIFY
-    };
 
     let mut profile = Vec::new();
     if pkcs7.verify(&stack_of_certs, root_store, None, Some(&mut profile), flags).is_err() {
         error!(LOG_LABEL, "pkcs7 verify failed.");
         return Err("pkcs7 verify failed.".into());
     }
-
     let profile_json = JsonValue::from_text(profile)?;
     let bundle_type = profile_json[PROFILE_TYPE_KEY].try_as_string()?.as_str();
+
+    if bundle_type == PROFILE_DEBUG_TYPE && verify_udid(&profile_json).is_err() {
+        error!(LOG_LABEL, "udid verify failed.");
+        return Err("Invalid udid .".into());
+    }
     let profile_type = match bundle_type {
         PROFILE_DEBUG_TYPE => DebugCertPathType::Developer as u32,
         PROFILE_RELEASE_TYPE => ReleaseCertPathType::Developer as u32,
@@ -126,7 +127,8 @@ fn parse_pkcs7_data(
         PROFILE_DEBUG_TYPE => {
             profile_json[PROFILE_BUNDLE_INFO_KEY][PROFILE_BUNDLE_INFO_DEBUG_KEY].try_as_string()?
         }
-        PROFILE_RELEASE_TYPE => profile_json[PROFILE_BUNDLE_INFO_KEY][PROFILE_BUNDLE_INFO_RELEASE_KEY]
+        PROFILE_RELEASE_TYPE => profile_json[PROFILE_BUNDLE_INFO_KEY]
+            [PROFILE_BUNDLE_INFO_RELEASE_KEY]
             .try_as_string()?,
         _ => {
             error!(LOG_LABEL, "pkcs7 verify failed.");
@@ -138,6 +140,40 @@ fn parse_pkcs7_data(
     let issuer = format_x509name_to_string(signed_pem.issuer_name());
 
     Ok((subject, issuer, profile_type))
+}
+
+fn get_udid() -> Result<String, String> {
+    let mut udid: Vec<u8> = vec![0; 128];
+    let result = unsafe { CodeSignGetUdid(udid.as_mut_ptr()) };
+
+    if result != 0 {
+        return Err("Failed to get UDID".to_string());
+    }
+
+    if let Some(first_zero_index) = udid.iter().position(|&x| x == 0) {
+        udid.truncate(first_zero_index);
+    }
+
+    match String::from_utf8(udid) {
+        Ok(s) => Ok(s),
+        Err(_) => Err("UDID is not valid UTF-8".to_string()),
+    }
+}
+
+fn verify_signers(
+    pkcs7: &Pkcs7,
+    profile_signer: &[(&String, &String)],
+) -> Result<(), Box<dyn Error>> {
+    let stack_of_certs = Stack::<X509>::new()?;
+    let signers_result = pkcs7.signers(&stack_of_certs, Pkcs7Flags::empty())?;
+    for signer in signers_result {
+        let subject_name = format_x509name_to_string(signer.subject_name());
+        let issuer_name = format_x509name_to_string(signer.issuer_name());
+        if !profile_signer.contains(&(&subject_name, &issuer_name)) {
+            return Err("Verification failed.".into());
+        }
+    }
+    Ok(())
 }
 
 fn format_x509name_to_string(name: &X509NameRef) -> String {
@@ -166,7 +202,7 @@ fn get_profile_paths(is_debug: bool) -> Vec<String> {
     if let Ok(entries) = read_dir(profile_paths) {
         for entry in entries.filter_map(Result::ok) {
             let path = entry.path();
-            let filename = format!("{}/{}", path.to_string_lossy(), PROFILE_STORE_TAIL);
+            let filename = fmt_store_path(&path.to_string_lossy(), PROFILE_STORE_TAIL);
             if file_exists(&filename) {
                 paths.push(filename);
             }
@@ -181,21 +217,17 @@ pub fn add_profile_cert_path(
     cert_paths: &TrustCertPath,
 ) -> Result<(), ProfileError> {
     let x509_store = root_cert.to_x509_store().unwrap();
-    if process_profile_paths(false, &x509_store, cert_paths.get_profile_info().as_slice()).is_err() {
+    if process_profile(false, &x509_store, cert_paths.get_profile_info().as_slice()).is_err() {
         return Err(ProfileError::AddCertPathError);
     }
     if unsafe { IsDeveloperModeOn() }
-        && process_profile_paths(
-            true,
-            &x509_store,
-            cert_paths.get_debug_profile_info().as_slice(),
-        ).is_err() {
+        && process_profile(true, &x509_store, cert_paths.get_debug_profile_info().as_slice()).is_err() {
         return Err(ProfileError::AddCertPathError);
     }
     Ok(())
 }
 
-fn process_profile_paths(
+fn process_profile(
     is_debug: bool,
     x509_store: &X509Store,
     profile_info: &[(&String, &String)],
@@ -204,27 +236,67 @@ fn process_profile_paths(
     for path in profiles_paths {
         let mut pkcs7_data = Vec::new();
         if load_bytes_from_file(&path, &mut pkcs7_data).is_err() {
+            info!(LOG_LABEL, "load profile failed {}!", @public(path));
+            continue;
+        }
+        info!(LOG_LABEL, "load profile success {}!", @public(path));
+        let pkcs7 = match Pkcs7::from_der(&pkcs7_data) {
+            Ok(pk7) => pk7,
+            Err(_) => {
+                error!(LOG_LABEL, "load profile to pkcs7 obj failed {}!", @public(path));
+                continue;
+            }
+        };
+        if verify_signers(&pkcs7, profile_info).is_err() {
+            error!(LOG_LABEL, "Invalid signer profile file {}", @public(path));
+            report_parse_profile_err(&path, HisyseventProfileError::VerifySigner as i32);
             continue;
         }
         let (subject, issuer, profile_type) =
-            match parse_pkcs7_data(&pkcs7_data, x509_store, profile_info, true) {
+            match parse_pkcs7_data(&pkcs7, x509_store, Pkcs7Flags::empty()) {
                 Ok(tuple) => tuple,
                 Err(_) => {
-                    error!(LOG_LABEL, "Failed to parse profile file {}", path);
-                    report_parse_profile_err(&path);
+                    error!(LOG_LABEL, "Failed to parse profile file {}", @public(path));
+                    report_parse_profile_err(&path, HisyseventProfileError::ParsePkcs7 as i32);
                     continue;
                 }
             };
         if add_cert_path_info(&subject, &issuer, profile_type, DEFAULT_MAX_CERT_PATH_LEN).is_err() {
             error!(
                 LOG_LABEL,
-                "Failed to add profile cert path info into ioctl for {}", path
+                "Failed to add profile cert path info into ioctl for {}", @public(path)
             );
-            report_parse_profile_err(&path);
+            report_parse_profile_err(&path, HisyseventProfileError::AddCertPath as i32);
             continue;
         }
     }
     Ok(())
+}
+
+fn verify_udid(profile_json: &JsonValue) -> Result<(), String> {
+    let device_udid = get_udid()?;
+    let device_id_type = &profile_json[PROFILE_DEBUG_INFO_KEY][PROFILE_DEVICE_ID_TYPE_KEY];
+
+    if let JsonValue::String(id_type) = device_id_type {
+        if id_type != "udid" {
+            return Err("Invalid device ID type".to_string());
+        }
+    } else {
+        return Err("Device ID type is not a string".to_string());
+    }
+    match &profile_json[PROFILE_DEBUG_INFO_KEY][PROFILE_DEVICE_IDS_KEY] {
+        JsonValue::Array(arr) => {
+            if arr.iter().any(|item| match item {
+                JsonValue::String(s) => s == &device_udid,
+                _ => false,
+            }) {
+                Ok(())
+            } else {
+                Err("UDID not found in the list".to_string())
+            }
+        }
+        _ => Err("Device IDs are not in an array format".to_string()),
+    }
 }
 
 fn enable_key_in_profile_internal(
@@ -238,7 +310,6 @@ fn enable_key_in_profile_internal(
         return Err(());
     }
     let profile_data = cbyte_buffer_to_vec(profile, profile_size);
-    let signer_info: &[(&String, &String)] = &[];
     let store = match X509StoreBuilder::new() {
         Ok(store) => store.build(),
         Err(_) => {
@@ -246,8 +317,15 @@ fn enable_key_in_profile_internal(
             return Err(());
         }
     };
+    let pkcs7 = match Pkcs7::from_der(&profile_data) {
+        Ok(pk7) => pk7,
+        Err(_) => {
+            error!(LOG_LABEL, "load profile to pkcs7 obj failed ");
+            return Err(());
+        }
+    };
     let (subject, issuer, profile_type) =
-        match parse_pkcs7_data(&profile_data, &store, signer_info, false) {
+        match parse_pkcs7_data(&pkcs7, &store, Pkcs7Flags::NOVERIFY) {
             Ok(tuple) => tuple,
             Err(_) => {
                 error!(LOG_LABEL, "parse pkcs7 data error");
@@ -256,31 +334,39 @@ fn enable_key_in_profile_internal(
         };
     let bundle_path = match profile_type {
         value if value == DebugCertPathType::Developer as u32 => {
-            format!("{}/{}", DEBUG_PROFILE_STORE_PREFIX, _bundle_name)
+            fmt_store_path(DEBUG_PROFILE_STORE_PREFIX, &_bundle_name)
         }
         value if value == ReleaseCertPathType::Developer as u32 => {
-            format!("{}/{}", PROFILE_STORE_PREFIX, _bundle_name)
+            fmt_store_path(PROFILE_STORE_PREFIX, &_bundle_name)
         }
         _ => {
             error!(LOG_LABEL, "invalid profile type");
             return Err(());
         }
     };
+    info!(LOG_LABEL, "create bundle_path path {}!", @public(bundle_path));
     if !file_exists(&bundle_path) && create_file_path(&bundle_path).is_err() {
-        error!(LOG_LABEL, "create bundle_path path {} failed!", bundle_path);
+        error!(LOG_LABEL, "create bundle_path path {} failed!", @public(bundle_path));
         return Err(());
     }
-
-    let filename = format!("{}/{}", bundle_path, PROFILE_STORE_TAIL);
+    if change_default_mode_directory(&bundle_path).is_err() {
+        error!(LOG_LABEL, "change bundle_path mode error!");
+        return Err(());
+    }
+    let filename = fmt_store_path(&bundle_path, PROFILE_STORE_TAIL);
     if write_bytes_to_file(&filename, &profile_data).is_err() {
         error!(LOG_LABEL, "dump profile data error!");
         return Err(());
     }
-
+    if change_default_mode_file(&filename).is_err() {
+        error!(LOG_LABEL, "change profile mode error!");
+        return Err(());
+    }
     if add_cert_path_info(&subject, &issuer, profile_type, DEFAULT_MAX_CERT_PATH_LEN).is_err() {
         error!(LOG_LABEL, "add profile data error!");
         return Err(());
     }
+    info!(LOG_LABEL, "finish add cert path in ioctl!");
     Ok(())
 }
 
@@ -291,8 +377,8 @@ fn remove_key_in_profile_internal(bundle_name: *const c_char) -> Result<(), ()> 
         return Err(());
     }
 
-    let debug_bundle_path = format!("{}/{}", DEBUG_PROFILE_STORE_PREFIX, _bundle_name);
-    let release_bundle_path = format!("{}/{}", PROFILE_STORE_PREFIX, _bundle_name);
+    let debug_bundle_path = fmt_store_path(DEBUG_PROFILE_STORE_PREFIX, &_bundle_name);
+    let release_bundle_path = fmt_store_path(PROFILE_STORE_PREFIX, &_bundle_name);
 
     let bundle_path = if file_exists(&debug_bundle_path) {
         debug_bundle_path
@@ -302,14 +388,13 @@ fn remove_key_in_profile_internal(bundle_name: *const c_char) -> Result<(), ()> 
         error!(LOG_LABEL, "bundle path does not exists!");
         return Err(());
     };
-    let filename = format!("{}/{}", bundle_path, PROFILE_STORE_TAIL);
+    let filename = fmt_store_path(&bundle_path, PROFILE_STORE_TAIL);
     let mut profile_data = Vec::new();
     if load_bytes_from_file(&filename, &mut profile_data).is_err() {
         error!(LOG_LABEL, "load profile data error!");
         return Err(());
     }
 
-    let signer_info: &[(&String, &String)] = &[];
     let store = match X509StoreBuilder::new() {
         Ok(store) => store.build(),
         Err(_) => {
@@ -317,9 +402,15 @@ fn remove_key_in_profile_internal(bundle_name: *const c_char) -> Result<(), ()> 
             return Err(());
         }
     };
-
+    let pkcs7 = match Pkcs7::from_der(&profile_data) {
+        Ok(pk7) => pk7,
+        Err(_) => {
+            error!(LOG_LABEL, "load profile to pkcs7 obj failed");
+            return Err(());
+        }
+    };
     let (subject, issuer, profile_type) =
-        match parse_pkcs7_data(&profile_data, &store, signer_info, false) {
+        match parse_pkcs7_data(&pkcs7, &store, Pkcs7Flags::NOVERIFY) {
             Ok(tuple) => tuple,
             Err(_) => {
                 error!(LOG_LABEL, "parse pkcs7 data error");
@@ -330,12 +421,16 @@ fn remove_key_in_profile_internal(bundle_name: *const c_char) -> Result<(), ()> 
         error!(LOG_LABEL, "remove profile data error!");
         return Err(());
     }
-    if unsafe { IsDeveloperModeOn() }
-        && profile_type != DebugCertPathType::Developer as u32
-        && remove_cert_path_info(&subject, &issuer, profile_type, DEFAULT_MAX_CERT_PATH_LEN).is_err() {
+    info!(LOG_LABEL, "remove bundle_path path {}!", @public(bundle_path));
+    if unsafe { !IsDeveloperModeOn() } && profile_type == DebugCertPathType::Developer as u32 {
+        info!(LOG_LABEL, "not remove profile_type:{} when development off", @public(profile_type));
+        return Ok(());
+    }
+    if remove_cert_path_info(&subject, &issuer, profile_type, DEFAULT_MAX_CERT_PATH_LEN).is_err() {
         error!(LOG_LABEL, "remove profile data error!");
         return Err(());
     }
+    info!(LOG_LABEL, "finish remove cert path in ioctl!");
     Ok(())
 }
 
