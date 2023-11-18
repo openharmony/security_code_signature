@@ -59,6 +59,18 @@ CS_SA_INVALID_CALLER:
   INTERFACE: {type: STRING, desc: 'interface type, Cert or Sign'}
   TOKEN_ID : {type: UINT32, desc: token id of invalid caller}
 
+CS_PARSE_CODE_SIG:
+  __BASE: {type: FAULT, level: CRITICAL, desc: parse code sig failed}
+  FILE_INFO: {type: STRING, desc: info of hap file}
+  ERR_TYPE : {type: UINT32, desc: parse cide sig error type}
+
+CS_INVALID_OWNER:
+  __BASE: {type: SECURITY, level: CRITICAL, desc: invalid owner}
+  FILE_INFO: {type: STRING, desc: info of hap file}
+  OWNER_ID: {type: STRING, desc: owner id of the hap file}
+  PARSED_OWNER_ID: {type: STRING, desc: owner id in the signature}
+
 CS_ERR_PROFILE:
-  __BASE: {type: FAULT, level: CRITICAL, desc: parsing local profile failure event}
-  PROFILE_PATH: {type: STRING, desc: profile path at local sotrage}
+  __BASE: {type: SECURITY, level: CRITICAL, desc: parsing local profile failure event}
+  PROFILE_INFO: {type: STRING, desc: profile path at local sotrage}
+  ERR_TYPE: {type: INT32, desc: profile parse error type}

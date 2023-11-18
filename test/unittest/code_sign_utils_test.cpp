@@ -442,8 +442,19 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0016, TestSize.Level0)
 {
     std::string hapRealPath = APP_BASE_PATH + "/demo_with_multi_lib/demo_with_code_sign_block.hap";
     EntryMap entryMap;
+    std::string profileEnablePath = PROFILE_BASE_PATH + "/demo_cert/pkcs7/verify_test_profile.p7b";
+    ByteBuffer buffer;
+    bool flag = ReadSignatureFromFile(profileEnablePath, buffer);
+    EXPECT_EQ(flag, true);
 
-    int32_t ret = CodeSignUtils::EnforceCodeSignForApp(hapRealPath, entryMap, FILE_SELF);
+    string bundlName = "CodeSignUtilsTest";
+    int32_t ret = CodeSignUtils::EnableKeyInProfile(bundlName, buffer);
+    EXPECT_EQ(ret, CS_SUCCESS);
+
+    ret = CodeSignUtils::EnforceCodeSignForApp(hapRealPath, entryMap, FILE_SELF);
+    EXPECT_EQ(ret, CS_SUCCESS);
+
+    ret = CodeSignUtils::RemoveKeyInProfile(bundlName);
     EXPECT_EQ(ret, CS_SUCCESS);
 
     std::string filePath1("libs/arm64-v8a/libc++_shared.so");

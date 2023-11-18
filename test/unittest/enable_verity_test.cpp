@@ -80,7 +80,6 @@ public:
     static void TearDownTestCase()
     {
         SaveStringToFile(XPM_DEBUG_FS_MODE_PATH, PERMISSIVE_MODE);
-        SaveStringToFile(SELINUX_MODE_PATH, ENFORCE_MODE);
     };
     void SetUp() {};
     void TearDown() {};

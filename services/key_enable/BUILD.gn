@@ -17,8 +17,10 @@ import("../../code_signature.gni")
 common_deps = [
   "${rust_openssl_dir}/openssl:lib",
   "utils:libkey_enable_utils",
+  "//third_party/rust/crates/cxx:lib",
 ]
 common_external_deps = [
+  "c_utils:utils_rust",
   "hilog:hilog_rust",
   "hisysevent:hisysevent_rust",
   "ylong_json:lib",

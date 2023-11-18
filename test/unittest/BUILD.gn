@@ -161,8 +161,10 @@ ohos_rust_static_library("rust_key_enable_lib") {
   deps = [
     "${code_signature_root_dir}/services/key_enable/utils:libkey_enable_utils",
     "${rust_openssl_dir}/openssl:lib",
+    "//third_party/rust/crates/cxx:lib",
   ]
   external_deps = [
+    "c_utils:utils_rust",
     "hilog:hilog_rust",
     "hisysevent:hisysevent_rust",
     "ylong_json:lib",

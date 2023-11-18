@@ -14,7 +14,7 @@
  */
 use super::cs_hisysevent;
 use super::profile_utils::IsDeveloperModeOn;
-use hilog_rust::{error, hilog, HiLogLabel, LogType};
+use hilog_rust::{error, hilog, info, HiLogLabel, LogType};
 use std::ffi::{c_char, CString};
 use ylong_json::JsonValue;
 
@@ -400,6 +400,7 @@ where
         __reserved: [0; 32],
     };
     let ret = operation(&cert_path_info);
+    info!(LOG_LABEL, "ioctl return:{}", @public(ret));
     if ret < 0 {
         cs_hisysevent::report_add_key_err(op_name, ret);
         return Err(CertPathError::CertPathOperationError);

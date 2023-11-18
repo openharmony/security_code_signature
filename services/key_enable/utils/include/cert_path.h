@@ -20,6 +20,7 @@
 
 #define CERT_DEVICE_PATH "/dev/code_sign"
 #define CERT_IOCTL_MAGIC_NUMBER 'k'
+#define UDID_SIZE 65
 
 struct CertPathInfo {
     uint32_t signing_length;
@@ -39,6 +40,7 @@ extern "C" {
     int AddCertPath(const CertPathInfo &info);
     int RemoveCertPath(const CertPathInfo &info);
     bool IsDeveloperModeOn();
+    int CodeSignGetUdid(char *udid);
 #ifdef __cplusplus
 }
 #endif
