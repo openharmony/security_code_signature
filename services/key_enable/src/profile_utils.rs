@@ -100,6 +100,7 @@ fn parse_pkcs7_data(
     pkcs7: &Pkcs7,
     root_store: &X509Store,
     flags: Pkcs7Flags,
+    check_udid: bool,
 ) -> Result<(String, String, u32), Box<dyn Error>> {
     let stack_of_certs = Stack::<X509>::new()?;
 
@@ -111,7 +112,7 @@ fn parse_pkcs7_data(
     let profile_json = JsonValue::from_text(profile)?;
     let bundle_type = profile_json[PROFILE_TYPE_KEY].try_as_string()?.as_str();
 
-    if bundle_type == PROFILE_DEBUG_TYPE && verify_udid(&profile_json).is_err() {
+    if bundle_type == PROFILE_DEBUG_TYPE && check_udid && verify_udid(&profile_json).is_err() {
         error!(LOG_LABEL, "udid verify failed.");
         return Err("Invalid udid .".into());
     }
@@ -253,7 +254,7 @@ fn process_profile(
             continue;
         }
         let (subject, issuer, profile_type) =
-            match parse_pkcs7_data(&pkcs7, x509_store, Pkcs7Flags::empty()) {
+            match parse_pkcs7_data(&pkcs7, x509_store, Pkcs7Flags::empty(), true) {
                 Ok(tuple) => tuple,
                 Err(_) => {
                     error!(LOG_LABEL, "Failed to parse profile file {}", @public(path));
@@ -325,7 +326,7 @@ fn enable_key_in_profile_internal(
         }
     };
     let (subject, issuer, profile_type) =
-        match parse_pkcs7_data(&pkcs7, &store, Pkcs7Flags::NOVERIFY) {
+        match parse_pkcs7_data(&pkcs7, &store, Pkcs7Flags::NOVERIFY, false) {
             Ok(tuple) => tuple,
             Err(_) => {
                 error!(LOG_LABEL, "parse pkcs7 data error");
@@ -410,7 +411,7 @@ fn remove_key_in_profile_internal(bundle_name: *const c_char) -> Result<(), ()> 
         }
     };
     let (subject, issuer, profile_type) =
-        match parse_pkcs7_data(&pkcs7, &store, Pkcs7Flags::NOVERIFY) {
+        match parse_pkcs7_data(&pkcs7, &store, Pkcs7Flags::NOVERIFY, false) {
             Ok(tuple) => tuple,
             Err(_) => {
                 error!(LOG_LABEL, "parse pkcs7 data error");
