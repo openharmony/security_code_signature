@@ -303,9 +303,11 @@ impl TrustCertPath {
 impl CertPath {
     /// add single app cert path
     pub fn add_subject_cert_path(&self) -> Result<(), CertPathError> {
+        let subject = fabricate_name(&self.subject);
+        let issuer = fabricate_name(&self.issuer_ca);
         add_cert_path_info(
-            &self.subject,
-            &self.issuer_ca,
+            subject,
+            issuer,
             self.cert_path_type,
             self.max_certs_path,
         )?;
@@ -336,9 +338,8 @@ fn fabricate_name(subject: &str) -> String {
         return "ALL".to_string();
     }
     let mut common_name = String::new();
-    let mut orgnazition = String::new();
+    let mut organization = String::new();
     let mut email = String::new();
-    let mut ret = String::new();
     let parts: Vec<&str> = subject.split(',').collect();
     for part in parts {
         let inner: Vec<&str> = part.split('=').collect();
@@ -349,30 +350,39 @@ fn fabricate_name(subject: &str) -> String {
         if inner_trimmed[0] == "CN" {
             common_name = inner_trimmed[1].into();
         } else if inner_trimmed[0] == "O" {
-            orgnazition = inner_trimmed[1].into();
+            organization = inner_trimmed[1].into();
         } else if inner_trimmed[0] == "E" {
             email = inner_trimmed[1].into();
         }
     }
-    if !common_name.is_empty() && !orgnazition.is_empty() {
-        if common_name.len() >= 6 && orgnazition.len() >= 6 && common_name[0..6] == orgnazition[0..6] {
-            ret = common_name;
+    let ret = common_format_fabricate_name(&common_name, &organization, &email);
+    ret
+}
+/// common rule to fabricate name
+pub fn common_format_fabricate_name(common_name: &str, organization: &str, email: &str) -> String {
+    let mut ret = String::new();
+    if !common_name.is_empty() && !organization.is_empty() {
+        if common_name.len() >= organization.len() && common_name.starts_with(organization) {
+            return common_name.to_string();
+        }
+        if common_name.len() >= 7 && organization.len() >= 7 && common_name[0..7] == organization[0..7] {
+            ret = common_name.to_string();
         } else {
-            ret = orgnazition + ": " + &common_name;
+            ret = format!("{}: {}", organization, common_name);
         }
     } else if !common_name.is_empty() {
-        ret = common_name;
-    } else if !orgnazition.is_empty() {
-        ret = orgnazition;
+        ret = common_name.to_string();
+    } else if !organization.is_empty() {
+        ret = organization.to_string();
     } else if !email.is_empty() {
-        ret = email;
+        ret = email.to_string();
     }
     ret
 }
 
 fn cert_path_operation<F>(
-    subject: &str,
-    issuer: &str,
+    subject: String,
+    issuer: String,
     cert_path_type: u32,
     path_length: u32,
     operation: F,
@@ -383,12 +393,9 @@ where
     if subject.is_empty() || issuer.is_empty() {
         return Err(CertPathError::CertPathOperationError);
     }
-    let fabricated_subject = fabricate_name(subject);
-    let fabricated_issuer = fabricate_name(issuer);
 
-    let subject_cstring =
-        CString::new(fabricated_subject).expect("convert to subject_cstring error!");
-    let issuer_cstring = CString::new(fabricated_issuer).expect("convert to cstring error!");
+    let subject_cstring = CString::new(subject).expect("convert to subject_cstring error!");
+    let issuer_cstring = CString::new(issuer).expect("convert to cstring error!");
 
     let cert_path_info = CertPathInfo {
         signing_length: subject_cstring.as_bytes().len() as u32,
@@ -409,8 +416,8 @@ where
 }
 /// add cert path info in kernel
 pub fn add_cert_path_info(
-    subject: &str,
-    issuer: &str,
+    subject: String,
+    issuer: String,
     cert_path_type: u32,
     path_length: u32,
 ) -> Result<(), CertPathError> {
@@ -426,8 +433,8 @@ pub fn add_cert_path_info(
 }
 /// remove cert path info in kernel
 pub fn remove_cert_path_info(
-    subject: &str,
-    issuer: &str,
+    subject: String,
+    issuer: String,
     cert_path_type: u32,
     path_length: u32,
 ) -> Result<(), CertPathError> {
