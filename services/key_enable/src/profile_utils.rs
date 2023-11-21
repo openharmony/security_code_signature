@@ -15,7 +15,7 @@
 
 use super::cert_chain_utils::PemCollection;
 use super::cert_path_utils::{
-    add_cert_path_info, remove_cert_path_info,
+    add_cert_path_info, remove_cert_path_info, common_format_fabricate_name,
     DebugCertPathType, ReleaseCertPathType, TrustCertPath,
 };
 use super::cs_hisysevent::report_parse_profile_err;
@@ -137,8 +137,8 @@ fn parse_pkcs7_data(
         }
     };
     let signed_pem = X509::from_pem(signed_cert.as_bytes())?;
-    let subject = format_x509name_to_string(signed_pem.subject_name());
-    let issuer = format_x509name_to_string(signed_pem.issuer_name());
+    let subject = format_x509_fabricate_name(signed_pem.subject_name());
+    let issuer = format_x509_fabricate_name(signed_pem.issuer_name());
 
     Ok((subject, issuer, profile_type))
 }
@@ -192,6 +192,26 @@ fn format_x509name_to_string(name: &X509NameRef) -> String {
         parts.push(format!("{}={}", tag, value));
     }
     parts.join(", ")
+}
+
+fn format_x509_fabricate_name(name: &X509NameRef) -> String {
+    let mut common_name = String::new();
+    let mut organization = String::new();
+    let mut email = String::new();
+
+    for entry in name.entries() {
+        let entry_nid = entry.object().nid();
+        if let Ok(value) = entry.data().as_utf8() {
+            match entry_nid {
+                openssl::nid::Nid::COMMONNAME => common_name = value.to_string(),
+                openssl::nid::Nid::ORGANIZATIONNAME => organization = value.to_string(),
+                openssl::nid::Nid::PKCS9_EMAILADDRESS => email = value.to_string(),
+                _ => continue,
+            };
+        }
+    }
+    let ret = common_format_fabricate_name(&common_name, &organization, &email);
+    ret
 }
 
 fn get_profile_paths(is_debug: bool) -> Vec<String> {
@@ -262,7 +282,7 @@ fn process_profile(
                     continue;
                 }
             };
-        if add_cert_path_info(&subject, &issuer, profile_type, DEFAULT_MAX_CERT_PATH_LEN).is_err() {
+        if add_cert_path_info(subject, issuer, profile_type, DEFAULT_MAX_CERT_PATH_LEN).is_err() {
             error!(
                 LOG_LABEL,
                 "Failed to add profile cert path info into ioctl for {}", @public(path)
@@ -276,6 +296,7 @@ fn process_profile(
 
 fn verify_udid(profile_json: &JsonValue) -> Result<(), String> {
     let device_udid = get_udid()?;
+    info!(LOG_LABEL, "get device udid {}!", device_udid);
     let device_id_type = &profile_json[PROFILE_DEBUG_INFO_KEY][PROFILE_DEVICE_ID_TYPE_KEY];
 
     if let JsonValue::String(id_type) = device_id_type {
@@ -363,7 +384,7 @@ fn enable_key_in_profile_internal(
         error!(LOG_LABEL, "change profile mode error!");
         return Err(());
     }
-    if add_cert_path_info(&subject, &issuer, profile_type, DEFAULT_MAX_CERT_PATH_LEN).is_err() {
+    if add_cert_path_info(subject, issuer, profile_type, DEFAULT_MAX_CERT_PATH_LEN).is_err() {
         error!(LOG_LABEL, "add profile data error!");
         return Err(());
     }
@@ -427,7 +448,7 @@ fn remove_key_in_profile_internal(bundle_name: *const c_char) -> Result<(), ()> 
         info!(LOG_LABEL, "not remove profile_type:{} when development off", @public(profile_type));
         return Ok(());
     }
-    if remove_cert_path_info(&subject, &issuer, profile_type, DEFAULT_MAX_CERT_PATH_LEN).is_err() {
+    if remove_cert_path_info(subject, issuer, profile_type, DEFAULT_MAX_CERT_PATH_LEN).is_err() {
         error!(LOG_LABEL, "remove profile data error!");
         return Err(());
     }
