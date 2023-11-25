@@ -22,6 +22,24 @@
 #include "hilog/log.h"
 #endif
 
+#ifndef __cplusplus
+#ifdef LOG_TAG
+#undef LOG_TAG
+#endif
+#define LOG_TAG "CODE_SIGN"
+
+#ifdef LOG_DOMAIN
+#undef LOG_DOMAIN
+#endif
+#define LOG_DOMAIN 0xD002F00
+
+#define LOG_DEBUG(fmt, ...) HILOG_DEBUG(LOG_CORE, "[%{public}s]:" fmt, __func__, ##__VA_ARGS__)
+#define LOG_INFO(fmt, ...) HILOG_INFO(LOG_CORE, "[%{public}s]:" fmt, __func__, ##__VA_ARGS__)
+#define LOG_WARN(fmt, ...) HILOG_WARN(LOG_CORE, "[%{public}s]:" fmt, __func__, ##__VA_ARGS__)
+#define LOG_ERROR(fmt, ...) HILOG_ERROR(LOG_CORE, "[%{public}s]:" fmt, __func__, ##__VA_ARGS__)
+#define LOG_FATAL(fmt, ...) HILOG_FATAL(LOG_CORE, "[%{public}s]:" fmt, __func__, ##__VA_ARGS__)
+
+#else // __cplusplus
 namespace OHOS {
 namespace Security {
 namespace CodeSign {
@@ -42,3 +60,4 @@ static constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, SECURITY_DOMAIN,
 }
 }
 #endif
+#endif // CODE_SIGN_LOG_H

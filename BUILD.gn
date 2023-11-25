@@ -25,6 +25,7 @@ config("common_utils_config") {
 
 group("subcomponents") {
   deps = [
+    "${code_signature_root_dir}/interfaces/innerkits/code_sign_attr_utils:libcode_sign_attr_utils",
     "${code_signature_root_dir}/interfaces/innerkits/code_sign_utils:libcode_sign_utils",
     "${code_signature_root_dir}/interfaces/innerkits/local_code_sign:liblocal_code_sign_sdk",
     "${code_signature_root_dir}/services/key_enable:key_enable_targets",

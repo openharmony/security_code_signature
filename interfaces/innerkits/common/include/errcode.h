@@ -16,9 +16,6 @@
 #ifndef CODE_SIGN_ERR_CODE_H
 #define CODE_SIGN_ERR_CODE_H
 
-namespace OHOS {
-namespace Security {
-namespace CodeSign {
 enum CommonErrCode {
     CS_SUCCESS = 0,
     CS_ERR_MEMORY = -0x1,
@@ -99,7 +96,4 @@ enum SignBlockErrCode {
     CS_ERR_SIGN_EXTENSION_OFFSET_ALIGN = -0x622,
     CS_ERR_TARGET_FILE_PATH = -0x623,
 };
-}
-}
-}
 #endif

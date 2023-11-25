@@ -35,6 +35,7 @@
 #include "enable_key_utils.h"
 #include "log.h"
 #include "xpm_common.h"
+#include "code_sign_attr_utils.h"
 
 using namespace testing::ext;
 
@@ -73,6 +74,7 @@ public:
     static void SetUpTestCase()
     {
         EXPECT_EQ(EnableTestKey(TEST_SUBJECT.c_str(), TEST_ISSUER.c_str()), 0);
+        EXPECT_EQ(SetXpmOwnerId(PROCESS_OWNERID_COMPAT, NULL), 0);
         g_isXpmOn = AllocXpmRegion();
         SaveStringToFile(SELINUX_MODE_PATH, PERMISSIVE_MODE);
         SaveStringToFile(XPM_DEBUG_FS_MODE_PATH, ENFORCE_MODE);

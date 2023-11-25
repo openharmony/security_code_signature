@@ -62,6 +62,13 @@
             "header_files": [],
             "header_base": "//base/security/code_signature/interfaces/innerkits/local_code_sign/include"
           }
+        },
+        {
+          "name" : "//base/security/code_signature/interfaces/innerkits/code_sign_attr_utils:libcode_sign_attr_utils",
+          "header": {
+            "header_files": [],
+            "header_base": "//base/security/code_signature/interfaces/innerkits/code_sign_attr_utils/include"
+          }
         }
       ],
       "test": [ "//base/security/code_signature/test:testgroup" ]
