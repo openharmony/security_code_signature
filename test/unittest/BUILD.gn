@@ -205,7 +205,6 @@ ohos_unittest("enable_verity_ioctl_unittest") {
   ]
   deps = [
     ":key_enable_src_set",
-    "${code_signature_root_dir}/interfaces/innerkits/code_sign_attr_utils:libcode_sign_attr_utils",
     "${googletest_dir}:gtest",
   ]
   external_deps = [
