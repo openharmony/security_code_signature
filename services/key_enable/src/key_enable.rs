@@ -28,7 +28,7 @@ use std::thread::sleep_ms;
 
 const LOG_LABEL: HiLogLabel = HiLogLabel {
     log_type: LogType::LogCore,
-    domain: 0xd002f00, // security domain
+    domain: 0xd005a06, // security domain
     tag: "CODE_SIGN",
 };
 

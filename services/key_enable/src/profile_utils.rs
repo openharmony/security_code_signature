@@ -37,7 +37,7 @@ const ERROR_CODE: i32 = -1;
 const SUCCESS_CODE: i32 = 0;
 const LOG_LABEL: HiLogLabel = HiLogLabel {
     log_type: LogType::LogCore,
-    domain: 0xd002f00, // security domain
+    domain: 0xd005a06, // security domain
     tag: "CODE_SIGN",
 };
 const PROFILE_STORE_PREFIX: &str = "/data/service/el0/profiles/developer";

@@ -31,7 +31,7 @@
 #ifdef LOG_DOMAIN
 #undef LOG_DOMAIN
 #endif
-#define LOG_DOMAIN 0xD002F00
+#define LOG_DOMAIN 0xD005A06
 
 #define LOG_DEBUG(fmt, ...) HILOG_DEBUG(LOG_CORE, "[%{public}s]:" fmt, __func__, ##__VA_ARGS__)
 #define LOG_INFO(fmt, ...) HILOG_INFO(LOG_CORE, "[%{public}s]:" fmt, __func__, ##__VA_ARGS__)
@@ -43,7 +43,7 @@
 namespace OHOS {
 namespace Security {
 namespace CodeSign {
-static constexpr unsigned int SECURITY_DOMAIN = 0xD002F00;
+static constexpr unsigned int SECURITY_DOMAIN = 0xD005A06;
 static constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, SECURITY_DOMAIN, "CODE_SIGN"};
 
 #define LOG_DEBUG(label, fmt, ...) \
