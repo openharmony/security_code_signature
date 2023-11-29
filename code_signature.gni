@@ -18,3 +18,7 @@ openssl_dir = "//third_party/openssl"
 rust_openssl_dir = "//third_party/rust/crates/rust-openssl"
 googletest_dir = "//third_party/googletest"
 third_party_securec_dir = "//third_party/bounds_checking_function"
+
+declare_args() {
+  code_signature_support_openharmony_ca = true
+}

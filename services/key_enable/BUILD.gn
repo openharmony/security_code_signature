@@ -60,7 +60,11 @@ ohos_rust_shared_ffi("key_enable_lib") {
 }
 
 ohos_prebuilt_etc("trusted_cert_path") {
-  source = "config/trusted_cert_path.json"
+  if (code_signature_support_openharmony_ca) {
+    source = "config/openharmony/trusted_cert_path.json"
+  } else {
+    source = "config/trusted_cert_path.json"
+  }
   part_name = "code_signature"
   subsystem_name = "security"
   relative_install_dir = "security"
@@ -81,11 +85,14 @@ ohos_prebuilt_etc("key_enable.cfg") {
 }
 
 group("key_enable_targets") {
-  deps = [
-    ":key_enable",
-    ":key_enable.cfg",
-    ":key_enable_lib",
-    ":trusted_cert_path",
-    ":trusted_cert_path_test",
-  ]
+  deps = []
+  if (host_os == "linux" && !is_asan) {
+    deps += [
+      ":key_enable",
+      ":key_enable.cfg",
+      ":key_enable_lib",
+      ":trusted_cert_path",
+      ":trusted_cert_path_test",
+    ]
+  }
 }

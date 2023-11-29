@@ -33,10 +33,14 @@ ohos_shared_library("libcode_sign_utils") {
   configs = [ "${code_signature_root_dir}:common_utils_config" ]
 
   deps = [
-    "${code_signature_root_dir}/services/key_enable:key_enable_lib",
     "${code_signature_root_dir}/utils:fsverity_sign_src_set",
     "${openssl_dir}:libcrypto_shared",
   ]
+  if (host_os == "linux" && !is_asan) {
+    deps += [ "${code_signature_root_dir}/services/key_enable:key_enable_lib" ]
+  } else {
+    sources += [ "${code_signature_root_dir}/services/key_enable/src/asan/disable_rust_interface.cpp" ]
+  }
   external_deps = [
     "ability_base:extractortool",
     "appverify:libhapverify",
