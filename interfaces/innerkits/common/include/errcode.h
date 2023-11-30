@@ -56,6 +56,7 @@ enum VerifyErrCode {
     CS_ERR_INVALID_OWNER_ID = -0x303,
     CS_CODE_SIGN_NOT_EXISTS = -0x304,
     CS_ERR_PROFILE = -0x305,
+    CS_ERR_ENABLE_TIMEOUT = -0x306
 };
 
 enum IPCErrCode {

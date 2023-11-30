@@ -31,9 +31,10 @@ namespace CodeSign {
 using EntryMap = std::unordered_map<std::string, std::string>;
 
 typedef enum {
-    FILE_ALL,
-    FILE_SELF,
-    FILE_ENTRY_ONLY,
+    FILE_ALL, // Enable hap and so(new and historical records)
+    FILE_SELF, // Only enable hap
+    FILE_ENTRY_ONLY, // Only enable so(new and historical records)
+    FILE_ENTRY_ADD, // Only record, not enable
     FILE_TYPE_MAX,
 } FileType;
 
@@ -54,7 +55,7 @@ public:
      * @param type signature file type
      * @return err code, see err_code.h
      */
-    static int32_t EnforceCodeSignForApp(const std::string &path, const EntryMap &entryPathMap, FileType type);
+    int32_t EnforceCodeSignForApp(const std::string &path, const EntryMap &entryPathMap, FileType type);
 
     /**
      * @brief Enforce code signature for app with ownerID
@@ -64,7 +65,7 @@ public:
      * @param type signature file type
      * @return err code, see err_code.h
      */
-    static int32_t EnforceCodeSignForAppWithOwnerId(std::string ownerId, const std::string &path,
+    int32_t EnforceCodeSignForAppWithOwnerId(const std::string &ownerId, const std::string &path,
         const EntryMap &entryPathMap, FileType type);
 
     /**
@@ -108,8 +109,9 @@ private:
     static int32_t IsFsVerityEnabled(int fd);
     static int32_t EnableCodeSignForFile(const std::string &path, const struct code_sign_enable_arg &arg);
     static void ShowCodeSignInfo(const std::string &path, const struct code_sign_enable_arg &arg);
-    static int32_t CheckOwnerId(const std::string &path, const std::string &ownerId,
-        const uint8_t *sigPtr, uint32_t sigSize);
+    static int32_t IsValidPathAndFileType(const std::string &path, std::string &realPath, FileType type);
+private:
+    EntryMap storedEntryMap_;
 };
 }
 }
