@@ -18,10 +18,10 @@
 /// two mocked function beacause of at asan mode, c_utils:utils_rust cannot compile
 int32_t EnableKeyInProfileByRust(const char* bundleName, const uint8_t* profile, uint32_t profileSize)
 {
-    return OHOS::Security::CodeSign::CS_SUCCESS;
+    return CS_SUCCESS;
 }
 
 int32_t RemoveKeyInProfileByRust(const char* bundleName)
 {
-    return OHOS::Security::CodeSign::CS_SUCCESS;
+    return CS_SUCCESS;
 }
