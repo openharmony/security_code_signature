@@ -16,7 +16,9 @@
     "hisysevent_config": [
       "//base/security/code_signature/hisysevent.yaml"
     ],
-    "features": [],
+    "features": [
+      "code_signature_support_oh_code_sign"
+    ],
     "adapted_system_type": [ "standard" ],
     "rom": "1024KB",
     "ram": "2048KB",

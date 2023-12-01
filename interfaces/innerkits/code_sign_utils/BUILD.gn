@@ -42,6 +42,10 @@ ohos_shared_library("libcode_sign_utils") {
   } else {
     sources += [ "${code_signature_root_dir}/services/key_enable/src/asan/disable_rust_interface.cpp" ]
   }
+  defines = []
+  if (code_signature_support_oh_code_sign) {
+    defines += [ "SUPPORT_OH_CODE_SIGN" ]
+  }
   external_deps = [
     "ability_base:extractortool",
     "appverify:libhapverify",

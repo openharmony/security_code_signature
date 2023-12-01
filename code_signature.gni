@@ -21,4 +21,5 @@ third_party_securec_dir = "//third_party/bounds_checking_function"
 
 declare_args() {
   code_signature_support_openharmony_ca = true
+  code_signature_support_oh_code_sign = false
 }
