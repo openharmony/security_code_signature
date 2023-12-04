@@ -32,7 +32,6 @@
         "safwk",
         "huks",
         "eventhandler",
-        "build_framework",
         "access_token",
         "ylong_json",
         "appverify",
@@ -40,8 +39,7 @@
       ],
       "third_party": [
         "openssl",
-        "fsverity-utils",
-        "googletest"
+        "fsverity-utils"
       ]
     },
     "build": {

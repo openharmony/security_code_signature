@@ -38,8 +38,6 @@ ohos_source_set("key_enable_src_set") {
 ohos_unittest("add_cert_path_unittest") {
   module_out_path = "security/code_signature"
   sources = [ "add_cert_path_test.cpp" ]
-
-  deps = [ "${googletest_dir}:gtest" ]
 }
 
 ohos_unittest("code_sign_utils_unittest") {
@@ -50,7 +48,6 @@ ohos_unittest("code_sign_utils_unittest") {
   deps = [
     ":key_enable_src_set",
     "${code_signature_root_dir}/interfaces/innerkits/code_sign_utils:libcode_sign_utils",
-    "${googletest_dir}:gtest",
   ]
 
   include_dirs = [
@@ -73,7 +70,6 @@ ohos_unittest("local_code_sign_unittest") {
   deps = [
     "${code_signature_root_dir}/interfaces/innerkits/code_sign_utils:libcode_sign_utils",
     "${code_signature_root_dir}/interfaces/innerkits/local_code_sign:liblocal_code_sign_sdk",
-    "${googletest_dir}:gtest",
     "${openssl_dir}:libcrypto_shared",
   ]
 
@@ -103,7 +99,6 @@ ohos_unittest("sign_and_enforce_unittest") {
   deps = [
     "${code_signature_root_dir}/interfaces/innerkits/code_sign_utils:libcode_sign_utils",
     "${code_signature_root_dir}/interfaces/innerkits/local_code_sign:liblocal_code_sign_sdk",
-    "${googletest_dir}:gtest",
     "${openssl_dir}:libcrypto_shared",
   ]
 
@@ -133,7 +128,6 @@ ohos_unittest("multi_thread_local_sign_unittest") {
   deps = [
     "${code_signature_root_dir}/interfaces/innerkits/code_sign_utils:libcode_sign_utils",
     "${code_signature_root_dir}/interfaces/innerkits/local_code_sign:liblocal_code_sign_sdk",
-    "${googletest_dir}:gtest",
     "${openssl_dir}:libcrypto_shared",
   ]
 
@@ -206,7 +200,6 @@ ohos_unittest("enable_verity_ioctl_unittest") {
   deps = [
     ":key_enable_src_set",
     "${code_signature_root_dir}/interfaces/innerkits/code_sign_attr_utils:libcode_sign_attr_utils",
-    "${googletest_dir}:gtest",
   ]
   external_deps = [
     "c_utils:utils",
