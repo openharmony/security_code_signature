@@ -15,6 +15,8 @@
 #include "rust_interface.h"
 #include "errcode.h"
 
+using namespace OHOS::Security::CodeSign;
+
 /// two mocked function beacause of at asan mode, c_utils:utils_rust cannot compile
 int32_t EnableKeyInProfileByRust(const char* bundleName, const uint8_t* profile, uint32_t profileSize)
 {

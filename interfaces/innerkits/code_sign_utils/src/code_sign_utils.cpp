@@ -318,6 +318,14 @@ int32_t CodeSignUtils::RemoveKeyInProfile(const std::string &bundleName)
         LABEL, "Remove key in profile failed. errno = <%{public}d, %{public}s>", errno, strerror(errno));
     return CS_ERR_PROFILE;
 }
+bool CodeSignUtils::isSupportOHCodeSign()
+{
+#ifdef SUPPORT_OH_CODE_SIGN
+    return true;
+#else
+    return false;
+#endif
+}
 }
 }
 }

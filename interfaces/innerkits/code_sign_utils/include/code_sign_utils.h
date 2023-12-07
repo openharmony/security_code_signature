@@ -104,6 +104,11 @@ public:
      * @return err code, see err_code.h
      */
     static int32_t RemoveKeyInProfile(const std::string &bundleName);
+    /**
+     * @brief inteface for get support_openharmony_ca state
+     * @return return ture if support oh-sdk code sign
+     */
+    static bool isSupportOHCodeSign();
 private:
     static int32_t IsSupportFsVerity(const std::string &path);
     static int32_t IsFsVerityEnabled(int fd);
