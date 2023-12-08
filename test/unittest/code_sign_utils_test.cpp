@@ -469,7 +469,7 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0016, TestSize.Level0)
     EXPECT_EQ(ret, CS_SUCCESS);
 
     ret = utils.EnforceCodeSignForApp(hapRealPath, entryMap, FILE_ALL);
-    EXPECT_EQ(ret, CS_ERR_TARGET_FILE_PATH);
+    EXPECT_EQ(ret, CS_ERR_FILE_PATH);
 }
 
 /**

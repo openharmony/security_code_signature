@@ -29,7 +29,7 @@ constexpr unsigned long MAP_XPM = 0x40;
 const unsigned long PAGE_SIZE = (sysconf(_SC_PAGESIZE));
 const unsigned long PAGE_MASK = ~(PAGE_SIZE - 1);
 
-const std::string XPM_DEBUG_FS_MODE_PATH = "/sys/kernel/debug/xpm/xpm_mode";
+const std::string XPM_DEBUG_FS_MODE_PATH = "/proc/sys/kernel/xpm/xpm_mode";
 const std::string SELINUX_MODE_PATH = "/sys/fs/selinux/enforce";
 const std::string PERMISSIVE_MODE = "0";
 const std::string ENFORCE_MODE = "1";
