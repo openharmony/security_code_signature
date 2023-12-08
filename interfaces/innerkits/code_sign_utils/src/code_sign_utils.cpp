@@ -267,7 +267,7 @@ int32_t CodeSignUtils::EnforceCodeSignForAppWithOwnerId(const std::string &owner
 
         ShowCodeSignInfo(targetFile, arg);
         if (!CheckFilePathValid(targetFile, Constants::ENABLE_APP_BASE_PATH)) {
-            return CS_ERR_TARGET_FILE_PATH;
+            return CS_ERR_FILE_PATH;
         }
         multiTask.AddTaskData(targetFile, arg);
     } while (ret == CS_SUCCESS);

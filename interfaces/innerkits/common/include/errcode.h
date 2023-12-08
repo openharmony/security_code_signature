@@ -95,6 +95,5 @@ enum SignBlockErrCode {
     CS_ERR_SO_SIGN_SIZE = -0x620,
     CS_ERR_SIGN_ADDR_ALIGN = -0x621,
     CS_ERR_SIGN_EXTENSION_OFFSET_ALIGN = -0x622,
-    CS_ERR_TARGET_FILE_PATH = -0x623,
 };
 #endif

@@ -78,6 +78,10 @@ public:
         g_isXpmOn = AllocXpmRegion();
         SaveStringToFile(SELINUX_MODE_PATH, PERMISSIVE_MODE);
         SaveStringToFile(XPM_DEBUG_FS_MODE_PATH, ENFORCE_MODE);
+        if (g_isXpmOn) {
+            std::string realPath;
+            g_isXpmOn = OHOS::PathToRealPath(XPM_DEBUG_FS_MODE_PATH, realPath);
+        }
     };
     static void TearDownTestCase()
     {
