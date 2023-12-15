@@ -465,7 +465,7 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0016, TestSize.Level0)
     std::string targetPath2 = TEST_APP_DTAT_DIR + "libs/arm64/libentry.so";
     entryMap.emplace(filePath2, targetPath2);
 
-    ret = utils.EnforceCodeSignForApp(hapRealPath, entryMap, FILE_ENTRY_ONLY);
+    ret = utils.EnforceCodeSignForApp(hapRealPath, entryMap, FILE_ENTRY_ADD);
     EXPECT_EQ(ret, CS_SUCCESS);
 
     ret = utils.EnforceCodeSignForApp(hapRealPath, entryMap, FILE_ALL);

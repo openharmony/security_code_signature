@@ -231,13 +231,14 @@ void CodeSignUtils::ShowCodeSignInfo(const std::string &path, const struct code_
 int32_t CodeSignUtils::EnforceCodeSignForAppWithOwnerId(const std::string &ownerId, const std::string &path,
                                                         const EntryMap &entryPathMap, FileType type)
 {
-    if (type == FILE_ENTRY_ADD || type == FILE_ALL) {
+    if (type == FILE_ENTRY_ADD || type == FILE_ENTRY_ONLY || type == FILE_ALL) {
+        if (type == FILE_ENTRY_ONLY && !isSupportOHCodeSign()) {
+            return CS_SUCCESS;
+        }
         storedEntryMap_.insert(entryPathMap.begin(), entryPathMap.end());
         if (type == FILE_ENTRY_ADD) {
             return CS_SUCCESS;
         }
-    } else if (type == FILE_ENTRY_ONLY) {
-        return CS_SUCCESS;
     }
     std::string realPath;
     int32_t ret = IsValidPathAndFileType(path, realPath, type);
