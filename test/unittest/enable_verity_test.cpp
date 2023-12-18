@@ -330,6 +330,7 @@ static void EnableExpandedTamperFile(const std::string &filePath,
 
     // Enable successully but cannot read
     EXPECT_EQ(EnableVerityOnOneFile(expandFilePath, &arg), 0);
+    SaveStringToFile(DROP_CACHE_PROC_PATH, DROP_ALL_CACHE_LEVEL);
     ByteBuffer tmp;
     EXPECT_EQ(ReadDataFromFile(expandFilePath, tmp), false);
 
