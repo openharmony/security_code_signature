@@ -40,9 +40,10 @@
 | **接口声明** | **接口描述** |
 | --- | --- |
 | int32_t EnforceCodeSignForApp(const EntryMap &entryPath, const std::string &signatureFile); | 对hap使能代码签名 |
+| int32_t EnforceCodeSignForApp(const std::string &path, const EntryMap &entryPathMap, FileType type); | 对hap使能代码签名 |
 | int32_t EnforceCodeSignForFile(const std::string &path, const ByteBuffer &signature); | 对文件使能代码签名 |
 | int32_t EnforceCodeSignForAppWithOwnerId(std::string ownerId, const std::string &path, const EntryMap &entryPathMap, FileType type); | 对hap使能代码签名和OwnerId校验 |
-| int ParseOwnerIdFromSignature(const ByteBuffer &sigbuffer, std::string &ownerID); | 从签名中获取OwnerId |
+| int ParseOwnerIdFromSignature(const ByteBuffer &sigbuffer, std::string &ownerID); | 从签名中解析OwnerId |
 | int32_t EnableKeyInProfile(const std::string &bundleName, const ByteBuffer &profileBuffer); | 信任开发者证书 |
 | int32_t RemoveKeyInProfile(const std::string &bundleName); | 撤销已信任的开发者证书 |
 | int32_t InitLocalCertificate(ByteBuffer &cert); | 初始化本地签名证书 |
