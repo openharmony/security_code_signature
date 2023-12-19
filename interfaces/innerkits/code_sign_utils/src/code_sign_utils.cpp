@@ -233,9 +233,6 @@ int32_t CodeSignUtils::EnforceCodeSignForAppWithOwnerId(const std::string &owner
                                                         const EntryMap &entryPathMap, FileType type)
 {
     if (type == FILE_ENTRY_ADD || type == FILE_ENTRY_ONLY || type == FILE_ALL) {
-        if (type == FILE_ENTRY_ONLY && !isSupportOHCodeSign()) {
-            return CS_SUCCESS;
-        }
         storedEntryMap_.insert(entryPathMap.begin(), entryPathMap.end());
         if (type == FILE_ENTRY_ADD) {
             return CS_SUCCESS;
