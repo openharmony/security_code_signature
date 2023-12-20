@@ -263,10 +263,13 @@ int32_t CodeSignUtils::EnforceCodeSignForAppWithOwnerId(const std::string &owner
         } else if (ret != CS_SUCCESS) {
             return ret;
         }
-
         ShowCodeSignInfo(targetFile, arg);
         if (!CheckFilePathValid(targetFile, Constants::ENABLE_APP_BASE_PATH)) {
             return CS_ERR_FILE_PATH;
+        }
+        ret = IsSupportFsVerity(targetFile);
+        if (ret != CS_SUCCESS) {
+            return ret;
         }
         multiTask.AddTaskData(targetFile, arg);
     } while (ret == CS_SUCCESS);
@@ -293,7 +296,7 @@ int32_t CodeSignUtils::IsValidPathAndFileType(const std::string &path, std::stri
         return CS_ERR_PARAM_INVALID;
     }
 
-    return IsSupportFsVerity(realPath);
+    return CS_SUCCESS;
 }
 
 int32_t CodeSignUtils::EnableKeyInProfile(const std::string &bundleName, const ByteBuffer &profileBuffer)
