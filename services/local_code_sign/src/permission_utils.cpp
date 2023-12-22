@@ -17,6 +17,7 @@
 
 #include "accesstoken_kit.h"
 #include "cs_hisysevent.h"
+#include "parameter.h"
 #include "ipc_skeleton.h"
 #include "log.h"
 
@@ -25,6 +26,9 @@ namespace Security {
 namespace CodeSign {
 const std::vector<std::string> CERTIFICATE_CALLERS = {"key_enable"};
 const std::vector<std::string> SIGN_CALLERS = {"installs"};
+constexpr int32_t VALUE_MAX_LEN = 32;
+const char* g_accessTokenServiceInitKey = "accesstoken.permission.init";
+bool g_isAtmInited = false;
 
 bool PermissionUtils::IsValidCallerOfCert()
 {
@@ -46,9 +50,24 @@ bool PermissionUtils::IsValidCallerOfLocalCodeSign()
     return false;
 }
 
+bool PermissionUtils::HasATMInitilized()
+{
+    char value[VALUE_MAX_LEN] = {0};
+    int32_t ret = GetParameter(g_accessTokenServiceInitKey, "", value, VALUE_MAX_LEN - 1);
+    if ((ret < 0) || (static_cast<uint64_t>(std::atoll(value)) != 0)) {
+        g_isAtmInited = true;
+        return true;
+    }
+    return false;
+}
+
 bool PermissionUtils::VerifyCallingProcess(const std::vector<std::string> &validCallers,
     const AccessToken::AccessTokenID &callerTokenId)
 {
+    if (!g_isAtmInited && !HasATMInitilized()) {
+        LOG_DEBUG(LABEL, "AccessTokenManager has not started yet.");
+        return true;
+    }
     for (const auto &caller: validCallers) {
         AccessToken::AccessTokenID tokenId = AccessToken::AccessTokenKit::GetNativeTokenId(caller);
         if (tokenId == callerTokenId) {

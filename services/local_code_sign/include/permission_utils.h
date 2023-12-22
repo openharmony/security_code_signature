@@ -31,6 +31,7 @@ public:
 private:
     static bool VerifyCallingProcess(const std::vector<std::string> &validCallers,
     const AccessToken::AccessTokenID &callerTokenID);
+    static bool HasATMInitilized();
 };
 }
 }

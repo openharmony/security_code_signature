@@ -199,31 +199,29 @@ fn restrict_keys(key_id: KeySerial) {
     }
 }
 
-/// enforce keyring
-fn enforce_keyring(root_cert: &PemCollection) {
+/// enable trusted and local keys, and then restrict keyring
+pub fn enable_all_keys() {
     let key_id = match get_keyring_id() {
         Ok(id) => id,
         Err(_) => return,
     };
-    enable_trusted_keys(key_id, root_cert);
-    enable_local_key(key_id);
-    restrict_keys(key_id);
-}
+    let root_cert = get_trusted_certs();
+    // enable device keys and authed source
+    enable_trusted_keys(key_id, &root_cert);
 
-fn add_cert_path(root_cert: &PemCollection) {
     let cert_paths = get_cert_path();
     if cert_paths.add_cert_paths().is_err() {
         error!(LOG_LABEL, "Add trusted cert path err");
     }
-    if add_profile_cert_path(root_cert, &cert_paths).is_err() {
+
+    // enable developer cert
+    if add_profile_cert_path(&root_cert, &cert_paths).is_err() {
         error!(LOG_LABEL, "Add cert path from local profile");
     }
-}
 
-/// enable trusted and local keys, and then restrict keyring
-pub fn enable_all_keys() {
-    let root_cert = get_trusted_certs();
-    enforce_keyring(&root_cert);
-    add_cert_path(&root_cert);
+    // enable local code sign key
+    enable_local_key(key_id);
+    restrict_keys(key_id);
+
     info!(LOG_LABEL, "Fnished enable all keys.");
 }

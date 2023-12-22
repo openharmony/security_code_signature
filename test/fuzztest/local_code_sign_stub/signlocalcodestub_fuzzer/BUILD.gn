@@ -66,6 +66,7 @@ ohos_fuzztest("SignLocalCodeStubFuzzTest") {
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
     "huks:libhukssdk",
+    "init:libbegetutil",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",

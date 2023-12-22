@@ -38,7 +38,8 @@ enum SignErrCode {
     CS_ERR_HUKS_SIGN = -0x202,
     CS_ERR_HUKS_INIT_KEY = -0x203,
     CS_ERR_COMPUTE_DIGEST = -0x204,
-    CS_ERR_NO_OWNER_ID = -0x205
+    CS_ERR_NO_OWNER_ID = -0x205,
+    CS_ERR_INIT_LOCAL_CERT = -0x206,
 };
 
 enum OpenSSLErrCode {
