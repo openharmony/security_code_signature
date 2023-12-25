@@ -17,7 +17,8 @@
       "//base/security/code_signature/hisysevent.yaml"
     ],
     "features": [
-      "code_signature_support_oh_code_sign"
+      "code_signature_support_oh_code_sign",
+      "code_signature_enable_xpm_mode"
     ],
     "adapted_system_type": [ "standard" ],
     "rom": "1024KB",
