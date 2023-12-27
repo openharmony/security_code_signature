@@ -28,43 +28,43 @@ using namespace OHOS::Security::CodeSign;
 namespace OHOS {
 namespace Security {
 namespace CodeSign {
-constexpr uint32_t INIT_LOCAL_CERT_TIMEOUT_MS = 300000;
-constexpr uint32_t INIT_LOCAL_CERT_SLEEP_US = 500 * 1000;
+constexpr uint32_t INIT_LOCAL_CERT_TIMEOUT_MS = 300 * 1000;
+constexpr uint32_t INIT_LOCAL_CERT_SLEEP_US = 1000 * 1000;
 const std::string INIT_LOCAL_CERT_THREAD_NAME = "init_local_cert";
 
 static std::condition_variable g_condition;
-static std::mutex g_lock;
 
 class InitLocalCertThread : public OHOS::Thread {
 public:
     InitLocalCertThread() {}
     ~InitLocalCertThread() {}
 
-    bool GetStatus()
+    int GetRet()
     {
-        return success;
+        return initResult_;
     }
 
     ByteBuffer& GetCert()
     {
-        return cert;
+        return cert_;
     }
+
 protected:
     bool Run()
     {
-        std::unique_lock<std::mutex> lock(g_lock);
-        int32_t ret;
-        do {
-            ret = LocalCodeSignKit::InitLocalCertificate(cert);
+        initResult_ = LocalCodeSignKit::InitLocalCertificate(cert_);
+        if (initResult_ == CS_ERR_SA_GET_PROXY) {
             usleep(INIT_LOCAL_CERT_SLEEP_US);
-        } while (ret == CS_ERR_SA_GET_PROXY);
-        success = (ret == CS_SUCCESS);
-        g_condition.notify_one();
-        return true;
+            return true;
+        } else {
+            g_condition.notify_one();
+            return false;
+        }
     }
+
 private:
-    bool success = false;
-    ByteBuffer cert;
+    int32_t initResult_ = -1;
+    ByteBuffer cert_;
 };
 }
 }
@@ -79,12 +79,15 @@ int32_t InitLocalCertificate(uint8_t *certData, uint32_t *certSize)
         return CS_ERR_INIT_LOCAL_CERT;
     }
 
-    std::unique_lock<std::mutex> lock(g_lock);
-    auto waitStatus = g_condition.wait_for(lock, std::chrono::milliseconds(INIT_LOCAL_CERT_TIMEOUT_MS),
-        [&thread]() { return thread->GetStatus(); });
-    if (!waitStatus) {
-        LOG_ERROR(LABEL, "init local cert timeout");
-        return CS_ERR_INIT_LOCAL_CERT;
+    std::mutex mtx;
+    std::unique_lock<std::mutex> lock(mtx);
+    g_condition.wait_for(lock, std::chrono::milliseconds(INIT_LOCAL_CERT_TIMEOUT_MS));
+    thread->NotifyExitSync();
+
+    int ret = thread->GetRet();
+    if (ret != CS_SUCCESS) {
+        LOG_ERROR(LABEL, "init local cert timeout or error, ret = %{public}d", ret);
+        return ret;
     }
 
     ByteBuffer &cert = thread->GetCert();
@@ -92,6 +95,5 @@ int32_t InitLocalCertificate(uint8_t *certData, uint32_t *certSize)
         return CS_ERR_MEMORY;
     }
     *certSize = cert.GetSize();
-
-    return CS_SUCCESS;
+    return ret;
 }
