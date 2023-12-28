@@ -230,11 +230,14 @@ void CodeSignUtils::ShowCodeSignInfo(const std::string &path, const struct code_
 }
 
 int32_t CodeSignUtils::EnforceCodeSignForAppWithOwnerId(const std::string &ownerId, const std::string &path,
-                                                        const EntryMap &entryPathMap, FileType type)
+    const EntryMap &entryPathMap, FileType type, const std::string &moduleName)
 {
+    LOG_DEBUG(LABEL, "Start to enforce codesign FileType:%{public}d, entryPathMap size:%{public}u",
+        type, static_cast<uint32_t>(entryPathMap.size()));
     if (type == FILE_ENTRY_ADD || type == FILE_ENTRY_ONLY || type == FILE_ALL) {
-        storedEntryMap_.insert(entryPathMap.begin(), entryPathMap.end());
+        StoredEntryMapInsert(moduleName, entryPathMap);
         if (type == FILE_ENTRY_ADD) {
+            LOG_DEBUG(LABEL, "Add entryPathMap complete");
             return CS_SUCCESS;
         }
     }
@@ -243,11 +246,14 @@ int32_t CodeSignUtils::EnforceCodeSignForAppWithOwnerId(const std::string &owner
     if (ret != CS_SUCCESS) {
         return ret;
     }
+    EntryMap entryMap;
+    StoredEntryMapSearch(moduleName, entryMap);
     CodeSignBlock codeSignBlock;
-    ret = codeSignBlock.ParseCodeSignBlock(realPath, storedEntryMap_, type);
-    storedEntryMap_.clear();
+    ret = codeSignBlock.ParseCodeSignBlock(realPath, entryMap, type);
+    StoredEntryMapDelete(moduleName);
     if (ret != CS_SUCCESS) {
         if ((ret == CS_CODE_SIGN_NOT_EXISTS) && InPermissiveMode()) {
+            LOG_DEBUG(LABEL, "Code sign not exists");
             return CS_SUCCESS;
         }
         ReportParseCodeSig(realPath, ret);
@@ -282,9 +288,10 @@ int32_t CodeSignUtils::EnforceCodeSignForAppWithOwnerId(const std::string &owner
     return ret;
 }
 
-int32_t CodeSignUtils::EnforceCodeSignForApp(const std::string &path, const EntryMap &entryPathMap, FileType type)
+int32_t CodeSignUtils::EnforceCodeSignForApp(const std::string &path, const EntryMap &entryPathMap,
+    FileType type, const std::string &moduleName)
 {
-    return EnforceCodeSignForAppWithOwnerId("", path, entryPathMap, type);
+    return EnforceCodeSignForAppWithOwnerId("", path, entryPathMap, type, moduleName);
 }
 
 int32_t CodeSignUtils::IsValidPathAndFileType(const std::string &path, std::string &realPath, FileType type)
@@ -345,13 +352,49 @@ bool CodeSignUtils::InPermissiveMode()
 #endif
 }
 
-bool CodeSignUtils::isSupportOHCodeSign()
+bool CodeSignUtils::IsSupportOHCodeSign()
 {
 #ifdef SUPPORT_OH_CODE_SIGN
     return !InPermissiveMode();
 #else
     return false;
 #endif
+}
+
+bool CodeSignUtils::IsCodeSignEnableCompleted()
+{
+    std::lock_guard<std::mutex> lock(storedEntryMapLock_);
+    if (!storedEntryMap_.empty()) {
+        storedEntryMap_.clear();
+        return false;
+    }
+    return true;
+}
+
+void CodeSignUtils::StoredEntryMapInsert(const std::string &moduleName, const EntryMap &entryPathMap)
+{
+    std::lock_guard<std::mutex> lock(storedEntryMapLock_);
+    auto iter = storedEntryMap_.find(moduleName);
+    if (iter != storedEntryMap_.end()) {
+        iter->second.insert(entryPathMap.begin(), entryPathMap.end());
+        return;
+    }
+    storedEntryMap_.emplace(moduleName, entryPathMap);
+}
+
+void CodeSignUtils::StoredEntryMapDelete(const std::string &moduleName)
+{
+    std::lock_guard<std::mutex> lock(storedEntryMapLock_);
+    storedEntryMap_.erase(moduleName);
+}
+
+void CodeSignUtils::StoredEntryMapSearch(const std::string &moduleName, EntryMap &entryPathMap)
+{
+    std::lock_guard<std::mutex> lock(storedEntryMapLock_);
+    auto iter = storedEntryMap_.find(moduleName);
+    if (iter != storedEntryMap_.end()) {
+        entryPathMap = iter->second;
+    }
 }
 }
 }

@@ -17,6 +17,7 @@
 #define OHOS_SECURITY_CODE_SIGN_UTILS_H
 
 #include <cstdint>
+#include <mutex>
 #include <string>
 #include <sys/ioctl.h>
 #include <sys/types.h>
@@ -53,9 +54,11 @@ public:
      * @param path hap real path on disk
      * @param entryPath map from entryname in hap to real path on disk
      * @param type signature file type
+     * @param moduleName hap module name
      * @return err code, see err_code.h
      */
-    int32_t EnforceCodeSignForApp(const std::string &path, const EntryMap &entryPathMap, FileType type);
+    int32_t EnforceCodeSignForApp(const std::string &path, const EntryMap &entryPathMap,
+        FileType type, const std::string &moduleName);
 
     /**
      * @brief Enforce code signature for app with ownerID
@@ -63,10 +66,11 @@ public:
      * @param path hap real path on disk
      * @param entryPath map from entryname in hap to real path on disk
      * @param type signature file type
+     * @param moduleName hap module name
      * @return err code, see err_code.h
      */
     int32_t EnforceCodeSignForAppWithOwnerId(const std::string &ownerId, const std::string &path,
-        const EntryMap &entryPathMap, FileType type);
+        const EntryMap &entryPathMap, FileType type, const std::string &moduleName);
 
     /**
      * @brief Enforce code signature for file with signature
@@ -108,20 +112,29 @@ public:
      * @brief Whether enabling code signing for app compiled by oh-sdk
      * @return return ture if support oh-sdk code sign
      */
-    static bool isSupportOHCodeSign();
+    static bool IsSupportOHCodeSign();
     /**
      * @brief Check if code signing is permissive
      * @return return ture if in permissive mode
      */
     static bool InPermissiveMode();
+    /**
+     * @brief Check if code signing is completed
+     * @return return ture if Completed
+     */
+    bool IsCodeSignEnableCompleted();
 private:
     static int32_t IsSupportFsVerity(const std::string &path);
     static int32_t IsFsVerityEnabled(int fd);
     static int32_t EnableCodeSignForFile(const std::string &path, const struct code_sign_enable_arg &arg);
     static void ShowCodeSignInfo(const std::string &path, const struct code_sign_enable_arg &arg);
     static int32_t IsValidPathAndFileType(const std::string &path, std::string &realPath, FileType type);
+    void StoredEntryMapInsert(const std::string &moduleName, const EntryMap &entryPathMap);
+    void StoredEntryMapDelete(const std::string &moduleName);
+    void StoredEntryMapSearch(const std::string &moduleName, EntryMap &entryPathMap);
 private:
-    EntryMap storedEntryMap_;
+    std::unordered_map<std::string, EntryMap> storedEntryMap_;
+    std::mutex storedEntryMapLock_;
 };
 }
 }

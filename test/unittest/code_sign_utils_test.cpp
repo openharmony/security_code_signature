@@ -454,9 +454,10 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0015, TestSize.Level0)
 HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0016, TestSize.Level0)
 {
     std::string hapRealPath = APP_BASE_PATH + "/demo_with_multi_lib/demo_with_code_sign_block.hap";
+    std::string moduleName = "EntryAbility";
     EntryMap entryMap;
     CodeSignUtils utils;
-    int32_t ret = utils.EnforceCodeSignForApp(hapRealPath, entryMap, FILE_SELF);
+    int32_t ret = utils.EnforceCodeSignForApp(hapRealPath, entryMap, FILE_SELF, moduleName);
     EXPECT_EQ(ret, CS_SUCCESS);
 
     std::string filePath1("libs/arm64-v8a/libc++_shared.so");
@@ -466,10 +467,10 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0016, TestSize.Level0)
     std::string targetPath2 = TEST_APP_DTAT_DIR + "libs/arm64/libentry.so";
     entryMap.emplace(filePath2, targetPath2);
 
-    ret = utils.EnforceCodeSignForApp(hapRealPath, entryMap, FILE_ENTRY_ADD);
+    ret = utils.EnforceCodeSignForApp(hapRealPath, entryMap, FILE_ENTRY_ADD, moduleName);
     EXPECT_EQ(ret, CS_SUCCESS);
 
-    ret = utils.EnforceCodeSignForApp(hapRealPath, entryMap, FILE_ALL);
+    ret = utils.EnforceCodeSignForApp(hapRealPath, entryMap, FILE_ALL, moduleName);
     EXPECT_EQ(ret, CS_ERR_FILE_PATH);
 }
 
@@ -484,7 +485,8 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0017, TestSize.Level0)
     std::string hapRealPath = APP_BASE_PATH + "/demo_with_multi_lib/entry-default-signed-debug.hap";
     EntryMap entryMap;
     CodeSignUtils utils;
-    int32_t ret = utils.EnforceCodeSignForAppWithOwnerId("DEBUG_LIB_ID", hapRealPath, entryMap, FILE_SELF);
+    int32_t ret = utils.EnforceCodeSignForAppWithOwnerId("DEBUG_LIB_ID",
+        hapRealPath, entryMap, FILE_SELF, "EntryAbility");
     EXPECT_EQ(ret, CS_SUCCESS);
 }
 
@@ -500,7 +502,7 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0018, TestSize.Level0)
     EntryMap entryMap;
     CodeSignUtils utils;
     int32_t ret = utils.EnforceCodeSignForAppWithOwnerId("test-app-identifier",
-        hapRealPath, entryMap, FILE_SELF);
+        hapRealPath, entryMap, FILE_SELF, "EntryAbility");
     EXPECT_EQ(ret, CS_SUCCESS);
 }
 
@@ -515,7 +517,8 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0019, TestSize.Level0)
     std::string hapRealPath = APP_BASE_PATH + "/demo_with_multi_lib/entry-default-signed-debug.hap";
     EntryMap entryMap;
     CodeSignUtils utils;
-    int32_t ret = utils.EnforceCodeSignForAppWithOwnerId("INVALID_ID", hapRealPath, entryMap, FILE_SELF);
+    int32_t ret = utils.EnforceCodeSignForAppWithOwnerId("INVALID_ID",
+        hapRealPath, entryMap, FILE_SELF, "EntryAbility");
     EXPECT_EQ(ret, CS_ERR_INVALID_OWNER_ID);
 }
 
@@ -530,7 +533,8 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0020, TestSize.Level0)
     std::string hapRealPath = APP_BASE_PATH + "/demo_with_multi_lib/entry-default-signed-release.hap";
     EntryMap entryMap;
     CodeSignUtils utils;
-    int32_t ret = utils.EnforceCodeSignForAppWithOwnerId("INVALID_ID", hapRealPath, entryMap, FILE_SELF);
+    int32_t ret = utils.EnforceCodeSignForAppWithOwnerId("INVALID_ID",
+        hapRealPath, entryMap, FILE_SELF, "EntryAbility");
     EXPECT_EQ(ret, CS_ERR_INVALID_OWNER_ID);
 }
 
@@ -554,7 +558,7 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0021, TestSize.Level0)
 
     EntryMap entryMap;
     CodeSignUtils utils;
-    ret = utils.EnforceCodeSignForApp(hapEnablePath, entryMap, FILE_SELF);
+    ret = utils.EnforceCodeSignForApp(hapEnablePath, entryMap, FILE_SELF, "EntryAbility");
     EXPECT_EQ(ret, CS_SUCCESS);
 }
 
@@ -594,6 +598,7 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0022, TestSize.Level0)
 HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0023, TestSize.Level0)
 {
     std::string hapRealPath = APP_BASE_PATH + "/demo_with_multi_lib/demo_with_code_sign_block.hap";
+    std::string moduleName = "EntryAbility";
     EntryMap entryMap;
 
     std::string filePath1("libs/arm64-v8a/libc++_shared.so");
@@ -601,18 +606,18 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0023, TestSize.Level0)
     entryMap.emplace(filePath1, targetPath1);
 
     CodeSignUtils utils;
-    int32_t ret = utils.EnforceCodeSignForApp(hapRealPath, entryMap, FILE_ENTRY_ONLY);
+    int32_t ret = utils.EnforceCodeSignForApp(hapRealPath, entryMap, FILE_ENTRY_ONLY, moduleName);
     EXPECT_EQ(ret, CS_SUCCESS);
 
     std::string filePath2("libs/arm64-v8a/libentry.so");
     std::string targetPath2 = APP_BASE_PATH + "/demo_with_multi_lib/libs/arm64-v8a/libentry.so";
     entryMap.emplace(filePath2, targetPath2);
 
-    ret = utils.EnforceCodeSignForApp(hapRealPath, entryMap, FILE_ENTRY_ADD);
+    ret = utils.EnforceCodeSignForApp(hapRealPath, entryMap, FILE_ENTRY_ADD, moduleName);
     EXPECT_EQ(ret, CS_SUCCESS);
 
     entryMap.clear();
-    ret = utils.EnforceCodeSignForApp(hapRealPath, entryMap, FILE_ALL);
+    ret = utils.EnforceCodeSignForApp(hapRealPath, entryMap, FILE_ALL, moduleName);
     EXPECT_EQ(ret, CS_SUCCESS);
 }
 
@@ -630,7 +635,7 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0024, TestSize.Level0)
     EntryMap entryMap;
     CodeSignUtils utils;
     std::string hapRealPath = APP_BASE_PATH + "/demo_without_lib/demo_without_lib.hap";
-    int32_t ret = utils.EnforceCodeSignForApp(hapRealPath, entryMap, FILE_SELF);
+    int32_t ret = utils.EnforceCodeSignForApp(hapRealPath, entryMap, FILE_SELF, "EntryAbility");
     EXPECT_EQ(ret, CS_SUCCESS);
     SaveStringToFile(XPM_DEBUG_FS_MODE_PATH, ENFORCE_MODE);
 }
@@ -649,7 +654,7 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0025, TestSize.Level0)
     std::string hapRealPath = APP_BASE_PATH + "/demo_without_lib/demo_without_lib.hap";
     EntryMap entryMap;
     CodeSignUtils utils;
-    int32_t ret = utils.EnforceCodeSignForApp(hapRealPath, entryMap, FILE_SELF);
+    int32_t ret = utils.EnforceCodeSignForApp(hapRealPath, entryMap, FILE_SELF, "EntryAbility");
     EXPECT_EQ(ret, CS_CODE_SIGN_NOT_EXISTS);
 }
 }  // namespace CodeSign
