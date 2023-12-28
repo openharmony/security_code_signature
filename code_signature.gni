@@ -17,6 +17,7 @@ fsverity_utils_dir = "//third_party/fsverity-utils"
 openssl_dir = "//third_party/openssl"
 rust_openssl_dir = "//third_party/rust/crates/rust-openssl"
 third_party_securec_dir = "//third_party/bounds_checking_function"
+selinux_dir = "//third_party/selinux"
 
 declare_args() {
   code_signature_support_openharmony_ca = true

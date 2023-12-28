@@ -36,6 +36,7 @@
 #include "log.h"
 #include "xpm_common.h"
 #include "code_sign_attr_utils.h"
+#include "selinux/selinux.h"
 
 using namespace testing::ext;
 
@@ -64,7 +65,6 @@ const std::string TEST_ISSUER = "OpenHarmony Application CA";
 const std::string DROP_CACHE_PROC_PATH = "/proc/sys/vm/drop_caches";
 const std::string DROP_ALL_CACHE_LEVEL = "3";
 
-
 static bool g_isXpmOn;
 
 class EnableVerityTest : public testing::Test {
@@ -91,6 +91,25 @@ public:
     void TearDown() {};
 };
  
+class SELinuxContextSetter {
+public:
+    SELinuxContextSetter()
+    {
+        getcon(&curContext);
+        setcon(BLOCKED_LABEL.c_str());
+    }
+
+    ~SELinuxContextSetter()
+    {
+        setcon(curContext);
+        freecon(curContext);
+    }
+
+private:
+    const std::string BLOCKED_LABEL = "u:r:key_enable:s0";
+    char *curContext;
+};
+
 static size_t GetFileSize(const std::string &path)
 {
     FILE *file = fopen(path.c_str(), "rb");
@@ -339,7 +358,7 @@ static void EnableExpandedTamperFile(const std::string &filePath,
 }
 
 /**
- * @tc.name: CodeSignUtilsTest_0001
+ * @tc.name: EnableVerityTest_0001
  * @tc.desc: enable all data in file successfully
  * @tc.type: Func
  * @tc.require:I8DH28
@@ -361,7 +380,7 @@ HWTEST_F(EnableVerityTest, EnableVerityTest_0001, TestSize.Level0)
 }
 
 /**
- * @tc.name: CodeSignUtilsTest_0002
+ * @tc.name: EnableVerityTest_0002
  * @tc.desc: enable orignial file with wrong file size
  * @tc.type: Func
  * @tc.require:I8DH28
@@ -392,7 +411,7 @@ HWTEST_F(EnableVerityTest, EnableVerityTest_0002, TestSize.Level0)
 }
 
 /**
- * @tc.name: CodeSignUtilsTest_0003
+ * @tc.name: EnableVerityTest_0003
  * @tc.desc: enable expanded file successfully
  * @tc.type: Func
  * @tc.require:I8DH28
@@ -413,7 +432,7 @@ HWTEST_F(EnableVerityTest, EnableVerityTest_0003, TestSize.Level0)
 }
 
 /**
- * @tc.name: CodeSignUtilsTest_0004
+ * @tc.name: EnableVerityTest_0004
  * @tc.desc: enable expanded file with inside tree successfully
  * @tc.type: Func
  * @tc.require:I8DH28
@@ -437,7 +456,7 @@ HWTEST_F(EnableVerityTest, EnableVerityTest_0004, TestSize.Level0)
 }
 
 /**
- * @tc.name: CodeSignUtilsTest_0005
+ * @tc.name: EnableVerityTest_0005
  * @tc.desc: enable expanded file with wrong tree offset
  * @tc.type: Func
  * @tc.require:I8DH28
@@ -465,7 +484,7 @@ HWTEST_F(EnableVerityTest, EnableVerityTest_0005, TestSize.Level0)
 }
 
 /**
- * @tc.name: CodeSignUtilsTest_0006
+ * @tc.name: EnableVerityTest_0006
  * @tc.desc: enable expanded file with wrong root hash
  * @tc.type: Func
  * @tc.require:I8DH28
@@ -489,7 +508,7 @@ HWTEST_F(EnableVerityTest, EnableVerityTest_0006, TestSize.Level0)
 }
 
 /**
- * @tc.name: CodeSignUtilsTest_0007
+ * @tc.name: EnableVerityTest_0007
  * @tc.desc: enable expanded file with wrong file
  * @tc.type: Func
  * @tc.require:I8DH28
@@ -503,7 +522,7 @@ HWTEST_F(EnableVerityTest, EnableVerityTest_0007, TestSize.Level0)
 }
 
 /**
- * @tc.name: CodeSignUtilsTest_0008
+ * @tc.name: EnableVerityTest_0008
  * @tc.desc: mmap signed data in xpm region success
  * @tc.type: Func
  * @tc.require:
@@ -513,6 +532,7 @@ HWTEST_F(EnableVerityTest, EnableVerityTest_0008, TestSize.Level0)
     if (!g_isXpmOn) {
         return;
     }
+
     std::string filePath = TEST_DEFAULT_FILE;
     struct code_sign_enable_arg arg = {};
     ByteBuffer signature;
@@ -522,6 +542,7 @@ HWTEST_F(EnableVerityTest, EnableVerityTest_0008, TestSize.Level0)
     std::string expandFilePath = MakeExpandTreeFile(filePath, &arg);
     EXPECT_EQ(EnableVerityOnOneFile(expandFilePath, &arg), 0);
 
+    std::unique_ptr<SELinuxContextSetter> setter = std::make_unique<SELinuxContextSetter>();
     int fd = open(expandFilePath.c_str(), O_RDONLY);
     // mmap with MAP_XPM flag, success
     void *addr = mmap(NULL, PAGE_SIZE, PROT_READ, MAP_PRIVATE | MAP_XPM,
@@ -535,7 +556,7 @@ HWTEST_F(EnableVerityTest, EnableVerityTest_0008, TestSize.Level0)
 }
 
 /**
- * @tc.name: CodeSignUtilsTest_0009
+ * @tc.name: EnableVerityTest_0009
  * @tc.desc: mmap unsigned data in xpm region failed
  * @tc.type: Func
  * @tc.require:
@@ -554,6 +575,7 @@ HWTEST_F(EnableVerityTest, EnableVerityTest_0009, TestSize.Level0)
     std::string expandFilePath = MakeExpandTreeFile(filePath, &arg);
     EXPECT_EQ(EnableVerityOnOneFile(expandFilePath, &arg), 0);
 
+    std::unique_ptr<SELinuxContextSetter> setter = std::make_unique<SELinuxContextSetter>();
     int fd = open(expandFilePath.c_str(), O_RDONLY);
     // mmap with MAP_XPM flag, over verity range
     void *addr = mmap(NULL, PAGE_SIZE, PROT_READ, MAP_PRIVATE | MAP_XPM,
@@ -565,7 +587,7 @@ HWTEST_F(EnableVerityTest, EnableVerityTest_0009, TestSize.Level0)
 }
 
 /**
- * @tc.name: CodeSignUtilsTest_0010
+ * @tc.name: EnableVerityTest_0010
  * @tc.desc: mmap signed data as executable success
  * @tc.type: Func
  * @tc.require:
@@ -584,6 +606,7 @@ HWTEST_F(EnableVerityTest, EnableVerityTest_0010, TestSize.Level0)
     std::string expandFilePath = MakeExpandTreeFile(filePath, &arg);
     EXPECT_EQ(EnableVerityOnOneFile(expandFilePath, &arg), 0);
 
+    std::unique_ptr<SELinuxContextSetter> setter = std::make_unique<SELinuxContextSetter>();
     int fd = open(expandFilePath.c_str(), O_RDONLY);
     // readelf from elf
     // [19] .text             PROGBITS        000063ec 0053ec 002168 00  AX  0   0  4
@@ -601,7 +624,7 @@ HWTEST_F(EnableVerityTest, EnableVerityTest_0010, TestSize.Level0)
 }
 
 /**
- * @tc.name: CodeSignUtilsTest_00011
+ * @tc.name: EnableVerityTest_00011
  * @tc.desc: mmap unsigned data as executable failed
  * @tc.type: Func
  * @tc.require
@@ -620,6 +643,7 @@ HWTEST_F(EnableVerityTest, EnableVerityTest_0011, TestSize.Level0)
     std::string expandFilePath = MakeExpandTreeFile(filePath, &arg);
     EXPECT_EQ(EnableVerityOnOneFile(expandFilePath, &arg), 0);
 
+    std::unique_ptr<SELinuxContextSetter> setter = std::make_unique<SELinuxContextSetter>();
     int fd = open(expandFilePath.c_str(), O_RDONLY);
     void *addr = mmap(NULL, PAGE_SIZE, PROT_READ | PROT_EXEC, MAP_PRIVATE,
         fd, arg.tree_offset & PAGE_MASK);

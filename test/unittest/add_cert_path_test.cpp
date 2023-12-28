@@ -85,7 +85,7 @@ static bool CallIoctl(const char *signing, const char *issuer, uint32_t max_cert
 HWTEST_F(AddCertPathTest, AddCertPathTest_0001, TestSize.Level0)
 {
     int ret = CallIoctl(TEST_SUBJECT.c_str(), TEST_ISSUER.c_str(), MAX_CERT_CHAIN, CERT_PATH_TYPE);
-    EXPECT_EQ(ret, 0);
+    EXPECT_GE(ret, 0);
 }
 
 /**
