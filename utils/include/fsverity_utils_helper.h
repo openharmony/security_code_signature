@@ -104,7 +104,7 @@ private:
                     return CS_ERR_FILE_READ;
                 }
                 buf += bytesRead;
-                count -= bytesRead;
+                count -= static_cast<size_t>(bytesRead);
             }
             return CS_SUCCESS;
         }

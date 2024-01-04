@@ -143,7 +143,7 @@ uint8_t *SignerInfo::GetDataToSign(uint32_t &len)
         if (itemLen < 0) {
             return nullptr;
         }
-        len = itemLen;
+        len = static_cast<uint32_t>(itemLen);
     } else {
         if (unsignedData_ == nullptr) {
             return nullptr;

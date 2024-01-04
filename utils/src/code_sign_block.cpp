@@ -34,7 +34,13 @@ namespace CodeSign {
 constexpr uint32_t HAP_CODE_SIGN_BLOCK_ID = 0x30000001;
 constexpr uint32_t CSB_PROPERTY_BLOB = 0x20000003;
 
-CodeSignBlock::CodeSignBlock() { }
+CodeSignBlock::CodeSignBlock()
+{
+    signatureInfo_.hapSigningBlockOffset = 0;
+    signatureInfo_.hapCentralDirOffset = 0;
+    signatureInfo_.hapEocdOffset = 0;
+    signatureInfo_.version = 0;
+}
 
 CodeSignBlock::~CodeSignBlock() { }
 
@@ -194,7 +200,7 @@ int32_t CodeSignBlock::GetCodeSignBlockBuffer(const std::string &path, ReadBuffe
         }
 
         blobBuffer = value.optionalBlockValue.GetBufferPtr();
-        blobSize = value.optionalBlockValue.GetCapacity();
+        blobSize = static_cast<uint32_t>(value.optionalBlockValue.GetCapacity());
         break;
     }
 

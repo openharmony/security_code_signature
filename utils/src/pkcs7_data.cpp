@@ -43,14 +43,14 @@ PKCS7Data::~PKCS7Data()
 
 bool PKCS7Data::InitPKCS7Data(const std::vector<ByteBuffer> &certChain)
 {
-    int flags = PKCS7_BINARY | PKCS7_DETACHED | PKCS7_NOATTR | PKCS7_PARTIAL;
+    uint32_t flags = PKCS7_BINARY | PKCS7_DETACHED | PKCS7_NOATTR | PKCS7_PARTIAL;
     STACK_OF(X509) *certs = nullptr;
     if (certChain.empty()) {
         flags = flags | PKCS7_NOCERTS;
     } else {
         certs = MakeStackOfCerts(certChain);
     }
-    p7_ = PKCS7_sign(nullptr, nullptr, certs, nullptr, flags);
+    p7_ = PKCS7_sign(nullptr, nullptr, certs, nullptr, static_cast<int>(flags));
     if (p7_ == nullptr) {
         sk_X509_pop_free(certs, X509_free);
         return false;

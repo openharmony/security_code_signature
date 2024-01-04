@@ -41,7 +41,7 @@ inline void ReportInvalidCaller(const std::string &interfaceType, uint32_t token
         HiviewDFX::HiSysEvent::EventType::SECURITY,
         "INTERFACE", interfaceType, "TOKEN_ID", tokenId);
 }
-inline void ReportParseCodeSig(const std::string &fileInfo, uint32_t errCode)
+inline void ReportParseCodeSig(const std::string &fileInfo, int32_t errCode)
 {
     HiSysEventWrite(HiviewDFX::HiSysEvent::Domain::CODE_SIGN, "CS_PARSE_CODE_SIG",
         HiviewDFX::HiSysEvent::EventType::FAULT,
