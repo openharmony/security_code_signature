@@ -61,14 +61,21 @@
         {   
             "mode":"Release",
             "type":"Block",
-            "subject":"",
-            "issuer":"",
+            "subject":"C=CN, O=Huawei, OU=Huawei CBG, CN=DevEcoTesting Release",
+            "issuer":"C=CN, O=Huawei, OU=Huawei CBG, CN=Huawei CBG Software Signing Service CA",
             "max-certs-path":3
         },
         {   
             "mode":"Dev",
             "type":"Platform",
             "subject":"C=CN, O=Huawei, OU=Huawei CBG, CN=HOS Application Provision Debug V2",
+            "issuer":"C=CN, O=Huawei, OU=Huawei CBG, CN=Huawei CBG Software Signing Service CA",
+            "max-certs-path":3
+        },
+        {
+            "mode":"Dev",
+            "type":"Platform",
+            "subject":"C=CN, O=Huawei, OU=Huawei CBG, CN=DevEcoTesting Release",
             "issuer":"C=CN, O=Huawei, OU=Huawei CBG, CN=Huawei CBG Software Signing Service CA",
             "max-certs-path":3
         },
