@@ -65,6 +65,13 @@
             "issuer":"C=CN, O=Huawei, OU=Huawei CBG, CN=Huawei CBG Software Signing Service CA",
             "max-certs-path":3
         },
+        {
+            "mode":"Release",
+            "type":"Block",
+            "subject":"C=CN, O=Huawei, OU=Huawei CBG, CN=HarmonyOS SDK debug tools",
+            "issuer":"C=CN, O=Huawei, OU=Huawei CBG, CN=Huawei CBG Software Signing Service CA",
+            "max-certs-path":3
+        },
         {   
             "mode":"Dev",
             "type":"Platform",
@@ -79,11 +86,11 @@
             "issuer":"C=CN, O=Huawei, OU=Huawei CBG, CN=Huawei CBG Software Signing Service CA",
             "max-certs-path":3
         },
-        {   
+        {
             "mode":"Dev",
             "type":"Debug",
-            "subject":"",
-            "issuer":"",
+            "subject":"C=CN, O=Huawei, OU=Huawei CBG, CN=HarmonyOS SDK debug tools",
+            "issuer":"C=CN, O=Huawei, OU=Huawei CBG, CN=Huawei CBG Software Signing Service CA",
             "max-certs-path":3
         },
         {   
