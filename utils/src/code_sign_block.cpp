@@ -95,7 +95,7 @@ int32_t CodeSignBlock::ParseNativeLibSignInfo(const EntryMap &entryMap)
     auto soInfo = GetNativeLibSignInfo();
     LOG_DEBUG(LABEL, "So info sectionNum:%{public}d, entryMap size:%{public}u",
         soInfo->sectionNum, static_cast<uint32_t>(entryMap.size()));
-    if ((soInfo->sectionNum == 0) || entryMap.empty()) {
+    if ((soInfo->sectionNum == 0) && entryMap.empty()) {
         return CS_SUCCESS;
     } else if (!entryMap.empty() && (soInfo->sectionNum == 0)) {
         return CS_ERR_NO_SIGNATURE;

@@ -88,7 +88,7 @@
         },
         {
             "mode":"Dev",
-            "type":"Debug",
+            "type":"Platform",
             "subject":"C=CN, O=Huawei, OU=Huawei CBG, CN=HarmonyOS SDK debug tools",
             "issuer":"C=CN, O=Huawei, OU=Huawei CBG, CN=Huawei CBG Software Signing Service CA",
             "max-certs-path":3

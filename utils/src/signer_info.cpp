@@ -275,7 +275,7 @@ int SignerInfo::ParseOwnerIdFromSignature(const ByteBuffer &sigbuffer, std::stri
         ASN1_TYPE *asn1Type = PKCS7_get_signed_attribute(signerInfo, nid);
         if (asn1Type != nullptr && asn1Type->type == V_ASN1_UTF8STRING) {
             ASN1_STRING *result = asn1Type->value.asn1_string;
-            ownerID.assign((const char *)ASN1_STRING_get0_data(result), ASN1_STRING_length(result));
+            ownerID.assign(reinterpret_cast<const char *>(ASN1_STRING_get0_data(result)), ASN1_STRING_length(result));
             break;
         }
     }
