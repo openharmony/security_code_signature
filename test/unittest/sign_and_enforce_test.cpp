@@ -20,6 +20,7 @@
 #include <openssl/asn1.h>
 #include <openssl/pkcs7.h>
 #include <openssl/x509v3.h>
+#include <sys/utsname.h>
 #include "access_token_setter.h"
 #include "byte_buffer.h"
 #include "code_sign_utils.h"
@@ -43,6 +44,8 @@ static const std::string FAKE_SERIAL_NUMBER = "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 static const std::string FAKE_CONTENT = "FAKE";
 
 static const int MAX_TEST_BUF_LEN = 1024;
+
+static bool g_isKernelLinux = false;
 
 static void ModifySignatureFormat(ByteBuffer &pkcs7Data)
 {
@@ -145,7 +148,13 @@ class SignAndEnforceTest : public testing::Test {
 public:
     SignAndEnforceTest() {};
     virtual ~SignAndEnforceTest() {};
-    static void SetUpTestCase() {};
+    static void SetUpTestCase()
+    {
+        struct utsname uts;
+        if (uname(&uts) == 0 && strcmp(uts.sysname, "Linux") == 0) {
+            g_isKernelLinux = true;
+        }
+    };
     static void TearDownTestCase() {};
     void SetUp() {};
     void TearDown() {};
@@ -174,6 +183,9 @@ HWTEST_F(SignAndEnforceTest, SignAndEnforceTest_0001, TestSize.Level0)
  */
 HWTEST_F(SignAndEnforceTest, SignAndEnforceTest_0002, TestSize.Level0)
 {
+    if (!g_isKernelLinux) {
+        return;
+    }
     ByteBuffer sig;
     InvokeLocalCodeSign(DEMO_AN_PATH, sig);
     int32_t ret = CodeSignUtils::EnforceCodeSignForFile(DEMO_TAMPER_AN_PATH, sig);
@@ -188,6 +200,9 @@ HWTEST_F(SignAndEnforceTest, SignAndEnforceTest_0002, TestSize.Level0)
  */
 HWTEST_F(SignAndEnforceTest, SignAndEnforceTest_0003, TestSize.Level0)
 {
+    if (!g_isKernelLinux) {
+        return;
+    }
     ByteBuffer sig;
     InvokeLocalCodeSign(DEMO_AN_PATH, sig);
     ModifySignatureFormat(sig);
@@ -203,6 +218,9 @@ HWTEST_F(SignAndEnforceTest, SignAndEnforceTest_0003, TestSize.Level0)
  */
 HWTEST_F(SignAndEnforceTest, SignAndEnforceTest_0004, TestSize.Level0)
 {
+    if (!g_isKernelLinux) {
+        return;
+    }
     ByteBuffer sig;
     InvokeLocalCodeSign(DEMO_AN_PATH, sig);;
     ByteBuffer wrongSig;
@@ -219,6 +237,9 @@ HWTEST_F(SignAndEnforceTest, SignAndEnforceTest_0004, TestSize.Level0)
  */
 HWTEST_F(SignAndEnforceTest, SignAndEnforceTest_0005, TestSize.Level0)
 {
+    if (!g_isKernelLinux) {
+        return;
+    }
     ByteBuffer sig;
     InvokeLocalCodeSign(DEMO_AN_PATH, sig);
     ByteBuffer wrongSig;

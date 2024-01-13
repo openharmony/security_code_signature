@@ -19,6 +19,7 @@
 #include <gtest/gtest.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
+#include <sys/utsname.h>
 #include <unistd.h>
 
 namespace OHOS {
@@ -48,11 +49,18 @@ static const string DEV_NAME = "/dev/code_sign";
 static const string TEST_SUBJECT = "OpenHarmony Application Release";
 static const string TEST_ISSUER = "OpenHarmony Application CA";
 
+static bool g_isKernelLinux = false;
 class AddCertPathTest : public testing::Test {
 public:
     AddCertPathTest() {};
     virtual ~AddCertPathTest() {};
-    static void SetUpTestCase() {};
+    static void SetUpTestCase()
+    {
+        struct utsname uts;
+        if (uname(&uts) == 0 && strcmp(uts.sysname, "Linux") == 0) {
+            g_isKernelLinux = true;
+        }
+    };
     static void TearDownTestCase() {};
     void SetUp() {};
     void TearDown() {};
@@ -96,6 +104,9 @@ HWTEST_F(AddCertPathTest, AddCertPathTest_0001, TestSize.Level0)
  */
 HWTEST_F(AddCertPathTest, AddCertPathTest_0002, TestSize.Level0)
 {
+    if (!g_isKernelLinux) {
+        return;
+    }
     int ret = CallIoctl(TEST_SUBJECT.c_str(), TEST_ISSUER.c_str(), GREATER_THAN_MAX_CERT_CHAIN, CERT_PATH_TYPE);
     EXPECT_NE(ret, 0);
 }
@@ -108,6 +119,9 @@ HWTEST_F(AddCertPathTest, AddCertPathTest_0002, TestSize.Level0)
  */
 HWTEST_F(AddCertPathTest, AddCertPathTest_0003, TestSize.Level0)
 {
+    if (!g_isKernelLinux) {
+        return;
+    }
     int ret = CallIoctl(TEST_SUBJECT.c_str(), TEST_ISSUER.c_str(), LESS_THAN_MIN_CERT_CHAIN, CERT_PATH_TYPE);
     EXPECT_NE(ret, 0);
 }
