@@ -31,7 +31,7 @@
 
 #include "cs_hisysevent.h"
 #include "cs_hitrace.h"
-#include "code_sign_enable_multi_task.h"
+#include "code_sign_helper.h"
 #include "constants.h"
 #include "directory_ex.h"
 #include "extractor.h"
@@ -39,7 +39,6 @@
 #include "log.h"
 #include "stat_utils.h"
 #include "signer_info.h"
-#include "code_sign_block.h"
 #include "rust_interface.h"
 
 namespace OHOS {
@@ -210,25 +209,6 @@ int32_t CodeSignUtils::EnforceCodeSignForFile(const std::string &path, const uin
     return EnableCodeSignForFile(realPath, arg);
 }
 
-void CodeSignUtils::ShowCodeSignInfo(const std::string &path, const struct code_sign_enable_arg &arg)
-{
-    uint8_t *salt = reinterpret_cast<uint8_t *>(arg.salt_ptr);
-    uint8_t rootHash[64] = {0};
-    uint8_t *rootHashPtr = rootHash;
-    if (arg.flags & CodeSignBlock::CSB_SIGN_INFO_MERKLE_TREE) {
-        rootHashPtr = reinterpret_cast<uint8_t *>(arg.root_hash_ptr);
-    }
-
-    LOG_DEBUG(LABEL, "{ "
-        "file:%{public}s version:%{public}d hash_algorithm:%{public}d block_size:%{public}d sig_size:%{public}d "
-        "data_size:%{public}lld salt_size:%{public}d salt:[%{public}d, ..., %{public}d, ..., %{public}d] "
-        "flags:%{public}d tree_offset:%{public}lld root_hash:[%{public}d, %{public}d, %{public}d, ..., %{public}d, "
-        "..., %{public}d] }",
-        path.c_str(), arg.cs_version, arg.hash_algorithm, arg.block_size, arg.sig_size,
-        arg.data_size, arg.salt_size, salt[0], salt[16], salt[31], arg.flags, arg.tree_offset, // 16, 31 data index
-        rootHashPtr[0], rootHashPtr[1], rootHashPtr[2], rootHashPtr[32], rootHashPtr[63]); // 2, 32, 63 data index
-}
-
 int32_t CodeSignUtils::EnforceCodeSignForAppWithOwnerId(const std::string &ownerId, const std::string &path,
     const EntryMap &entryPathMap, FileType type, const std::string &moduleName)
 {
@@ -240,51 +220,41 @@ int32_t CodeSignUtils::EnforceCodeSignForAppWithOwnerId(const std::string &owner
             LOG_DEBUG(LABEL, "Add entryPathMap complete");
             return CS_SUCCESS;
         }
+    } else if (type >= FILE_TYPE_MAX) {
+        return CS_ERR_PARAM_INVALID;
     }
+    return ProcessCodeSignBlock(ownerId, path, type, moduleName);
+}
+
+int32_t CodeSignUtils::ProcessCodeSignBlock(const std::string &ownerId, const std::string &path,
+    FileType type, const std::string &moduleName)
+{
     std::string realPath;
-    int32_t ret = IsValidPathAndFileType(path, realPath, type);
-    if (ret != CS_SUCCESS) {
-        return ret;
+    if (!OHOS::PathToRealPath(path, realPath)) {
+        return CS_ERR_FILE_PATH;
     }
+    int32_t ret;
     EntryMap entryMap;
-    StoredEntryMapSearch(moduleName, entryMap);
-    CodeSignBlock codeSignBlock;
-    ret = codeSignBlock.ParseCodeSignBlock(realPath, entryMap, type);
-    StoredEntryMapDelete(moduleName);
+    CodeSignHelper codeSignHelper;
+    {
+        std::lock_guard<std::mutex> lock(storedEntryMapLock_);
+        StoredEntryMapSearch(moduleName, entryMap);
+        ret = codeSignHelper.ParseCodeSignBlock(realPath, entryMap, type);
+        StoredEntryMapDelete(moduleName);
+    }
     if (ret != CS_SUCCESS) {
-        if ((ret == CS_CODE_SIGN_NOT_EXISTS) && InPermissiveMode()) {
-            LOG_DEBUG(LABEL, "Code sign not exists");
-            return CS_SUCCESS;
-        }
-        ReportParseCodeSig(realPath, ret);
-        return ret;
+        return HandleCodeSignBlockFailure(realPath, ret);
     }
-    CodeSignEnableMultiTask multiTask;
-    do {
-        std::string targetFile;
-        struct code_sign_enable_arg arg = {0};
-        ret = codeSignBlock.GetOneFileAndCodeSignInfo(targetFile, arg);
-        if (ret == CS_SUCCESS_END) {
-            ret = CS_SUCCESS;
-            break;
-        } else if (ret != CS_SUCCESS) {
-            return ret;
-        }
-        ShowCodeSignInfo(targetFile, arg);
-        if (!CheckFilePathValid(targetFile, Constants::ENABLE_APP_BASE_PATH)) {
-            return CS_ERR_FILE_PATH;
-        }
-        ret = IsSupportFsVerity(targetFile);
-        if (ret != CS_SUCCESS) {
-            return ret;
-        }
-        multiTask.AddTaskData(targetFile, arg);
-    } while (ret == CS_SUCCESS);
-    bool waitStatus = multiTask.ExecuteEnableCodeSignTask(ret, ownerId, path, EnableCodeSignForFile);
-    if (!waitStatus) {
-        LOG_ERROR(LABEL, "enable code sign timeout");
-        return CS_ERR_ENABLE_TIMEOUT;
+    return codeSignHelper.ProcessMultiTask(ownerId, path, EnableCodeSignForFile);
+}
+
+int32_t CodeSignUtils::HandleCodeSignBlockFailure(const std::string &realPath, int32_t ret)
+{
+    if ((ret == CS_CODE_SIGN_NOT_EXISTS) && InPermissiveMode()) {
+        LOG_DEBUG(LABEL, "Code sign not exists");
+        return CS_SUCCESS;
     }
+    ReportParseCodeSig(realPath, ret);
     return ret;
 }
 
@@ -292,19 +262,6 @@ int32_t CodeSignUtils::EnforceCodeSignForApp(const std::string &path, const Entr
     FileType type, const std::string &moduleName)
 {
     return EnforceCodeSignForAppWithOwnerId("", path, entryPathMap, type, moduleName);
-}
-
-int32_t CodeSignUtils::IsValidPathAndFileType(const std::string &path, std::string &realPath, FileType type)
-{
-    if (!OHOS::PathToRealPath(path, realPath)) {
-        return CS_ERR_FILE_PATH;
-    }
-
-    if (type >= FILE_TYPE_MAX) {
-        return CS_ERR_PARAM_INVALID;
-    }
-
-    return CS_SUCCESS;
 }
 
 int32_t CodeSignUtils::EnableKeyInProfile(const std::string &bundleName, const ByteBuffer &profileBuffer)
@@ -384,13 +341,11 @@ void CodeSignUtils::StoredEntryMapInsert(const std::string &moduleName, const En
 
 void CodeSignUtils::StoredEntryMapDelete(const std::string &moduleName)
 {
-    std::lock_guard<std::mutex> lock(storedEntryMapLock_);
     storedEntryMap_.erase(moduleName);
 }
 
 void CodeSignUtils::StoredEntryMapSearch(const std::string &moduleName, EntryMap &entryPathMap)
 {
-    std::lock_guard<std::mutex> lock(storedEntryMapLock_);
     auto iter = storedEntryMap_.find(moduleName);
     if (iter != storedEntryMap_.end()) {
         entryPathMap = iter->second;

@@ -123,15 +123,21 @@ public:
      * @return return ture if Completed
      */
     bool IsCodeSignEnableCompleted();
-private:
+    /**
+     * @brief Check if the file path support FsVerity
+     * @param path file path
+     * @return err code, see err_code.h
+     */
     static int32_t IsSupportFsVerity(const std::string &path);
+private:
     static int32_t IsFsVerityEnabled(int fd);
     static int32_t EnableCodeSignForFile(const std::string &path, const struct code_sign_enable_arg &arg);
-    static void ShowCodeSignInfo(const std::string &path, const struct code_sign_enable_arg &arg);
-    static int32_t IsValidPathAndFileType(const std::string &path, std::string &realPath, FileType type);
     void StoredEntryMapInsert(const std::string &moduleName, const EntryMap &entryPathMap);
     void StoredEntryMapDelete(const std::string &moduleName);
     void StoredEntryMapSearch(const std::string &moduleName, EntryMap &entryPathMap);
+    int32_t ProcessCodeSignBlock(const std::string &ownerId, const std::string &path,
+        FileType type, const std::string &moduleName);
+    int32_t HandleCodeSignBlockFailure(const std::string &realPath, int32_t ret);
 private:
     std::unordered_map<std::string, EntryMap> storedEntryMap_;
     std::mutex storedEntryMapLock_;

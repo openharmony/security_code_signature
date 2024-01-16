@@ -23,6 +23,7 @@ ohos_shared_library("libcode_sign_utils") {
     "${code_signature_root_dir}/utils/src/code_sign_block.cpp",
     "${code_signature_root_dir}/utils/src/file_helper.cpp",
     "src/code_sign_enable_multi_task.cpp",
+    "src/code_sign_helper.cpp",
     "src/code_sign_utils.cpp",
     "src/stat_utils.cpp",
   ]
