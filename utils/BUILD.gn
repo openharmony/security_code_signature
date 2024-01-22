@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Copyright (c) 2023-2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -14,14 +14,6 @@
 import("//build/ohos.gni")
 import("../code_signature.gni")
 
-config("fsverity_utils_config") {
-  include_dirs = [
-    "${fsverity_utils_dir}/include",
-    "${fsverity_utils_dir}/common",
-    "${openssl_dir}/include",
-  ]
-}
-
 ohos_source_set("fsverity_sign_src_set") {
   sources = [
     "src/fsverity_utils_helper.cpp",
@@ -31,10 +23,7 @@ ohos_source_set("fsverity_sign_src_set") {
     "src/signer_info.cpp",
   ]
   include_dirs = [ "include" ]
-  public_configs = [
-    ":fsverity_utils_config",
-    "${code_signature_root_dir}:common_public_config",
-  ]
+  public_configs = [ "${code_signature_root_dir}:common_public_config" ]
 
   deps = [
     "${fsverity_utils_dir}:libfsverity_utils",
