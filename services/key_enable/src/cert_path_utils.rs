@@ -30,6 +30,7 @@ const TYPE_KEY: &str = "type";
 const SUBJECT_KEY: &str = "subject";
 const ISSUER_KEY: &str = "issuer";
 const MAX_CERT_PATH: &str = "max-certs-path";
+const COMMON_NAME_CHAR_LIMIT: usize = 7;
 /// profile cert path error
 pub enum CertPathError {
     /// cert path add remove error
@@ -365,11 +366,15 @@ pub fn common_format_fabricate_name(common_name: &str, organization: &str, email
         if common_name.len() >= organization.len() && common_name.starts_with(organization) {
             return common_name.to_string();
         }
-        if common_name.len() >= 7 && organization.len() >= 7 && common_name[0..7] == organization[0..7] {
-            ret = common_name.to_string();
-        } else {
-            ret = format!("{}: {}", organization, common_name);
+        if common_name.len() >= COMMON_NAME_CHAR_LIMIT && organization.len() >= COMMON_NAME_CHAR_LIMIT {
+            let common_name_prefix = &common_name.as_bytes()[..COMMON_NAME_CHAR_LIMIT];
+            let organization_prefix = &organization.as_bytes()[..COMMON_NAME_CHAR_LIMIT];
+            if common_name_prefix == organization_prefix {
+                ret = common_name.to_string();
+                return ret;
+            }
         }
+        ret = format!("{}: {}", organization, common_name);
     } else if !common_name.is_empty() {
         ret = common_name.to_string();
     } else if !organization.is_empty() {
