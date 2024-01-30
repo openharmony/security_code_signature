@@ -212,7 +212,7 @@ int32_t CodeSignUtils::EnforceCodeSignForFile(const std::string &path, const uin
 int32_t CodeSignUtils::EnforceCodeSignForAppWithOwnerId(const std::string &ownerId, const std::string &path,
     const EntryMap &entryPathMap, FileType type, const std::string &moduleName)
 {
-    LOG_DEBUG(LABEL, "Start to enforce codesign FileType:%{public}d, entryPathMap size:%{public}u",
+    LOG_INFO(LABEL, "Start to enforce codesign FileType:%{public}d, entryPathMap size:%{public}u",
         type, static_cast<uint32_t>(entryPathMap.size()));
     if (type == FILE_ENTRY_ADD || type == FILE_ENTRY_ONLY || type == FILE_ALL) {
         StoredEntryMapInsert(moduleName, entryPathMap);
