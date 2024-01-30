@@ -179,7 +179,7 @@ int32_t CodeSignUtils::EnableCodeSignForFile(const std::string &path, const stru
         ret = CS_SUCCESS;
     } while (0);
     close(fd);
-    LOG_INFO(LABEL, "Enforcing file complete");
+    LOG_INFO(LABEL, "Enforcing file complete and ret = %{public}d", ret);
     return ret;
 }
 
@@ -212,8 +212,8 @@ int32_t CodeSignUtils::EnforceCodeSignForFile(const std::string &path, const uin
 int32_t CodeSignUtils::EnforceCodeSignForAppWithOwnerId(const std::string &ownerId, const std::string &path,
     const EntryMap &entryPathMap, FileType type, const std::string &moduleName)
 {
-    LOG_DEBUG(LABEL, "Start to enforce codesign FileType:%{public}d, entryPathMap size:%{public}u",
-        type, static_cast<uint32_t>(entryPathMap.size()));
+    LOG_INFO(LABEL, "Start to enforce codesign FileType:%{public}d, entryPathMap size:%{public}u, path = %{public}s",
+        type, static_cast<uint32_t>(entryPathMap.size()), path.c_str());
     if (type == FILE_ENTRY_ADD || type == FILE_ENTRY_ONLY || type == FILE_ALL) {
         StoredEntryMapInsert(moduleName, entryPathMap);
         if (type == FILE_ENTRY_ADD) {
