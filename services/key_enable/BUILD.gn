@@ -83,9 +83,9 @@ ohos_prebuilt_etc("trusted_cert_path_test") {
 
 ohos_prebuilt_etc("key_enable.cfg") {
   if (code_signature_enable_xpm_mode) {
-    source = "cfg/key_enable.enable_xpm.cfg"
+    source = "cfg/enable_xpm/key_enable.cfg"
   } else {
-    source = "cfg/key_enable.disable_xpm.cfg"
+    source = "cfg/disable_xpm/key_enable.cfg"
   }
   relative_install_dir = "init"
   subsystem_name = "security"
