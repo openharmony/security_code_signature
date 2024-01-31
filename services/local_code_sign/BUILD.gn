@@ -16,6 +16,12 @@ import("//build/ohos/sa_profile/sa_profile.gni")
 import("../../code_signature.gni")
 
 ohos_shared_library("liblocal_code_sign") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  branch_protector_ret = "pac_ret"
   sources = [
     "${code_signature_root_dir}/utils/src/cert_utils.cpp",
     "src/local_code_sign_service.cpp",

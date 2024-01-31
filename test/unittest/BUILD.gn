@@ -64,6 +64,12 @@ ohos_unittest("code_sign_utils_unittest") {
 }
 
 ohos_unittest("local_code_sign_unittest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  branch_protector_ret = "pac_ret"
   module_out_path = "security/code_signature"
   resource_config_file = "resources/ohos_test.xml"
   sources = [ "local_code_sign_test.cpp" ]

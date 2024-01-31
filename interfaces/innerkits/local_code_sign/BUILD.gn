@@ -19,6 +19,12 @@ config("public_local_code_sign_configs") {
 }
 
 ohos_shared_library("liblocal_code_sign_sdk") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  branch_protector_ret = "pac_ret"
   sources = [
     "src/local_code_sign_client.cpp",
     "src/local_code_sign_kit.cpp",
@@ -34,8 +40,8 @@ ohos_shared_library("liblocal_code_sign_sdk") {
 
   external_deps = [
     "c_utils:utils",
-    "hisysevent:libhisysevent",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
