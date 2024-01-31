@@ -619,7 +619,7 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0023, TestSize.Level0)
     std::string moduleName = "EntryAbility";
     EntryMap entryMap;
 
-    std::string filePath1("libs/arm64-v8a/code_sign_block/libc++_shared.so");
+    std::string filePath1("libs/arm64-v8a/libc++_shared.so");
     std::string targetPath1 = APP_BASE_PATH + "/demo_with_multi_lib/libs/arm64-v8a/code_sign_block/libc++_shared.so";
     entryMap.emplace(filePath1, targetPath1);
 
@@ -627,7 +627,7 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0023, TestSize.Level0)
     int32_t ret = utils.EnforceCodeSignForApp(hapRealPath, entryMap, FILE_ENTRY_ONLY, moduleName);
     EXPECT_EQ(ret, CS_SUCCESS);
 
-    std::string filePath2("libs/arm64-v8a/code_sign_block/libentry.so");
+    std::string filePath2("libs/arm64-v8a/libentry.so");
     std::string targetPath2 = APP_BASE_PATH + "/demo_with_multi_lib/libs/arm64-v8a/code_sign_block/libentry.so";
     entryMap.emplace(filePath2, targetPath2);
 
@@ -690,10 +690,10 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0026, TestSize.Level0)
     std::string hapRealPath2 = APP_BASE_PATH + "/demo_with_multi_lib/entry-default-signed-release.hap";
     std::string hapRealPath3 = APP_BASE_PATH + "/demo_with_multi_lib/entry-default-signed-debug.hap";
 
-    std::string filePath1("libs/arm64-v8a/code_sign_block/libc++_shared.so");
+    std::string filePath1("libs/arm64-v8a/libc++_shared.so");
     std::string targetPath1 = APP_BASE_PATH + "/demo_with_multi_lib/libs/arm64-v8a/code_sign_block/libc++_shared.so";
     entryMap.emplace(filePath1, targetPath1);
-    std::string filePath2("libs/arm64-v8a/code_sign_block/libentry.so");
+    std::string filePath2("libs/arm64-v8a/libentry.so");
     std::string targetPath2 = APP_BASE_PATH + "/demo_with_multi_lib/libs/arm64-v8a/code_sign_block/libentry.so";
     entryMap.emplace(filePath2, targetPath2);
 
