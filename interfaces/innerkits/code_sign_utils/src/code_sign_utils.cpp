@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -210,12 +210,15 @@ int32_t CodeSignUtils::EnforceCodeSignForFile(const std::string &path, const uin
 }
 
 int32_t CodeSignUtils::EnforceCodeSignForAppWithOwnerId(const std::string &ownerId, const std::string &path,
-    const EntryMap &entryPathMap, FileType type, const std::string &moduleName)
+    const EntryMap &entryPathMap, FileType type)
 {
     LOG_INFO(LABEL, "Start to enforce codesign FileType:%{public}d, entryPathMap size:%{public}u, path = %{public}s",
         type, static_cast<uint32_t>(entryPathMap.size()), path.c_str());
     if (type == FILE_ENTRY_ADD || type == FILE_ENTRY_ONLY || type == FILE_ALL) {
-        StoredEntryMapInsert(moduleName, entryPathMap);
+        {
+            std::lock_guard<std::mutex> lock(storedEntryMapLock_);
+            storedEntryMap_.insert(entryPathMap.begin(), entryPathMap.end());
+        }
         if (type == FILE_ENTRY_ADD) {
             LOG_DEBUG(LABEL, "Add entryPathMap complete");
             return CS_SUCCESS;
@@ -223,24 +226,21 @@ int32_t CodeSignUtils::EnforceCodeSignForAppWithOwnerId(const std::string &owner
     } else if (type >= FILE_TYPE_MAX) {
         return CS_ERR_PARAM_INVALID;
     }
-    return ProcessCodeSignBlock(ownerId, path, type, moduleName);
+    return ProcessCodeSignBlock(ownerId, path, type);
 }
 
-int32_t CodeSignUtils::ProcessCodeSignBlock(const std::string &ownerId, const std::string &path,
-    FileType type, const std::string &moduleName)
+int32_t CodeSignUtils::ProcessCodeSignBlock(const std::string &ownerId, const std::string &path, FileType type)
 {
     std::string realPath;
     if (!OHOS::PathToRealPath(path, realPath)) {
         return CS_ERR_FILE_PATH;
     }
     int32_t ret;
-    EntryMap entryMap;
     CodeSignHelper codeSignHelper;
     {
         std::lock_guard<std::mutex> lock(storedEntryMapLock_);
-        StoredEntryMapSearch(moduleName, entryMap);
-        ret = codeSignHelper.ParseCodeSignBlock(realPath, entryMap, type);
-        StoredEntryMapDelete(moduleName);
+        ret = codeSignHelper.ParseCodeSignBlock(realPath, storedEntryMap_, type);
+        storedEntryMap_.clear();
     }
     if (ret != CS_SUCCESS) {
         return HandleCodeSignBlockFailure(realPath, ret);
@@ -258,10 +258,9 @@ int32_t CodeSignUtils::HandleCodeSignBlockFailure(const std::string &realPath, i
     return ret;
 }
 
-int32_t CodeSignUtils::EnforceCodeSignForApp(const std::string &path, const EntryMap &entryPathMap,
-    FileType type, const std::string &moduleName)
+int32_t CodeSignUtils::EnforceCodeSignForApp(const std::string &path, const EntryMap &entryPathMap, FileType type)
 {
-    return EnforceCodeSignForAppWithOwnerId("", path, entryPathMap, type, moduleName);
+    return EnforceCodeSignForAppWithOwnerId("", path, entryPathMap, type);
 }
 
 int32_t CodeSignUtils::EnableKeyInProfile(const std::string &bundleName, const ByteBuffer &profileBuffer)
@@ -316,40 +315,6 @@ bool CodeSignUtils::IsSupportOHCodeSign()
 #else
     return false;
 #endif
-}
-
-bool CodeSignUtils::IsCodeSignEnableCompleted()
-{
-    std::lock_guard<std::mutex> lock(storedEntryMapLock_);
-    if (!storedEntryMap_.empty()) {
-        storedEntryMap_.clear();
-        return false;
-    }
-    return true;
-}
-
-void CodeSignUtils::StoredEntryMapInsert(const std::string &moduleName, const EntryMap &entryPathMap)
-{
-    std::lock_guard<std::mutex> lock(storedEntryMapLock_);
-    auto iter = storedEntryMap_.find(moduleName);
-    if (iter != storedEntryMap_.end()) {
-        iter->second.insert(entryPathMap.begin(), entryPathMap.end());
-        return;
-    }
-    storedEntryMap_.emplace(moduleName, entryPathMap);
-}
-
-void CodeSignUtils::StoredEntryMapDelete(const std::string &moduleName)
-{
-    storedEntryMap_.erase(moduleName);
-}
-
-void CodeSignUtils::StoredEntryMapSearch(const std::string &moduleName, EntryMap &entryPathMap)
-{
-    auto iter = storedEntryMap_.find(moduleName);
-    if (iter != storedEntryMap_.end()) {
-        entryPathMap = iter->second;
-    }
 }
 }
 }
