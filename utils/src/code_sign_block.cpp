@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -101,6 +101,7 @@ int32_t CodeSignBlock::ParseNativeLibSignInfo(const EntryMap &entryMap)
         return CS_ERR_NO_SIGNATURE;
     }
 
+    size_t signMapPreSize = signMap_.size();
     auto entryInfo = soInfo->info;
     auto entryInfoEnd = soInfo->info + soInfo->sectionNum;
     auto dataInfo = CONST_STATIC_CAST(char, soInfo);
@@ -129,6 +130,12 @@ int32_t CodeSignBlock::ParseNativeLibSignInfo(const EntryMap &entryMap)
         signMap_.emplace(targetFile, info);
         entryInfo++;
     } while (entryInfo < entryInfoEnd);
+
+    if (entryMap.size() != signMap_.size() - signMapPreSize) {
+        LOG_DEBUG(LABEL, "signMap_ size:%{public}u, signMapPreSize:%{public}u",
+            static_cast<uint32_t>(signMap_.size()), static_cast<uint32_t>(signMapPreSize));
+        return CS_ERR_NO_SIGNATURE;
+    }
 
     return CS_SUCCESS;
 }

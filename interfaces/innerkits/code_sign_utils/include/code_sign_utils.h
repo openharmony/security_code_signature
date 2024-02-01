@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -42,7 +42,7 @@ typedef enum {
 class CodeSignUtils {
 public:
     /**
-     * @brief Enforce code signature for app
+     * @brief Enforce code signature for a hap
      * @param entryPath map from entryname in hap to real path on disk
      * @param signatureFile signature file path
      * @return err code, see err_code.h
@@ -50,27 +50,25 @@ public:
     static int32_t EnforceCodeSignForApp(const EntryMap &entryPath, const std::string &signatureFile);
 
     /**
-     * @brief Enforce code signature for app
+     * @brief Enforce code signature for a hap with its native files.
+     * Multiple instances should be created to enable code signing for a multi-hap app.
      * @param path hap real path on disk
      * @param entryPath map from entryname in hap to real path on disk
      * @param type signature file type
-     * @param moduleName hap module name
      * @return err code, see err_code.h
      */
-    int32_t EnforceCodeSignForApp(const std::string &path, const EntryMap &entryPathMap,
-        FileType type, const std::string &moduleName);
+    int32_t EnforceCodeSignForApp(const std::string &path, const EntryMap &entryPathMap, FileType type);
 
     /**
-     * @brief Enforce code signature for app with ownerID
+     * @brief Enforce code signature for a hap with ownerID
      * @param ownerId app-identifier of the signature
      * @param path hap real path on disk
      * @param entryPath map from entryname in hap to real path on disk
      * @param type signature file type
-     * @param moduleName hap module name
      * @return err code, see err_code.h
      */
     int32_t EnforceCodeSignForAppWithOwnerId(const std::string &ownerId, const std::string &path,
-        const EntryMap &entryPathMap, FileType type, const std::string &moduleName);
+        const EntryMap &entryPathMap, FileType type);
 
     /**
      * @brief Enforce code signature for file with signature
@@ -119,11 +117,6 @@ public:
      */
     static bool InPermissiveMode();
     /**
-     * @brief Check if code signing is completed
-     * @return return ture if Completed
-     */
-    bool IsCodeSignEnableCompleted();
-    /**
      * @brief Check if the file path support FsVerity
      * @param path file path
      * @return err code, see err_code.h
@@ -132,14 +125,10 @@ public:
 private:
     static int32_t IsFsVerityEnabled(int fd);
     static int32_t EnableCodeSignForFile(const std::string &path, const struct code_sign_enable_arg &arg);
-    void StoredEntryMapInsert(const std::string &moduleName, const EntryMap &entryPathMap);
-    void StoredEntryMapDelete(const std::string &moduleName);
-    void StoredEntryMapSearch(const std::string &moduleName, EntryMap &entryPathMap);
-    int32_t ProcessCodeSignBlock(const std::string &ownerId, const std::string &path,
-        FileType type, const std::string &moduleName);
+    int32_t ProcessCodeSignBlock(const std::string &ownerId, const std::string &path, FileType type);
     int32_t HandleCodeSignBlockFailure(const std::string &realPath, int32_t ret);
 private:
-    std::unordered_map<std::string, EntryMap> storedEntryMap_;
+    EntryMap storedEntryMap_;
     std::mutex storedEntryMapLock_;
 };
 }
