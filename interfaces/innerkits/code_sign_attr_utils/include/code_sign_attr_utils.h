@@ -23,7 +23,13 @@ extern "C" {
 #endif
 
 #define MAX_OWNERID_LEN 64
+#if defined(__LP64__)
+#define XPM_REGION_LEN 0x100000000
+#else
 #define XPM_REGION_LEN 0x10000000
+#endif
+
+#define MAX_OWNERID_LEN 64
 
 #define OWNERID_SYSTEM_TAG "SYSTEM_LIB_ID"
 #define OWNERID_DEBUG_TAG  "DEBUG_LIB_ID"
