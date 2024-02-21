@@ -19,6 +19,12 @@ config("public_code_sign_utils_configs") {
 }
 
 ohos_shared_library("libcode_sign_utils") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  branch_protector_ret = "pac_ret"
   sources = [
     "${code_signature_root_dir}/utils/src/code_sign_block.cpp",
     "${code_signature_root_dir}/utils/src/file_helper.cpp",
