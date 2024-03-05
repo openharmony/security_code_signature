@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -39,7 +39,7 @@ static const std::string AN_BASE_PATH = "/data/local/ark-cache/tmp/multi_thread/
 static const std::string ORIGIN_AN_FILE = AN_BASE_PATH + "demo.an";
 static const std::string DemoWithownerID = AN_BASE_PATH + "demoWithownerID.an";
 
-static const char *g_validCaller = "installs";
+static const char *VALID_CALLER = "installs";
 
 uint64_t GetFileSize(int32_t fd)
 {
@@ -83,7 +83,7 @@ static bool DupFile(const std::string &path)
 void LocalCodeSignAndEnforce()
 {
     ByteBuffer sig;
-    uint64_t selfTokenId = NativeTokenSet(g_validCaller);
+    uint64_t selfTokenId = NativeTokenSet(VALID_CALLER);
     int ret = LocalCodeSignKit::SignLocalCode(ORIGIN_AN_FILE, sig);
     std::thread::id thisId = std::this_thread::get_id();
     std::ostringstream oss;
@@ -100,7 +100,7 @@ void LocalCodeSignAndEnforce()
 void LocalCodeSignAndEnforceWithOwnerID()
 {
     ByteBuffer sig;
-    uint64_t selfTokenId = NativeTokenSet(g_validCaller);
+    uint64_t selfTokenId = NativeTokenSet(VALID_CALLER);
     std::string ownerID = "AppName123";
     int ret = LocalCodeSignKit::SignLocalCode(ownerID, DemoWithownerID, sig);
     std::thread::id thisId = std::this_thread::get_id();
