@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,7 +27,7 @@ namespace Security {
 namespace CodeSign {
 static constexpr int MAX_DIGEST_SIZE = 64; // size of sha512
 static constexpr int FSVERITY_HASH_PAGE_SIZE = 4096;
-static const char *g_fsverityDigestMagic = "FSVerity";
+static const char *FSVERITY_DIGEST_MAGIC = "FSVerity";
 static constexpr uint32_t FSVERITY_DIGEST_MAGIC_LENGTH = 8;
 
 FsverityUtilsHelper &FsverityUtilsHelper::GetInstance()
@@ -56,7 +56,7 @@ void FsverityUtilsHelper::ErrorMsgLogCallback(const char *msg)
 bool FsverityUtilsHelper::FormatDigest(libfsverity_digest *digest, uint8_t *buffer)
 {
     struct fsverity_formatted_digest *ret = reinterpret_cast<struct fsverity_formatted_digest *>(buffer);
-    if (memcpy_s(ret->magic, FSVERITY_DIGEST_MAGIC_LENGTH, g_fsverityDigestMagic,
+    if (memcpy_s(ret->magic, FSVERITY_DIGEST_MAGIC_LENGTH, FSVERITY_DIGEST_MAGIC,
         FSVERITY_DIGEST_MAGIC_LENGTH) != EOK) {
         return false;
     }
