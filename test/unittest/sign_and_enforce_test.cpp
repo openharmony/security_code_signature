@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,7 +37,7 @@ static const std::string AN_BASE_PATH = "/data/local/ark-cache/tmp/";
 static const std::string DEMO_AN_PATH = AN_BASE_PATH + "demo.an";
 static const std::string DEMO_TAMPER_AN_PATH = AN_BASE_PATH + "fake_demo.an";
 
-static const char *g_validCaller = "installs";
+static const char *VALID_CALLER = "installs";
 
 static const std::string FAKE_SERIAL_NUMBER = "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 static const std::string FAKE_CONTENT = "FAKE";
@@ -135,7 +135,7 @@ static bool ModifyPkcs7SignerwithTargetFunc(ByteBuffer &src, ByteBuffer &dst,
 
 static void InvokeLocalCodeSign(const std::string &filePath, ByteBuffer &sig)
 {
-    uint64_t selfTokenId = NativeTokenSet(g_validCaller);
+    uint64_t selfTokenId = NativeTokenSet(VALID_CALLER);
     int ret = LocalCodeSignKit::SignLocalCode(filePath, sig);
     NativeTokenReset(selfTokenId);
     EXPECT_EQ(ret, CS_SUCCESS);
