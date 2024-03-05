@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,7 +27,7 @@ namespace CodeSign {
 const std::vector<std::string> CERTIFICATE_CALLERS = {"key_enable"};
 const std::vector<std::string> SIGN_CALLERS = {"installs"};
 constexpr int32_t VALUE_MAX_LEN = 32;
-const char* g_accessTokenServiceInitKey = "accesstoken.permission.init";
+const char* ACCESS_TOKEN_SERVICE_INIT_KEY = "accesstoken.permission.init";
 bool g_isAtmInited = false;
 
 bool PermissionUtils::IsValidCallerOfCert()
@@ -53,7 +53,7 @@ bool PermissionUtils::IsValidCallerOfLocalCodeSign()
 bool PermissionUtils::HasATMInitilized()
 {
     char value[VALUE_MAX_LEN] = {0};
-    int32_t ret = GetParameter(g_accessTokenServiceInitKey, "", value, VALUE_MAX_LEN - 1);
+    int32_t ret = GetParameter(ACCESS_TOKEN_SERVICE_INIT_KEY, "", value, VALUE_MAX_LEN - 1);
     if ((ret < 0) || (static_cast<uint64_t>(std::atoll(value)) != 0)) {
         g_isAtmInited = true;
         return true;
