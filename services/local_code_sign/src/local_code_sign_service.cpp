@@ -118,7 +118,7 @@ int32_t LocalCodeSignService::SignLocalCode(const std::string &ownerID, const st
                                             ByteBuffer &signature)
 {
     if (ownerID.length() > MAX_OWNER_ID_LEN) {
-        LOG_ERROR(LABEL, "ownerID len %{public}u should not exceed %{public}u", ownerID.length(), MAX_OWNER_ID_LEN);
+        LOG_ERROR(LABEL, "ownerID len %{public}zu should not exceed %{public}u", ownerID.length(), MAX_OWNER_ID_LEN);
         return CS_ERR_INVALID_OWNER_ID;
     }
     ByteBuffer digest;
