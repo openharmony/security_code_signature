@@ -309,7 +309,7 @@ bool CodeSignUtils::InPermissiveMode()
 bool CodeSignUtils::IsSupportOHCodeSign()
 {
 #ifdef SUPPORT_OH_CODE_SIGN
-    return !InPermissiveMode();
+    return true;
 #else
     return false;
 #endif
