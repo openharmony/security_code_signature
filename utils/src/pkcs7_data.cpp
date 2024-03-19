@@ -16,11 +16,12 @@
 #include "pkcs7_data.h"
 
 #include <string>
+#include <openssl/asn1.h>
+#include <securec.h>
 
 #include "log.h"
-#include "openssl/asn1.h"
 #include "openssl_utils.h"
-#include "securec.h"
+
 
 namespace OHOS {
 namespace Security {

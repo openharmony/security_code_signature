@@ -22,9 +22,8 @@
 namespace OHOS {
 namespace Security {
 namespace CodeSign {
-constexpr uint32_t MAX_REPLY_BUFFER_SIZE = 65536;
 
-int32_t LocalCodeSignProxy::InitLocalCertificate(ByteBuffer &cert)
+int32_t LocalCodeSignProxy::InitLocalCertificate(const ByteBuffer &challenge, ByteBuffer &cert)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -34,6 +33,12 @@ int32_t LocalCodeSignProxy::InitLocalCertificate(ByteBuffer &cert)
         return CS_ERR_REMOTE_CONNECTION;
     }
     if (!data.WriteInterfaceToken(GetDescriptor())) {
+        return CS_ERR_IPC_WRITE_DATA;
+    }
+    if (!data.WriteUint32(challenge.GetSize())) {
+        return CS_ERR_IPC_WRITE_DATA;
+    }
+    if (!data.WriteBuffer(challenge.GetBuffer(), challenge.GetSize())) {
         return CS_ERR_IPC_WRITE_DATA;
     }
     if (remote->SendRequest(static_cast<uint32_t>(LocalCodeSignInterfaceCode::INIT_LOCAL_CERTIFICATE),
@@ -88,7 +93,7 @@ int32_t LocalCodeSignProxy::ReadResultFromReply(MessageParcel &reply, ByteBuffer
     if (!reply.ReadUint32(size)) {
         return CS_ERR_IPC_READ_DATA;
     }
-    if (size > MAX_REPLY_BUFFER_SIZE) {
+    if (size > reply.GetReadableBytes()) {
         LOG_ERROR("Invalid reply data size.");
         return CS_ERR_IPC_MSG_INVALID;
     }

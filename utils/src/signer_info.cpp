@@ -17,14 +17,15 @@
 
 #include <openssl/asn1.h>
 #include <openssl/pem.h>
-#include <openssl_utils.h>
 #include <openssl/obj_mac.h>
 #include <openssl/pkcs7.h>
 #include <openssl/x509.h>
 #include <openssl/objects.h>
-#include "securec.h"
+#include <securec.h>
+
 #include "errcode.h"
 #include "log.h"
+#include "openssl_utils.h"
 
 namespace OHOS {
 namespace Security {
@@ -32,9 +33,10 @@ namespace CodeSign {
 static constexpr int INVALID_SIGN_ALGORITHM_NID = -1;
 static constexpr int MAX_SIGNATURE_SIZE = 1024; // 1024: max signature length
 
-const std::string SignerInfo::SIGNER_OID = "1.3.6.1.4.1.2011.2.376.1.4.1"; // OID used for code signing to mark owner ID
-const std::string SignerInfo::SIGNER_OID_SHORT_NAME = "ownerID";
-const std::string SignerInfo::SIGNER_OID_LONG_NAME = "Code Signature Owner ID";
+// OID used for code signing to mark owner ID
+const std::string SignerInfo::OWNERID_OID = "1.3.6.1.4.1.2011.2.376.1.4.1";
+const std::string SignerInfo::OWNERID_OID_SHORT_NAME = "ownerID";
+const std::string SignerInfo::OWNERID_OID_LONG_NAME = "Code Signature Owner ID";
 
 bool SignerInfo::InitSignerInfo(const std::string &ownerID, X509 *cert, const EVP_MD *md,
     const ByteBuffer &contentData, bool carrySigningTime)
@@ -225,12 +227,7 @@ PKCS7_SIGNER_INFO *SignerInfo::GetSignerInfo()
 
 int SignerInfo::AddOwnerID(const std::string &ownerID)
 {
-    int nid = OBJ_txt2nid(SIGNER_OID.c_str());
-    if (nid == NID_undef) {
-        OBJ_create(SIGNER_OID.c_str(), SIGNER_OID_SHORT_NAME.c_str(), SIGNER_OID_LONG_NAME.c_str());
-        nid = OBJ_txt2nid(SIGNER_OID.c_str());
-    }
-
+    int nid = CreateNIDFromOID(OWNERID_OID, OWNERID_OID_SHORT_NAME, OWNERID_OID_LONG_NAME);
     ASN1_STRING *ownerIDAsn1 = ASN1_STRING_new();
     ASN1_STRING_set(ownerIDAsn1, ownerID.c_str(), ownerID.length());
     int ret = PKCS7_add_signed_attribute(p7info_, nid, V_ASN1_UTF8STRING, ownerIDAsn1);
@@ -245,12 +242,7 @@ int SignerInfo::AddOwnerID(const std::string &ownerID)
 
 int SignerInfo::ParseOwnerIdFromSignature(const ByteBuffer &sigbuffer, std::string &ownerID)
 {
-    int nid = OBJ_txt2nid(SIGNER_OID.c_str());
-    if (nid == NID_undef) {
-        OBJ_create(SIGNER_OID.c_str(), SIGNER_OID_SHORT_NAME.c_str(), SIGNER_OID_LONG_NAME.c_str());
-        nid = OBJ_txt2nid(SIGNER_OID.c_str());
-    }
-
+    int nid = CreateNIDFromOID(OWNERID_OID, OWNERID_OID_SHORT_NAME, OWNERID_OID_LONG_NAME);
     BIO *bio = BIO_new_mem_buf(sigbuffer.GetBuffer(), sigbuffer.GetSize());
     if (bio == nullptr) {
         ERR_LOG_WITH_OPEN_SSL_MSG("BIO_new_mem_buf failed");

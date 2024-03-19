@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,27 +13,9 @@
  * limitations under the License.
  */
 
-#ifndef CODE_SIGN_SIGN_KEY_H
-#define CODE_SIGN_SIGN_KEY_H
+#ifndef TEST_FUZZTEST_INITLOCALCERTIFICATESTUB_FUZZER_H
+#define TEST_FUZZTEST_INITLOCALCERTIFICATESTUB_FUZZER_H
 
-#include <vector>
+#define FUZZ_PROJECT_NAME "initlocalcertificatestub_fuzzer"
 
-#include "byte_buffer.h"
-
-namespace OHOS {
-namespace Security {
-namespace CodeSign {
-class SignKey {
-public:
-    virtual const ByteBuffer *GetSignCert() = 0;
-    std::vector<ByteBuffer> GetCarriedCerts()
-    {
-        std::vector<ByteBuffer> certs;
-        return certs;
-    }
-    virtual bool Sign(const ByteBuffer &data, ByteBuffer &ret) = 0;
-};
-}
-}
-}
-#endif
+#endif // TEST_FUZZTEST_INITLOCALCERTIFICATESTUB_FUZZER_H

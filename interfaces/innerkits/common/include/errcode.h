@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -40,6 +40,7 @@ enum SignErrCode {
     CS_ERR_COMPUTE_DIGEST = -0x204,
     CS_ERR_NO_OWNER_ID = -0x205,
     CS_ERR_INIT_LOCAL_CERT = -0x206,
+    CS_ERR_VERIFY_CERT = -0x207
 };
 
 enum OpenSSLErrCode {

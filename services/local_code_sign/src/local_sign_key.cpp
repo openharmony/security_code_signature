@@ -18,21 +18,19 @@
 #include <cstring>
 #include <cstdio>
 #include <climits>
-#include <openssl/rand.h>
+#include <securec.h>
 #include <string>
 
 #include "byte_buffer.h"
 #include "cert_utils.h"
 #include "errcode.h"
 #include "log.h"
-#include "securec.h"
 
 namespace OHOS {
 namespace Security {
 namespace CodeSign {
 static const std::string ALIAS_NAME = "LOCAL_SIGN_KEY";
 static const struct HksBlob LOCAL_SIGN_KEY_ALIAS = { ALIAS_NAME.size(), (uint8_t *)ALIAS_NAME.c_str()};
-static const uint32_t CHALLENGE_LEN = 32;
 static const uint32_t SIGNATURE_COMMON_SIZE = 512;
 
 static const std::string SUPPORTED_SIGN_ALGORITHM = "ECDSA256";
@@ -75,6 +73,22 @@ LocalSignKey::~LocalSignKey()
     }
 }
 
+void LocalSignKey::SetChallenge(const ByteBuffer &challenge)
+{
+    std::lock_guard<std::mutex> lock(lock_);
+    if (challenge_) {
+        challenge_.reset(nullptr);
+    }
+    uint32_t len = challenge.GetSize();
+    challenge_ = std::make_unique<ByteBuffer>(len);
+    if (challenge_ == nullptr) {
+        return;
+    }
+    if (memcpy_s(challenge_->GetBuffer(), len, challenge.GetBuffer(), len) != EOK) {
+        LOG_ERROR("set challenge failed.");
+    }
+}
+
 bool LocalSignKey::InitKey()
 {
     int32_t ret = HksKeyExist(&LOCAL_SIGN_KEY_ALIAS, nullptr);
@@ -84,6 +98,10 @@ bool LocalSignKey::InitKey()
         }
     } else if (ret != HKS_SUCCESS) {
         LOG_ERROR("HksKeyExist fail, ret is %{public}d!", ret);
+        return false;
+    }
+    certChain_ = QueryCertChain();
+    if (certChain_ == nullptr) {
         return false;
     }
     return true;
@@ -123,6 +141,7 @@ const HksCertChain *LocalSignKey::GetCertChain()
     }
     return certChain_;
 }
+
 HksCertChain *LocalSignKey::QueryCertChain()
 {
     // init attest param
@@ -146,6 +165,17 @@ HksCertChain *LocalSignKey::QueryCertChain()
     return certChain;
 }
 
+int32_t LocalSignKey::GetFormattedCertChain(ByteBuffer &buffer)
+{
+    if (GetCertChain() == nullptr) {
+        return CS_ERR_HUKS_OBTAIN_CERT;
+    }
+    if (!FormattedCertChain(certChain_, buffer)) {
+        return CS_ERR_MEMORY;
+    }
+    return CS_SUCCESS;
+}
+
 bool LocalSignKey::GetKeyParamSet(HUKSParamSet &paramSet)
 {
     if (algorithm_.compare(SUPPORTED_SIGN_ALGORITHM) == 0) {
@@ -156,17 +186,19 @@ bool LocalSignKey::GetKeyParamSet(HUKSParamSet &paramSet)
 
 bool LocalSignKey::GetAttestParamSet(HUKSParamSet &paramSet)
 {
+    std::lock_guard<std::mutex> lock(lock_);
     // init challenge data by secure random function
     if (challenge_ == nullptr) {
-        challenge_ = std::make_unique<uint8_t[]>(CHALLENGE_LEN);
+        challenge_ = GetRandomChallenge();
         if (challenge_ == nullptr) {
             return false;
         }
-        RAND_bytes(challenge_.get(), CHALLENGE_LEN);
     }
+
+    LOG_INFO("challenge in attest param.");
     struct HksBlob challengeBlob = {
-        .size = CHALLENGE_LEN,
-        .data = challenge_.get()
+        .size = challenge_->GetSize(),
+        .data = challenge_->GetBuffer()
     };
     struct HksParam attestationParams[] = {
         { .tag = HKS_TAG_ATTESTATION_CHALLENGE, .blob = challengeBlob },

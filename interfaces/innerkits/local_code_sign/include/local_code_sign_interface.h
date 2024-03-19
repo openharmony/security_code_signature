@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,7 +29,7 @@ constexpr int LOCAL_CODE_SIGN_SA_ID = 3507;
 class LocalCodeSignInterface : public OHOS::IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Security.LocalCodeSignInterface");
-    virtual int32_t InitLocalCertificate(ByteBuffer &cert) = 0;
+    virtual int32_t InitLocalCertificate(const ByteBuffer &challenge, ByteBuffer &cert) = 0;
     virtual int32_t SignLocalCode(const std::string &ownerID, const std::string &filePath, ByteBuffer &signature) = 0;
 };
 }

@@ -96,22 +96,15 @@ void LocalCodeSignService::OnStop()
     state_ = ServiceRunningState::STATE_NOT_START;
 }
 
-int32_t LocalCodeSignService::InitLocalCertificate(ByteBuffer &cert)
+int32_t LocalCodeSignService::InitLocalCertificate(const ByteBuffer &challenge, ByteBuffer &certChainData)
 {
     LocalSignKey &key = LocalSignKey::GetInstance();
+    key.SetChallenge(challenge);
     if (!key.InitKey()) {
         LOG_ERROR("Init key failed.");
         return CS_ERR_HUKS_INIT_KEY;
     }
-    const ByteBuffer *keyCert = key.GetSignCert();
-    if (keyCert == nullptr) {
-        LOG_ERROR("Get cert failed.");
-        return CS_ERR_HUKS_OBTAIN_CERT;
-    }
-    if (!cert.CopyFrom(keyCert->GetBuffer(), keyCert->GetSize())) {
-        return CS_ERR_MEMORY;
-    }
-    return CS_SUCCESS;
+    return key.GetFormattedCertChain(certChainData);
 }
 
 int32_t LocalCodeSignService::SignLocalCode(const std::string &ownerID, const std::string &filePath,

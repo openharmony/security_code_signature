@@ -24,7 +24,6 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::option::Option;
 use std::ptr;
-use std::thread::sleep_ms;
 
 const LOG_LABEL: HiLogLabel = HiLogLabel {
     log_type: LogType::LogCore,
@@ -39,10 +38,6 @@ const FSVERITY_KEYRING_NAME: &str = ".fs-verity";
 const LOCAL_KEY_NAME: &str = "local_key";
 const CODE_SIGN_KEY_NAME_PREFIX: &str = "fs_verity_key";
 const SUCCESS: i32 = 0;
-
-// retry to get local cert
-const LOCAL_CERT_MAX_RETRY_TIMES: i32 = 5;
-const SLEEP_MILLI_SECONDS: u32 = 50;
 
 type KeySerial = i32;
 
@@ -72,8 +67,10 @@ fn get_local_key() -> Option<Vec<u8>> {
     let mut cert_size = CERT_DATA_MAX_SIZE;
     let mut cert_data = Vec::with_capacity(cert_size);
     let pcert = cert_data.as_mut_ptr();
+
     unsafe {
-        if InitLocalCertificate(pcert, &mut cert_size) == 0 {
+        let ret = InitLocalCertificate(pcert, &mut cert_size);
+        if ret == 0 {
             cert_data.set_len(cert_size);
             Some(cert_data)
         } else {
@@ -166,27 +163,12 @@ fn enable_trusted_keys(key_id: KeySerial, root_cert: &PemCollection) {
 
 // enable local key from local code sign SA
 fn enable_local_key(key_id: KeySerial) {
-    let mut times = 0;
-    let cert_data = loop {
-        match get_local_key() {
-            Some(key) => {
-                break key;
-            }
-            None => {
-                error!(LOG_LABEL, "Get local key failed, may try again.");
-            }
+    if let Some(cert_data) = get_local_key() {
+        let ret = enable_key(key_id, LOCAL_KEY_NAME, &cert_data);
+        if ret < 0 {
+            cs_hisysevent::report_add_key_err("local_key", ret);
+            error!(LOG_LABEL, "Enable local key failed");
         }
-        times += 1;
-        if times == LOCAL_CERT_MAX_RETRY_TIMES {
-            error!(LOG_LABEL, "Local key is not avaliable.");
-            return;
-        }
-        sleep_ms(SLEEP_MILLI_SECONDS);
-    };
-    let ret = enable_key(key_id, LOCAL_KEY_NAME, &cert_data);
-    if ret < 0 {
-        cs_hisysevent::report_add_key_err("local_key", ret);
-        error!(LOG_LABEL, "Enable local key failed");
     }
 }
 

@@ -16,10 +16,11 @@
 #ifndef CODE_SIGN_PKCS7_DATA_H
 #define CODE_SIGN_PKCS7_DATA_H
 
+#include <openssl/evp.h>
+#include <openssl/pkcs7.h>
+#include <openssl/x509.h>
+
 #include "byte_buffer.h"
-#include "openssl/evp.h"
-#include "openssl/pkcs7.h"
-#include "openssl/x509.h"
 
 namespace OHOS {
 namespace Security {

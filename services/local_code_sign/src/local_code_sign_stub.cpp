@@ -15,6 +15,7 @@
 
 #include "local_code_sign_stub.h"
 
+#include "cert_utils.h"
 #include "cs_hisysevent.h"
 #include "cs_hitrace.h"
 #include "errcode.h"
@@ -61,8 +62,20 @@ int32_t LocalCodeSignStub::InitLocalCertificateInner(MessageParcel &data, Messag
         reply.WriteInt32(CS_ERR_NO_PERMISSION);
         return CS_ERR_NO_PERMISSION;
     }
+
+    uint32_t challengeLen;
+    if (!data.ReadUint32(challengeLen) || !CheckChallengeSize(challengeLen)) {
+        LOG_ERROR("Get challenge size failed.");
+        return CS_ERR_IPC_READ_DATA;
+    }
+    ByteBuffer challenge;
+    const uint8_t *challengeBuffer = data.ReadBuffer(challengeLen);
+    if (!challenge.CopyFrom(challengeBuffer, challengeLen)) {
+        return CS_ERR_MEMORY;
+    }
+
     ByteBuffer cert;
-    int32_t result = InitLocalCertificate(cert);
+    int32_t result = InitLocalCertificate(challenge, cert);
     if (!reply.WriteInt32(result)) {
         return CS_ERR_IPC_WRITE_DATA;
     }

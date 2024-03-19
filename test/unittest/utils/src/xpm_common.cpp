@@ -21,12 +21,12 @@
 #include <cstring>
 #include <fcntl.h>
 #include <unistd.h>
+#include <securec.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 
 #include "code_sign_attr_utils.h"
 #include "log.h"
-#include "securec.h"
 
 namespace OHOS {
 namespace Security {

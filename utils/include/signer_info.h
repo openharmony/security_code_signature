@@ -18,20 +18,20 @@
 
 #include <vector>
 #include <string>
-#include "byte_buffer.h"
-#include "openssl/evp.h"
-#include "openssl/pkcs7.h"
-#include "openssl/x509.h"
+#include <openssl/evp.h>
+#include <openssl/pkcs7.h>
+#include <openssl/x509.h>
 
+#include "byte_buffer.h"
 
 namespace OHOS {
 namespace Security {
 namespace CodeSign {
 class SignerInfo {
 public:
-    static const std::string SIGNER_OID;
-    static const std::string SIGNER_OID_SHORT_NAME;
-    static const std::string SIGNER_OID_LONG_NAME;
+    static const std::string OWNERID_OID;
+    static const std::string OWNERID_OID_SHORT_NAME;
+    static const std::string OWNERID_OID_LONG_NAME;
     
     static int ParseOwnerIdFromSignature(const ByteBuffer &sigbuffer, std::string &ownerID);
     bool InitSignerInfo(const std::string &ownerID, X509 *cert, const EVP_MD *md, const ByteBuffer &contentData,

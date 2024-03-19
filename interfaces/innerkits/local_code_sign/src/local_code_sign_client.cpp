@@ -15,7 +15,10 @@
 
 #include "local_code_sign_client.h"
 #include <iservice_registry.h>
+
+#include "cert_utils.h"
 #include "cs_hisysevent.h"
+#include "huks_attest_verifier.h"
 #include "local_code_sign_proxy.h"
 #include "local_code_sign_load_callback.h"
 #include "log.h"
@@ -131,12 +134,18 @@ int32_t LocalCodeSignClient::InitLocalCertificate(ByteBuffer &cert)
     if (localCodeSignProxy_ == nullptr) {
         return CS_ERR_SA_GET_PROXY;
     }
-    int32_t ret = localCodeSignProxy_->InitLocalCertificate(cert);
+    ByteBuffer certChainBuffer;
+    std::unique_ptr<ByteBuffer> challenge = GetRandomChallenge();
+    int32_t ret = localCodeSignProxy_->InitLocalCertificate(*challenge, certChainBuffer);
     if (ret != CS_SUCCESS) {
         LOG_ERROR("InitLocalCertificate err, error code = %{public}d", ret);
         return ret;
     }
-    return CS_SUCCESS;
+
+    if (!GetVerifiedCert(certChainBuffer, *challenge, cert)) {
+        ret = CS_ERR_VERIFY_CERT;
+    }
+    return ret;
 }
 
 int32_t LocalCodeSignClient::SignLocalCode(const std::string &ownerID, const std::string &path, ByteBuffer &signature)

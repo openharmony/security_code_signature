@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,12 +15,12 @@
 
 #include "local_code_sign_utils.h"
 
+#include <securec.h>
 #include <unistd.h>
 
 #include "byte_buffer.h"
 #include "local_code_sign_kit.h"
 #include "log.h"
-#include "securec.h"
 #include "thread_ex.h"
 
 using namespace OHOS::Security::CodeSign;
@@ -28,8 +28,8 @@ using namespace OHOS::Security::CodeSign;
 namespace OHOS {
 namespace Security {
 namespace CodeSign {
-constexpr uint32_t INIT_LOCAL_CERT_TIMEOUT_MS = 300 * 1000;
-constexpr uint32_t INIT_LOCAL_CERT_SLEEP_US = 1000 * 1000;
+constexpr uint32_t INIT_LOCAL_CERT_TIMEOUT_MS = 300 * 1000; // 5min
+constexpr uint32_t INIT_LOCAL_CERT_SLEEP_US = 1000 * 1000;  // 1s
 const std::string INIT_LOCAL_CERT_THREAD_NAME = "init_local_cert";
 
 static std::condition_variable g_condition;

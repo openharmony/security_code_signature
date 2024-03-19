@@ -66,6 +66,7 @@ group("local_code_sign_configs") {
   deps = [
     ":local_code_sign.cfg",
     ":local_code_sign_sa_profile",
+    ":trusted_attest_root_ca",
   ]
 }
 
@@ -79,4 +80,15 @@ ohos_prebuilt_etc("local_code_sign.cfg") {
 ohos_sa_profile("local_code_sign_sa_profile") {
   sources = [ "sa_profile/3507.json" ]
   part_name = "code_signature"
+}
+
+ohos_prebuilt_etc("trusted_attest_root_ca") {
+  if (!code_signature_support_oh_code_sign) {
+    source = "config/OpenHarmony/trusted_attest_root_ca.cer"
+  } else {
+    source = "config/trusted_attest_root_ca.cer"
+  }
+  part_name = "code_signature"
+  subsystem_name = "security"
+  relative_install_dir = "security"
 }

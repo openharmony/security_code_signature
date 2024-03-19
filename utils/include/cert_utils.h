@@ -18,13 +18,23 @@
 
 #include <cstdint>
 
+#include "byte_buffer.h"
 #include "hks_type.h"
 
 namespace OHOS {
 namespace Security {
 namespace CodeSign {
-bool ConstructDataToCertChain(struct HksCertChain **certChain);
+static const uint32_t CERT_COUNT = 4;
+
+bool ConstructDataToCertChain(struct HksCertChain **certChain, int certsCount = CERT_COUNT);
 void FreeCertChain(struct HksCertChain **certChain, const uint32_t pos);
+bool FormattedCertChain(const HksCertChain *certChain, ByteBuffer &buffer);
+bool GetCertChainFormBuffer(const ByteBuffer &certChainBuffer,
+    ByteBuffer &signCert, ByteBuffer &issuer, std::vector<ByteBuffer> &chain);
+int32_t VerifyAttestCertChain(const HksCertChain *certChain, const ByteBuffer &challenge);
+bool GetSigningCertFromCerChain(const HksCertChain *certChain, ByteBuffer cert);
+std::unique_ptr<ByteBuffer> GetRandomChallenge();
+bool CheckChallengeSize(uint32_t size);
 }
 }
 }
