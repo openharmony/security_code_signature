@@ -128,6 +128,8 @@ static bool VerifyIssurCert(X509 *cert, STACK_OF(X509) *chain)
             break;
         }
         X509_STORE_CTX_set_purpose(storeCtx, X509_PURPOSE_ANY);
+        // because user can set date of device, validation skip time check for fool-proofing
+        X509_STORE_CTX_set_flags(storeCtx, X509_V_FLAG_NO_CHECK_TIME);
         int index = X509_verify_cert(storeCtx);
         if (index <= 0) {
             index = X509_STORE_CTX_get_error(storeCtx);
@@ -230,6 +232,26 @@ static bool VerifyExtension(X509 *cert, const ByteBuffer &challenge)
     return true;
 }
 
+static void ShowCertInfo(const std::vector<ByteBuffer> &certChainBuffer,
+    const ByteBuffer &issuerBuffer, const ByteBuffer &certBuffer)
+{
+    std::string pem;
+    LOG_INFO("Dump cert chain");
+    for (auto cert: certChainBuffer) {
+        if (ConvertCertToPEMString(cert, pem)) {
+            LOG_INFO("%{private}s", pem.c_str());
+        }
+    }
+    LOG_INFO("Dump issuer cert");
+    if (ConvertCertToPEMString(issuerBuffer, pem)) {
+        LOG_INFO("%{private}s", pem.c_str());
+    }
+    LOG_INFO("Dump signing cert");
+    if (ConvertCertToPEMString(certBuffer, pem)) {
+        LOG_INFO("%{private}s", pem.c_str());
+    }
+}
+
 bool GetVerifiedCert(const ByteBuffer &buffer, const ByteBuffer &challenge, ByteBuffer &certBuffer)
 {
     std::vector<ByteBuffer> certChainBuffer;
@@ -281,6 +303,9 @@ bool GetVerifiedCert(const ByteBuffer &buffer, const ByteBuffer &challenge, Byte
     X509_free(signCert);
     X509_free(issuerCert);
     sk_X509_pop_free(certChain, X509_free);
+    if (!ret) {
+        ShowCertInfo(certChainBuffer, issuerBuffer, certBuffer);
+    }
     return ret;
 }
 }

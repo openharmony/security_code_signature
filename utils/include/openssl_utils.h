@@ -40,6 +40,7 @@ X509 *LoadCertFromBuffer(const uint8_t *buffer, const uint32_t size);
 STACK_OF(X509) *MakeStackOfCerts(const std::vector<ByteBuffer> &certChain);
 int CreateNIDFromOID(const std::string &oid, const std::string &shortName,
     const std::string &longName);
+bool ConvertCertToPEMString(const ByteBuffer &cert, std::string &pemString);
 }
 }
 }
