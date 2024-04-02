@@ -15,6 +15,7 @@
 
 #include "openssl_utils.h"
 
+#include <openssl/pem.h>
 #include "log.h"
 
 namespace OHOS {
@@ -44,6 +45,36 @@ X509 *LoadCertFromBuffer(const uint8_t *buffer, const uint32_t size)
     }
     BIO_free(mem);
     return cert;
+}
+
+bool ConvertCertToPEMString(const ByteBuffer &certBuffer, std::string &pemString)
+{
+    X509 *cert = LoadCertFromBuffer(certBuffer.GetBuffer(), certBuffer.GetSize());
+    if (cert == nullptr) {
+        return false;
+    }
+    BIO *mem = BIO_new(BIO_s_mem());
+    if (mem == nullptr) {
+        X509_free(cert);
+        return false;
+    }
+    bool ret = false;
+    do {
+        if (!PEM_write_bio_X509(mem, cert)) {
+            ERR_LOG_WITH_OPEN_SSL_MSG("convert to pem failed.");
+            break;
+        }
+        uint8_t *outData = nullptr;
+        uint32_t len = BIO_get_mem_data(mem, &outData);
+        if (len < 0) {
+            break;
+        }
+        pemString = std::string(reinterpret_cast<char *>(outData), len);
+        ret = true;
+    } while (0);
+    BIO_free(mem);
+    X509_free(cert);
+    return ret;
 }
 
 STACK_OF(X509) *MakeStackOfCerts(const std::vector<ByteBuffer> &certChain)
