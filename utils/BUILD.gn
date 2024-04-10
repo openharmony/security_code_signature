@@ -32,6 +32,7 @@ ohos_source_set("fsverity_sign_src_set") {
   public_configs = [ "${code_signature_root_dir}:common_public_config" ]
 
   external_deps = [
+    "bounds_checking_function:libsec_shared",
     "fsverity-utils:libfsverity_utils",
     "hilog:libhilog",
     "openssl:libcrypto_shared",
