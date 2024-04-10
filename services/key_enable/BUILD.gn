@@ -14,13 +14,8 @@
 import("//build/ohos.gni")
 import("../../code_signature.gni")
 
-common_deps = [
-  "${rust_openssl_dir}/openssl:lib",
-  "utils:libkey_enable_utils",
-  "//third_party/rust/crates/cxx:lib",
-]
+common_deps = [ "utils:libkey_enable_utils" ]
 common_external_deps = [
-  "c_utils:utils_rust",
   "hilog:hilog_rust",
   "hisysevent:hisysevent_rust",
   "ylong_json:lib",
@@ -34,6 +29,13 @@ ohos_rust_executable("key_enable") {
   sources = [ "src/main.rs" ]
   deps = common_deps
   external_deps = common_external_deps
+  if (!ohos_indep_compiler_enable) {
+    deps += [
+      "${rust_openssl_dir}/openssl:lib",
+      "//third_party/rust/crates/cxx:lib",
+    ]
+    external_deps += [ "c_utils:utils_rust" ]
+  }
   crate_name = "key_enable"
   crate_type = "bin"
   subsystem_name = "security"
@@ -49,6 +51,13 @@ ohos_rust_shared_ffi("key_enable_lib") {
   sources = [ "src/lib.rs" ]
   deps = common_deps
   external_deps = common_external_deps
+  if (!ohos_indep_compiler_enable) {
+    deps += [
+      "${rust_openssl_dir}/openssl:lib",
+      "//third_party/rust/crates/cxx:lib",
+    ]
+    external_deps += [ "c_utils:utils_rust" ]
+  }
   crate_name = "key_enable"
   subsystem_name = "security"
   part_name = "code_signature"
