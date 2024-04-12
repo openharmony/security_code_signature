@@ -23,8 +23,9 @@
 #include "local_code_sign_client.h"
 #include "local_code_sign_kit.h"
 #include "local_code_sign_load_callback.h"
-#include "signer_info.h"
+#include "local_key_helper.h"
 #include "log.h"
+#include "signer_info.h"
 
 using namespace OHOS::Security::CodeSign;
 using namespace testing::ext;
@@ -93,7 +94,7 @@ HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0003, TestSize.Level0)
     EXPECT_EQ(ret, CS_ERR_NO_OWNER_ID);
     EXPECT_EQ(retOwnerID, "");
     ret = CodeSignUtils::EnforceCodeSignForFile(DEMO_AN_PATH, sig);
-    EXPECT_EQ(ret, CS_SUCCESS);
+    EXPECT_EQ(ret, GetEnforceFileResult());
 }
 
 /**
@@ -197,7 +198,7 @@ HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0010, TestSize.Level0)
     ret = CodeSignUtils::ParseOwnerIdFromSignature(sig, retOwnerID);
     EXPECT_EQ(ownerID, retOwnerID);
     ret = CodeSignUtils::EnforceCodeSignForFile(DEMO_AN_PATH2, sig);
-    EXPECT_EQ(ret, CS_SUCCESS);
+    EXPECT_EQ(ret, GetEnforceFileResult());
 }
 
 /**

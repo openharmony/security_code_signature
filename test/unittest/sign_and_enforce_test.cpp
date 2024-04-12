@@ -25,6 +25,7 @@
 #include "byte_buffer.h"
 #include "code_sign_utils.h"
 #include "local_code_sign_kit.h"
+#include "local_key_helper.h"
 #include "log.h"
 
 using namespace OHOS::Security::CodeSign;
@@ -259,7 +260,7 @@ HWTEST_F(SignAndEnforceTest, SignAndEnforceTest_0006, TestSize.Level0)
     ByteBuffer sig;
     InvokeLocalCodeSign(DEMO_AN_PATH, sig);
     int32_t ret = CodeSignUtils::EnforceCodeSignForFile(DEMO_AN_PATH, sig);
-    EXPECT_EQ(ret, CS_SUCCESS);
+    EXPECT_EQ(ret, GetEnforceFileResult());
 }
 } // namespace CodeSign
 } // namespace Security

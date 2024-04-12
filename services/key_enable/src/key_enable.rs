@@ -14,6 +14,7 @@
  */
 
 use super::cert_chain_utils::PemCollection;
+use super::cert_path_utils::TrustCertPath;
 use super::cert_utils::{get_cert_path, get_trusted_certs};
 use super::cs_hisysevent;
 use super::profile_utils::add_profile_cert_path;
@@ -24,6 +25,7 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::option::Option;
 use std::ptr;
+use std::thread;
 
 const LOG_LABEL: HiLogLabel = HiLogLabel {
     log_type: LogType::LogCore,
@@ -55,6 +57,7 @@ extern "C" {
         type_name: *const u8,
         restriction: *const u8,
     ) -> KeySerial;
+    fn CheckUserUnlock() -> bool;
 }
 
 fn print_openssl_error_stack(error_stack: ErrorStack) {
@@ -161,6 +164,27 @@ fn enable_trusted_keys(key_id: KeySerial, root_cert: &PemCollection) {
     }
 }
 
+// start cert path ops thread add trusted cert & developer cert
+fn add_cert_path_thread(
+    root_cert: PemCollection,
+    cert_paths: TrustCertPath,
+) -> std::thread::JoinHandle<()> {
+    thread::spawn(move || {
+        // enable trusted cert in prebuilt config
+        info!(LOG_LABEL, "Starting enable trusted cert.");
+        if cert_paths.add_cert_paths().is_err() {
+            error!(LOG_LABEL, "Add trusted cert path err.");
+        }
+
+        // enable developer certs
+        info!(LOG_LABEL, "Starting enable developer cert.");
+        if add_profile_cert_path(&root_cert, &cert_paths).is_err() {
+            error!(LOG_LABEL, "Add cert path from local profile err.");
+        }
+        info!(LOG_LABEL, "Finished cert path adding.");
+    })
+}
+
 // enable local key from local code sign SA
 fn enable_local_key(key_id: KeySerial) {
     if let Some(cert_data) = get_local_key() {
@@ -181,29 +205,37 @@ fn restrict_keys(key_id: KeySerial) {
     }
 }
 
+fn enable_keys_after_user_unlock(key_id: KeySerial) {
+    if !unsafe { CheckUserUnlock() } {
+        restrict_keys(key_id);
+        return;
+    }
+
+    // enable local code sign key
+    enable_local_key(key_id);
+    restrict_keys(key_id);
+}
+
 /// enable trusted and local keys, and then restrict keyring
 pub fn enable_all_keys() {
     let key_id = match get_keyring_id() {
         Ok(id) => id,
-        Err(_) => return,
+        Err(_) => {
+            error!(LOG_LABEL, "Failed to get keyring ID.");
+            return;
+        },
     };
     let root_cert = get_trusted_certs();
     // enable device keys and authed source
     enable_trusted_keys(key_id, &root_cert);
 
     let cert_paths = get_cert_path();
-    if cert_paths.add_cert_paths().is_err() {
-        error!(LOG_LABEL, "Add trusted cert path err");
-    }
+    let cert_thread = add_cert_path_thread(root_cert, cert_paths);
+    enable_keys_after_user_unlock(key_id);
 
-    // enable developer cert
-    if add_profile_cert_path(&root_cert, &cert_paths).is_err() {
-        error!(LOG_LABEL, "Add cert path from local profile");
+    if let Err(e) = cert_thread.join() {
+        error!(LOG_LABEL, "add cert path thread panicked: {:?}", e);
     }
-
-    // enable local code sign key
-    enable_local_key(key_id);
-    restrict_keys(key_id);
 
     info!(LOG_LABEL, "Fnished enable all keys.");
 }

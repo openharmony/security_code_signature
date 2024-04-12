@@ -17,8 +17,9 @@ import("../../../code_signature.gni")
 ohos_static_library("libkey_enable_utils") {
   sources = [
     "src/cert_path.cpp",
+    "src/key_enable_adapter.cpp",
     "src/key_utils.cpp",
-    "src/local_code_sign_utils.cpp",
+    "src/unlock_event_helper.cpp",
   ]
   include_dirs = [
     "include",
@@ -31,9 +32,13 @@ ohos_static_library("libkey_enable_utils") {
   configs = [ "${code_signature_root_dir}:common_utils_config" ]
 
   external_deps = [
+    "ability_base:want",
     "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
     "hilog:libhilog",
     "init:libbegetutil",
+    "samgr:samgr_proxy",
+    "screenlock_mgr:screenlock_client",
   ]
   subsystem_name = "security"
   part_name = "code_signature"

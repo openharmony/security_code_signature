@@ -80,6 +80,9 @@
             <option name="push" value="demo_an/demo.an -> /data/test/tmp" src="res"/>
             <option name="shell" value="cp /data/test/tmp/demo.an /data/test/tmp/demo2.an"/>
             <option name="shell" value="cp /data/test/tmp/* /data/local/ark-cache/tmp"/>
+            <option name="shell" value="power-shell wakeup"/>
+            <option name="shell" value="uinput -T -m 594 2117 594 864 400"/>
+            <option name="shell" value="power-shell setmode 602"/>
         </preparer>
         <cleaner>
             <option name="shell" value="rm -rf /data/local/ark-cache/tmp"/>
@@ -93,6 +96,9 @@
             <option name="push" value="demo_an/demo.an -> /data/test/tmp" src="res"/>
             <option name="shell" value="cp /data/test/tmp/* /data/local/ark-cache/tmp"/>
             <option name="shell" value="head -c 100000 /dev/urandom > /data/local/ark-cache/tmp/fake_demo.an"/>
+            <option name="shell" value="power-shell wakeup"/>
+            <option name="shell" value="uinput -T -m 594 2117 594 864 400"/>
+            <option name="shell" value="power-shell setmode 602"/>
         </preparer>
         <cleaner>
             <option name="shell" value="rm -rf /data/local/ark-cache/tmp"/>
@@ -106,6 +112,9 @@
             <option name="push" value="demo_an/demo.an -> /data/test/tmp" src="res"/>
             <option name="shell" value="cp /data/test/tmp/demo.an /data/test/tmp/demoWithownerID.an"/>
             <option name="shell" value="cp /data/test/tmp/* /data/local/ark-cache/tmp/multi_thread"/>
+            <option name="shell" value="power-shell wakeup"/>
+            <option name="shell" value="uinput -T -m 594 2117 594 864 400"/>
+            <option name="shell" value="power-shell setmode 602"/>
         </preparer>
         <cleaner>
             <option name="shell" value="rm -rf /data/local/ark-cache/tmp/multi_thread"/>

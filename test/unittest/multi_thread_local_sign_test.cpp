@@ -23,6 +23,7 @@
 #include "byte_buffer.h"
 #include "code_sign_utils.h"
 #include "local_code_sign_kit.h"
+#include "local_key_helper.h"
 #include "log.h"
 
 using namespace OHOS::Security::CodeSign;
@@ -94,7 +95,7 @@ void LocalCodeSignAndEnforce()
     NativeTokenReset(selfTokenId);
     EXPECT_EQ(ret, CS_SUCCESS);
     ret = CodeSignUtils::EnforceCodeSignForFile(tmpFileName, sig);
-    EXPECT_EQ(ret, CS_SUCCESS);
+    EXPECT_EQ(ret, GetEnforceFileResult());
 }
 
 void LocalCodeSignAndEnforceWithOwnerID()
@@ -112,7 +113,7 @@ void LocalCodeSignAndEnforceWithOwnerID()
     NativeTokenReset(selfTokenId);
     EXPECT_EQ(ret, CS_SUCCESS);
     ret = CodeSignUtils::EnforceCodeSignForFile(tmpFileName, sig);
-    EXPECT_EQ(ret, CS_SUCCESS);
+    EXPECT_EQ(ret, GetEnforceFileResult());
 }
 
 class MultiThreadLocalSignTest : public testing::Test {
