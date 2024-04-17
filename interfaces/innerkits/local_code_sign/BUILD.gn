@@ -40,6 +40,10 @@ ohos_shared_library("liblocal_code_sign_sdk") {
     ":public_local_code_sign_configs",
   ]
   configs = [ "${code_signature_root_dir}:common_utils_config" ]
+  defines = []
+  if (build_variant == "root") {
+    defines += [ "CODE_SIGNATURE_DEBUGGABLE" ]
+  }
 
   external_deps = [
     "c_utils:utils",

@@ -149,6 +149,10 @@ bool GetCertChainFormBuffer(const ByteBuffer &certChainBuffer,
     uint32_t certsCount = *reinterpret_cast<uint32_t *>(rawPtr);
     rawPtr += sizeof(uint32_t);
 
+    if (certsCount == 0) {
+        return false;
+    }
+
     uint32_t certSize;
     bool ret = true;
     uint32_t restSize = certChainBuffer.GetSize() - sizeof(uint32_t);

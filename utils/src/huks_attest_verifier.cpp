@@ -56,6 +56,7 @@ static const std::vector<std::string> CHALLENGE_EXTENSION = {
 
 static const std::string LOCAL_CODE_SIGN_SA_NAME = "local_code_sign";
 
+static constexpr uint32_t MIN_VECTOR_SIZE = 3;
 static bool g_verifierInited = false;
 static int g_saNid = 0;
 static int g_challengeNid = 0;
@@ -63,6 +64,9 @@ static int g_attestationNid = 0;
 
 static inline int GetNidFromDefination(const std::vector<std::string> &defVector)
 {
+    if (defVector.size() < MIN_VECTOR_SIZE) {
+        return NID_undef;
+    }
     return CreateNIDFromOID(defVector[0], defVector[1], defVector[defVector.size() - 1]);
 }
 
@@ -252,6 +256,22 @@ static void ShowCertInfo(const std::vector<ByteBuffer> &certChainBuffer,
     }
 }
 
+static bool VerifyCertAndExtension(X509 *signCert, X509 *issuerCert, const ByteBuffer &challenge)
+{
+    if (!VerifySigningCert(signCert, issuerCert)) {
+        return false;
+    }
+    LOG_DEBUG("Verify sign cert pass");
+
+    if (!VerifyExtension(signCert, challenge)) {
+        LOG_ERROR("Verify extension failed.");
+        return false;
+    }
+    LOG_INFO("Verify success");
+    return true;
+}
+
+
 bool GetVerifiedCert(const ByteBuffer &buffer, const ByteBuffer &challenge, ByteBuffer &certBuffer)
 {
     std::vector<ByteBuffer> certChainBuffer;
@@ -288,24 +308,19 @@ bool GetVerifiedCert(const ByteBuffer &buffer, const ByteBuffer &challenge, Byte
             break;
         }
 
-        if (!VerifySigningCert(signCert, issuerCert)) {
+        if (!VerifyCertAndExtension(signCert, issuerCert, challenge)) {
             break;
         }
-        LOG_DEBUG("Verify sign cert pass");
-
-        if (!VerifyExtension(signCert, challenge)) {
-            LOG_ERROR("Verify extension failed.");
-            break;
-        }
-        LOG_INFO("Verify success");
         ret = true;
     } while (0);
     X509_free(signCert);
     X509_free(issuerCert);
     sk_X509_pop_free(certChain, X509_free);
+#ifdef CODE_SIGNATURE_DEBUGGABLE
     if (!ret) {
         ShowCertInfo(certChainBuffer, issuerBuffer, certBuffer);
     }
+#endif
     return ret;
 }
 }
