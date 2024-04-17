@@ -38,8 +38,14 @@ ohos_static_library("libkey_enable_utils") {
     "hilog:libhilog",
     "init:libbegetutil",
     "samgr:samgr_proxy",
-    "screenlock_mgr:screenlock_client",
   ]
+
+  defines = []
+  if (code_signature_screenlock_mgr_enable) {
+    defines += [ "SCREENLOCK_MANAGER_ENABLED" ]
+    external_deps += [ "screenlock_mgr:screenlock_client" ]
+  }
+
   subsystem_name = "security"
   part_name = "code_signature"
 }

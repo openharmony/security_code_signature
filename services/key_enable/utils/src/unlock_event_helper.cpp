@@ -19,7 +19,10 @@
 
 #include "datetime_ex.h"
 #include "log.h"
+
+#ifdef SCREENLOCK_MANAGER_ENABLED
 #include "screenlock_manager.h"
+#endif
 
 namespace OHOS {
 namespace Security {
@@ -48,6 +51,7 @@ UnlockEventHelper &UnlockEventHelper::GetInstance()
 bool UnlockEventHelper::CheckUserUnlockByScreenLockManager()
 {
     std::lock_guard<std::mutex> lock(unlockMutex_);
+#ifdef SCREENLOCK_MANAGER_ENABLED
     if (hasUnLocked_) {
         return true;
     }
@@ -58,6 +62,7 @@ bool UnlockEventHelper::CheckUserUnlockByScreenLockManager()
     } else {
         LOG_ERROR(LABEL, "unable get lock screen status");
     }
+#endif
     return hasUnLocked_;
 }
 
