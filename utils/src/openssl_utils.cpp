@@ -65,7 +65,7 @@ bool ConvertCertToPEMString(const ByteBuffer &certBuffer, std::string &pemString
             break;
         }
         uint8_t *outData = nullptr;
-        uint32_t len = BIO_get_mem_data(mem, &outData);
+        int32_t len = BIO_get_mem_data(mem, &outData);
         if (len < 0) {
             break;
         }

@@ -38,7 +38,7 @@ public:
         Init(bufferSize);
     }
 
-    ByteBuffer(const ByteBuffer &other)
+    ByteBuffer(const ByteBuffer &other): data(nullptr), size(0)
     {
         CopyFrom(other.GetBuffer(), other.GetSize());
     }

@@ -38,7 +38,7 @@ static constexpr uint32_t MULTI_THREAD_NUM = 10;
 static constexpr int64_t BUFFER_SIZE = 1024;
 static const std::string AN_BASE_PATH = "/data/local/ark-cache/tmp/multi_thread/";
 static const std::string ORIGIN_AN_FILE = AN_BASE_PATH + "demo.an";
-static const std::string DemoWithownerID = AN_BASE_PATH + "demoWithownerID.an";
+static const std::string DEMO_WITHOWNER_ID = AN_BASE_PATH + "demoWithownerID.an";
 
 static const char *VALID_CALLER = "installs";
 
@@ -103,7 +103,7 @@ void LocalCodeSignAndEnforceWithOwnerID()
     ByteBuffer sig;
     uint64_t selfTokenId = NativeTokenSet(VALID_CALLER);
     std::string ownerID = "AppName123";
-    int ret = LocalCodeSignKit::SignLocalCode(ownerID, DemoWithownerID, sig);
+    int ret = LocalCodeSignKit::SignLocalCode(ownerID, DEMO_WITHOWNER_ID, sig);
     std::thread::id thisId = std::this_thread::get_id();
     std::ostringstream oss;
     oss << thisId;
