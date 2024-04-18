@@ -236,6 +236,7 @@ static bool VerifyExtension(X509 *cert, const ByteBuffer &challenge)
     return true;
 }
 
+#ifdef CODE_SIGNATURE_DEBUGGABLE
 static void ShowCertInfo(const std::vector<ByteBuffer> &certChainBuffer,
     const ByteBuffer &issuerBuffer, const ByteBuffer &certBuffer)
 {
@@ -255,6 +256,7 @@ static void ShowCertInfo(const std::vector<ByteBuffer> &certChainBuffer,
         LOG_INFO("%{private}s", pem.c_str());
     }
 }
+#endif
 
 static bool VerifyCertAndExtension(X509 *signCert, X509 *issuerCert, const ByteBuffer &challenge)
 {
