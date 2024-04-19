@@ -41,14 +41,20 @@ static const struct HksParam ECC_KEY_PRARAM[] = {
     { .tag = HKS_TAG_ALGORITHM, .uint32Param = HKS_ALG_ECC },
     { .tag = HKS_TAG_KEY_SIZE, .uint32Param = HKS_ECC_KEY_SIZE_256 },
     { .tag = HKS_TAG_PURPOSE, .uint32Param = HKS_KEY_PURPOSE_SIGN | HKS_KEY_PURPOSE_VERIFY },
-    { .tag = HKS_TAG_DIGEST, .uint32Param = HKS_DIGEST_SHA256 }
+    { .tag = HKS_TAG_DIGEST, .uint32Param = HKS_DIGEST_SHA256 },
+    { .tag = HKS_TAG_AUTH_STORAGE_LEVEL, .uint32Param = HKS_AUTH_STORAGE_LEVEL_DE }
 };
 
 static const struct HksParam ECC_SIGN_PRARAM[] = {
     { .tag = HKS_TAG_ALGORITHM, .uint32Param = HKS_ALG_ECC },
     { .tag = HKS_TAG_KEY_SIZE, .uint32Param = HKS_ECC_KEY_SIZE_256 },
     { .tag = HKS_TAG_PURPOSE, .uint32Param = HKS_KEY_PURPOSE_SIGN },
-    { .tag = HKS_TAG_DIGEST, .uint32Param = HKS_DIGEST_SHA256 }
+    { .tag = HKS_TAG_DIGEST, .uint32Param = HKS_DIGEST_SHA256 },
+    { .tag = HKS_TAG_AUTH_STORAGE_LEVEL, .uint32Param = HKS_AUTH_STORAGE_LEVEL_DE }
+};
+
+static const struct HksParam ECC_EXIST_PRARAM[] = {
+    { .tag = HKS_TAG_AUTH_STORAGE_LEVEL, .uint32Param = HKS_AUTH_STORAGE_LEVEL_DE }
 };
 
 LocalSignKey &LocalSignKey::GetInstance()
@@ -91,7 +97,12 @@ void LocalSignKey::SetChallenge(const ByteBuffer &challenge)
 
 bool LocalSignKey::InitKey()
 {
-    int32_t ret = HksKeyExist(&LOCAL_SIGN_KEY_ALIAS, nullptr);
+    HUKSParamSet paramSet;
+    bool bRet = paramSet.Init(ECC_EXIST_PRARAM, sizeof(ECC_EXIST_PRARAM) / sizeof(HksParam));
+    if (!bRet) {
+        return false;
+    }
+    int32_t ret = HksKeyExist(&LOCAL_SIGN_KEY_ALIAS, paramSet.GetParamSet());
     if (ret == HKS_ERROR_NOT_EXIST) {
         if (!GenerateKey()) {
             return false;
@@ -203,6 +214,7 @@ bool LocalSignKey::GetAttestParamSet(HUKSParamSet &paramSet)
     struct HksParam attestationParams[] = {
         { .tag = HKS_TAG_ATTESTATION_CHALLENGE, .blob = challengeBlob },
         { .tag = HKS_TAG_ATTESTATION_ID_ALIAS, .blob = LOCAL_SIGN_KEY_ALIAS },
+        { .tag = HKS_TAG_AUTH_STORAGE_LEVEL, .uint32Param = HKS_AUTH_STORAGE_LEVEL_DE }
     };
     return paramSet.Init(attestationParams, sizeof(attestationParams) / sizeof(HksParam));
 }
