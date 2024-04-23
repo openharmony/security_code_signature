@@ -22,7 +22,7 @@ selinux_dir = "//third_party/selinux"
 declare_args() {
   code_signature_support_openharmony_ca = true
   code_signature_support_oh_code_sign = false
-  code_signature_enable_xpm_mode = false
+  code_signature_enable_xpm_mode = 0
   code_signature_support_oh_release_app = true
   code_signature_screenlock_mgr_enable = false
   if (defined(global_parts_info) &&
