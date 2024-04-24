@@ -95,8 +95,16 @@ ohos_prebuilt_etc("trusted_cert_path_test") {
 }
 
 ohos_prebuilt_etc("key_enable.cfg") {
-  if (code_signature_enable_xpm_mode) {
-    source = "cfg/enable_xpm/key_enable.cfg"
+  if (code_signature_enable_xpm_mode == 1) {
+    source = "cfg/enable_xpm/level1/key_enable.cfg"
+  } else if (code_signature_enable_xpm_mode == 2) {
+    source = "cfg/enable_xpm/level2/key_enable.cfg"
+  } else if (code_signature_enable_xpm_mode == 3) {
+    source = "cfg/enable_xpm/level3/key_enable.cfg"
+  } else if (code_signature_enable_xpm_mode == 4) {
+    source = "cfg/enable_xpm/level4/key_enable.cfg"
+  } else if (code_signature_enable_xpm_mode == 5) {
+    source = "cfg/enable_xpm/level5/key_enable.cfg"
   } else {
     source = "cfg/disable_xpm/key_enable.cfg"
   }
