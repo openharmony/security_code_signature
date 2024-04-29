@@ -47,7 +47,7 @@ public:
 
 /**
  * @tc.name: LocalCodeSignUtilsTest_0001
- * @tc.desc: Used to increase utils coverage
+ * @tc.desc: Sign local code successfully, owner ID is empty
  * @tc.type: Func
  * @tc.require: issueI8FCGF
  */
@@ -64,7 +64,43 @@ HWTEST_F(LocalCodeSignUtilsTest, LocalCodeSignUtilsTest_0001, TestSize.Level0)
     ByteBuffer signature;
     int ret = PKCS7Generator::GenerateSignature(ownerID, LocalSignKey::GetInstance(), DEFAULT_HASH_ALGORITHM.c_str(),
         digest, signature);
-    EXPECT_EQ(ret, CS_ERR_HUKS_OBTAIN_CERT);
+    EXPECT_EQ(ret, CS_SUCCESS);
+}
+
+/**
+ * @tc.name: LocalCodeSignUtilsTest_0002
+ * @tc.desc: Sign local code with owner ID successfully
+ * @tc.type: Func
+ * @tc.require: issueI88PPA
+ */
+HWTEST_F(LocalCodeSignUtilsTest, LocalCodeSignUtilsTest_0002, TestSize.Level0)
+{
+    ByteBuffer digest;
+    std::string realPath;
+    std::string ownerID = "AppName123";
+    bool bRet = OHOS::PathToRealPath(DEMO_AN_PATH2, realPath);
+    EXPECT_EQ(bRet, true);
+    bRet = FsverityUtilsHelper::GetInstance().GenerateFormattedDigest(realPath.c_str(), digest);
+    EXPECT_EQ(bRet, true);
+
+    ByteBuffer signature;
+    int ret = PKCS7Generator::GenerateSignature(ownerID, LocalSignKey::GetInstance(), DEFAULT_HASH_ALGORITHM.c_str(),
+        digest, signature);
+    EXPECT_EQ(ret, CS_SUCCESS);
+}
+
+/**
+ * @tc.name: LocalCodeSignUtilsTest_0003
+ * @tc.desc: Generate formatted digest failed with wrong path
+ * @tc.type: Func
+ * @tc.require: issueI8FCGF
+ */
+HWTEST_F(LocalCodeSignUtilsTest, LocalCodeSignUtilsTest_0003, TestSize.Level0)
+{
+    ByteBuffer digest;
+    std::string realPath = DEMO_AN_PATH2 + "invalid";
+    bool bRet = FsverityUtilsHelper::GetInstance().GenerateFormattedDigest(realPath.c_str(), digest);
+    EXPECT_EQ(bRet, false);
 }
 } // namespace CodeSign
 } // namespace Security
