@@ -170,6 +170,7 @@ HksCertChain *LocalSignKey::QueryCertChain()
     // get cert chain by huks attest
     int32_t ret = HksAttestKey(&LOCAL_SIGN_KEY_ALIAS, paramSet.GetParamSet(), certChain);
     if (ret != HKS_SUCCESS) {
+        FreeCertChain(&certChain, certChain->certsCount);
         LOG_ERROR("HksAttestKey fail, ret is %{public}d!", ret);
         return nullptr;
     }
