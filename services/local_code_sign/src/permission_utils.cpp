@@ -25,7 +25,7 @@ namespace OHOS {
 namespace Security {
 namespace CodeSign {
 const std::vector<std::string> CERTIFICATE_CALLERS = {"key_enable"};
-const std::vector<std::string> SIGN_CALLERS = {"installs"};
+const std::vector<std::string> SIGN_CALLERS = {"compiler_service"};
 constexpr int32_t VALUE_MAX_LEN = 32;
 const char* ACCESS_TOKEN_SERVICE_INIT_KEY = "accesstoken.permission.init";
 bool g_isAtmInited = false;
