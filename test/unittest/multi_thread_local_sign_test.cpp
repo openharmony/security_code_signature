@@ -40,7 +40,7 @@ static const std::string AN_BASE_PATH = "/data/local/ark-cache/tmp/multi_thread/
 static const std::string ORIGIN_AN_FILE = AN_BASE_PATH + "demo.an";
 static const std::string DEMO_WITHOWNER_ID = AN_BASE_PATH + "demoWithownerID.an";
 
-static const char *VALID_CALLER = "installs";
+static const char *VALID_CALLER = "compiler_service";
 
 uint64_t GetFileSize(int32_t fd)
 {

@@ -56,7 +56,7 @@ namespace OHOS {
         uint32_t code = static_cast<uint32_t>(LocalCodeSignInterfaceCode::SIGN_LOCAL_CODE);
         MessageParcel reply;
         MessageOption option;
-        uint64_t selfTokenId = NativeTokenSet("installs");
+        uint64_t selfTokenId = NativeTokenSet("compiler_service");
         DelayedSingleton<LocalCodeSignService>::GetInstance()->OnStart();
         DelayedSingleton<LocalCodeSignService>::GetInstance()->OnRemoteRequest(code, datas, reply, option);
         NativeTokenReset(selfTokenId);

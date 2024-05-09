@@ -39,7 +39,7 @@ static const std::string AN_BASE_PATH = "/data/local/ark-cache/tmp/";
 static const std::string DEMO_AN_PATH = AN_BASE_PATH + "demo.an";
 static const std::string DEMO_TAMPER_AN_PATH = AN_BASE_PATH + "fake_demo.an";
 
-static const char *VALID_CALLER = "installs";
+static const char *VALID_CALLER = "compiler_service";
 
 static const std::string FAKE_SERIAL_NUMBER = "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 static const std::string FAKE_CONTENT = "FAKE";

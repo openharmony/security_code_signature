@@ -85,7 +85,7 @@ HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0002, TestSize.Level0)
 HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0003, TestSize.Level0)
 {
     ByteBuffer sig;
-    uint64_t selfTokenId = NativeTokenSet("installs");
+    uint64_t selfTokenId = NativeTokenSet("compiler_service");
     int ret = LocalCodeSignKit::SignLocalCode(DEMO_AN_PATH, sig);
     NativeTokenReset(selfTokenId);
     EXPECT_EQ(ret, CS_SUCCESS);
@@ -119,7 +119,7 @@ HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0004, TestSize.Level0)
 HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0005, TestSize.Level0)
 {
     ByteBuffer sig;
-    uint64_t selfTokenId = NativeTokenSet("installs");
+    uint64_t selfTokenId = NativeTokenSet("compiler_service");
     int ret = LocalCodeSignKit::SignLocalCode(DEMO_AN_PATH + "invalid", sig);
     NativeTokenReset(selfTokenId);
     EXPECT_EQ(ret, CS_ERR_FILE_PATH);
@@ -188,7 +188,7 @@ HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0009, TestSize.Level0)
 HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0010, TestSize.Level0)
 {
     ByteBuffer sig;
-    uint64_t selfTokenId = NativeTokenSet("installs");
+    uint64_t selfTokenId = NativeTokenSet("compiler_service");
     std::string ownerID = "AppName123";
     int ret = LocalCodeSignKit::SignLocalCode(ownerID, DEMO_AN_PATH2, sig);
     NativeTokenReset(selfTokenId);
@@ -210,7 +210,7 @@ HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0010, TestSize.Level0)
 HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0011, TestSize.Level0)
 {
     ByteBuffer sig;
-    uint64_t selfTokenId = NativeTokenSet("installs");
+    uint64_t selfTokenId = NativeTokenSet("compiler_service");
     std::string ownerID = "";
     int ret = LocalCodeSignKit::SignLocalCode(ownerID, DEMO_AN_PATH2, sig);
     NativeTokenReset(selfTokenId);
@@ -230,7 +230,7 @@ HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0011, TestSize.Level0)
 HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0012, TestSize.Level0)
 {
     ByteBuffer sig;
-    uint64_t selfTokenId = NativeTokenSet("installs");
+    uint64_t selfTokenId = NativeTokenSet("compiler_service");
     std::string ownerID = "AppName123";
     int ret = LocalCodeSignKit::SignLocalCode(ownerID, DEMO_AN_PATH2 + "invalid", sig);
     NativeTokenReset(selfTokenId);
@@ -260,7 +260,7 @@ HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0013, TestSize.Level0)
 HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0014, TestSize.Level0)
 {
     ByteBuffer sig;
-    uint64_t selfTokenId = NativeTokenSet("installs");
+    uint64_t selfTokenId = NativeTokenSet("compiler_service");
     std::string ownerID(33, 'a');
     int ret = LocalCodeSignKit::SignLocalCode(ownerID, DEMO_AN_PATH2, sig);
     NativeTokenReset(selfTokenId);
