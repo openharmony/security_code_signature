@@ -37,22 +37,30 @@ extern "C" {
 
 enum FileOwneridType {
     FILE_OWNERID_UNINT = 0,
-    FILE_OWNERID_SYSTEM,
-    FILE_OWNERID_APP,
-    FILE_OWNERID_DEBUG,
-    FILE_OWNERID_SHARED,
-    FILE_OWNERID_COMPAT,
+    FILE_OWNERID_SYSTEM,          // 1
+    FILE_OWNERID_APP,             // 2
+    FILE_OWNERID_DEBUG,           // 3
+    FILE_OWNERID_SHARED,          // 4
+    FILE_OWNERID_COMPAT,          // 5
+    FILE_OWNERID_EXTEND,          // 6
+    FILE_OWNERID_DEBUG_PLATFORM,  // 7
+    FILE_OWNERID_PLATFORM,        // 8
+    FILE_OWNERID_NWEB,            // 9
     FILE_OWNERID_MAX
 };
 
 /* process and file ownerid types need to correspond to each other */
 enum ProcessOwneridType {
     PROCESS_OWNERID_UNINIT = FILE_OWNERID_UNINT,
-    PROCESS_OWNERID_SYSTEM = FILE_OWNERID_SYSTEM,
-    PROCESS_OWNERID_APP    = FILE_OWNERID_APP,
-    PROCESS_OWNERID_DEBUG  = FILE_OWNERID_DEBUG,
-    PROCESS_OWNERID_COMPAT = FILE_OWNERID_COMPAT,
-    PROCESS_OWNERID_EXTEND,
+    PROCESS_OWNERID_SYSTEM,          // 1
+    PROCESS_OWNERID_APP,             // 2
+    PROCESS_OWNERID_DEBUG,           // 3
+    PROCESS_OWNERID_SHARED,          // 4
+    PROCESS_OWNERID_COMPAT,          // 5
+    PROCESS_OWNERID_EXTEND,          // 6
+    PROCESS_OWNERID_DEBUG_PLATFORM,  // 7
+    PROCESS_OWNERID_PLATFORM,        // 8
+    PROCESS_OWNERID_NWEB,            // 9
     PROCESS_OWNERID_MAX
 };
 

@@ -18,7 +18,7 @@
         },
         {   
             "mode":"Release",
-            "type":"Authed",
+            "type":"Platform",
             "subject":"ALL",
             "wrong-issuer":"C=CN, O=Huawei, OU=Huawei CBG, CN=Huawei CBG Software Signing Service CA",
             "max-certs-path":3

@@ -39,14 +39,14 @@
         },
         {   
             "mode":"Release",
-            "type":"Authed",
+            "type":"Platform",
             "subject":"ALL",
             "issuer":"C=CN, O=Huawei, OU=Huawei CBG, CN=Huawei CBG Software Signing Service CA Test",
             "max-certs-path":3
         },
         {   
             "mode":"Release",
-            "type":"Authed",
+            "type":"Platform",
             "subject":"C=CN, O=OpenHarmony, OU=OpenHarmony Team, CN=OpenHarmony Application Release",
             "issuer":"C=CN, O=OpenHarmony, OU=OpenHarmony Team, CN=OpenHarmony Application CA",
             "max-certs-path":3
