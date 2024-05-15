@@ -242,6 +242,18 @@ ohos_unittest("enable_verity_ioctl_unittest") {
   ]
 }
 
+ohos_unittest("jit_code_sign_unittest") {
+  module_out_path = "security/code_signature"
+  include_dirs = [
+    "${code_signature_root_dir}/interfaces/innerkits/jit_code_sign/include",
+  ]
+  sources = [ "jit_code_sign_test.cpp" ]
+  deps = [ "${code_signature_root_dir}/interfaces/innerkits/jit_code_sign:libjit_code_sign" ]
+  external_deps = [ "c_utils:utils" ]
+  subsystem_name = "security"
+  part_name = "code_signature"
+}
+
 group("unittest_group") {
   testonly = true
   if (!defined(ohos_lite)) {
@@ -255,5 +267,8 @@ group("unittest_group") {
       ":rust_key_enable_unittest",
       ":sign_and_enforce_unittest",
     ]
+    if (jit_code_sign_enable) {
+      deps += [ ":jit_code_sign_unittest" ]
+    }
   }
 }

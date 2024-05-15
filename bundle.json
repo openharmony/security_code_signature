@@ -73,6 +73,13 @@
             "header_files": [],
             "header_base": "//base/security/code_signature/interfaces/innerkits/code_sign_attr_utils/include"
           }
+        },
+        {
+          "name" : "//base/security/code_signature/interfaces/innerkits/jit_code_sign:libjit_code_sign",
+          "header": {
+            "header_files": [],
+            "header_base": "//base/security/code_signature/interfaces/innerkits/jit_code_sign/include"
+          }
         }
       ],
       "test": [ "//base/security/code_signature/test:testgroup" ]

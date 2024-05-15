@@ -29,4 +29,10 @@ declare_args() {
       defined(global_parts_info.theme_screenlock_mgr)) {
     code_signature_screenlock_mgr_enable = true
   }
+  jit_code_sign_enable = false
+}
+
+if (defined(target_cpu) && target_cpu == "arm64" &&
+    code_signature_support_oh_code_sign) {
+  jit_code_sign_enable = true
 }

@@ -1,0 +1,46 @@
+# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("../../../code_signature.gni")
+
+config("public_jit_code_sign_configs") {
+  cflags = [ "-march=armv8.4-a" ]
+  include_dirs = [ "include" ]
+}
+
+ohos_shared_library("libjit_code_sign") {
+  sources = [ "src/jit_code_signer_factory.cpp" ]
+
+  if (jit_code_sign_enable) {
+    defines = [
+      "JIT_CODE_SIGN_ENABLE",
+      "ARCH_PAC_SUPPORT",
+    ]
+    sources += [
+      "src/jit_code_signer_base.cpp",
+      "src/jit_code_signer_hybrid.cpp",
+      "src/jit_code_signer_single.cpp",
+      "src/pac_sign_ctx.cpp",
+    ]
+  }
+  public_configs = [
+    ":public_jit_code_sign_configs",
+    "${code_signature_root_dir}:common_public_config",
+  ]
+  configs = [ "${code_signature_root_dir}:common_utils_config" ]
+
+  external_deps = [ "hilog:libhilog" ]
+  part_name = "code_signature"
+  subsystem_name = "security"
+}

@@ -27,6 +27,7 @@ group("subcomponents") {
   deps = [
     "${code_signature_root_dir}/interfaces/innerkits/code_sign_attr_utils:libcode_sign_attr_utils",
     "${code_signature_root_dir}/interfaces/innerkits/code_sign_utils:libcode_sign_utils",
+    "${code_signature_root_dir}/interfaces/innerkits/jit_code_sign:libjit_code_sign",
     "${code_signature_root_dir}/interfaces/innerkits/local_code_sign:liblocal_code_sign_sdk",
     "${code_signature_root_dir}/services/local_code_sign:liblocal_code_sign",
     "${code_signature_root_dir}/services/local_code_sign:local_code_sign_configs",
