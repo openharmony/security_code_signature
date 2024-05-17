@@ -40,7 +40,6 @@ public:
     void Init(int index);
     void InitSalt();
     uint32_t Update(uint32_t value);
-    void Finalize();
     uint32_t SignSingle(uint32_t value, uint32_t index);
     void SetIndex(uint32_t index);
     uint32_t GetSalt();

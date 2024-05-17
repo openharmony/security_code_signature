@@ -151,13 +151,6 @@ uint32_t PACSignCtx::Update(uint32_t value)
     return signature;
 }
 
-void PACSignCtx::Finalize()
-{
-    if (purpose_ == CTXPurpose::SIGN) {
-        (void) GetRealContext();
-    }
-}
-
 uint32_t PACSignCtx::SignSingle(uint32_t value, uint32_t index)
 {
     uint64_t paddingContext = PaddingContext(SIGN_WITHOUT_CONTEXT, index);

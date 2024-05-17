@@ -14,6 +14,7 @@
 - 代码签名使能：在用户态提供代码签名校验的相关接口和逻辑，供应用安装的时候调用，为应用和代码文件使能代码签名。
 - 本地代码签名：在设备侧运行签名服务给本地代码提供签名接口，为AOT生成的机器码文件生成代码签名。
 - 代码属性设置：支持代码所有者标记及校验，提供配置XPM验签地址区接口。
+- JIT(Just In Time)代码签名：使用代码签名技术来保护编译出的JIT代码的完整性，防止恶意代码被注入到JIT代码中。
 
 ## 目录
 
@@ -24,7 +25,8 @@
 │       ├── code_sign_attr_utils # 属性设置接口
 │       ├── code_sign_utils      # 使能接口
 │       ├── common               # 公共基础能力
-│       └── local_code_sign      # 本地签名接口
+│       ├── jit_code_sign        # JIT代码签名
+│       └── local_code_sign      # 本地签名
 ├── services                     # 服务层
 │    ├── key_enable              # 证书初始化
 │    └── local_code_sign         # 本地签名服务
@@ -51,6 +53,16 @@
 | int32_t SignLocalCode(const std::string &ownerID, const std::string &filePath, ByteBuffer &signature); | 带OwnerId的本地代码签名 |
 | int InitXpmRegion(void); | 初始化XPM地址 |
 | int SetXpmOwnerId(uint32_t idType, const char *ownerId); | 设置OwnerId |
+| int32_t RegisterTmpBuffer(JitCodeSignerBase *signer, void *tmpBuffer); | 注册临时Buffer起始地址 |
+| int32_t AppendInstruction(JitCodeSignerBase *signer, Instr instr); | 对添加到临时Buffer的指令签名 |
+| int32_t AppendData(JitCodeSignerBase *signer, const void *const data, uint32_t size); | 对添加到临时Buffer的数据签名 |
+| int32_t WillFixUp(JitCodeSignerBase *signer, uint32_t n = 1); | 声明下n条指令待更新 |
+| int32_t PatchInstruction(JitCodeSignerBase *signer, int offset, Instr instr); | 更新缓冲区的偏移处指令签名 |
+| int32_t PatchInstruction(JitCodeSignerBase *signer, void *address, Instr insn); | 更新对应地址指令签名 |
+| int32_t PatchData(JitCodeSignerBase *signer, int offset, const void *const data, uint32_t size); | 更新缓冲区偏移处数据签名 |
+| int32_t PatchData(JitCodeSignerBase *signer, void *address, const void *const data, uint32_t size); | 更新对应地址数据签名 |
+| int32_t ResetJitCode(void *jitMemory, int size); | 重置JIT内存 |
+| int32_t CopyToJitCode(JitCodeSignerBase *signer, void *jitMemory, void *tmpBuffer, int size); | 将JIT代码复制到JIT内存 |
 
 ### 签名工具使用指南
 

@@ -24,6 +24,7 @@
 #include <unistd.h>
 
 #include "errcode.h"
+#include "jit_code_signer_factory.h"
 #include "jit_buffer_integrity.h"
 #include "pac_sign_ctx.h"
 
@@ -121,6 +122,7 @@ public:
 
     static void SetUpTestCase()
     {
+        EXPECT_EQ(JitCodeSignerFactory::IsSupportJitCodeSigner(), true);
         JitFortPrepare();
         AllocJitMemory();
     };
