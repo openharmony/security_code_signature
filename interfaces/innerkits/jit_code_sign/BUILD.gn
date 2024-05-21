@@ -34,6 +34,11 @@ ohos_shared_library("libjit_code_sign") {
       "src/pac_sign_ctx.cpp",
     ]
   }
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   public_configs = [
     ":public_jit_code_sign_configs",
     "${code_signature_root_dir}:common_public_config",

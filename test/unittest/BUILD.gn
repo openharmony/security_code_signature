@@ -248,6 +248,11 @@ ohos_unittest("jit_code_sign_unittest") {
     "${code_signature_root_dir}/interfaces/innerkits/jit_code_sign/include",
   ]
   sources = [ "jit_code_sign_test.cpp" ]
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   deps = [ "${code_signature_root_dir}/interfaces/innerkits/jit_code_sign:libjit_code_sign" ]
   external_deps = [ "c_utils:utils" ]
   subsystem_name = "security"

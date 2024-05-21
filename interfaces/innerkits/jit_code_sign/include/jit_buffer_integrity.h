@@ -162,7 +162,8 @@ static inline int32_t PatchData(JitCodeSignerBase *signer, void *address,
  * @param size memory size
  * @return error code, see errcode.h
  */
-static inline int32_t ResetJitCode(void *jitMemory, int size)
+__attribute__((no_sanitize("cfi"))) static inline int32_t ResetJitCode(
+    void *jitMemory, int size)
 {
     if (jitMemory == nullptr) {
         return CS_ERR_JIT_MEMORY;
@@ -191,8 +192,8 @@ static inline int32_t ResetJitCode(void *jitMemory, int size)
  * @param size memory size
  * @return error code, see errcode.h
  */
-static inline int32_t CopyToJitCode(JitCodeSignerBase *signer, void *jitMemory,
-    void *tmpBuffer, int size)
+__attribute__((no_sanitize("cfi"))) static inline int32_t CopyToJitCode(
+    JitCodeSignerBase *signer, void *jitMemory, void *tmpBuffer, int size)
 {
     CHECK_NULL_AND_RETURN_CODE(signer);
     int32_t ret = CS_SUCCESS;
