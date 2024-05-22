@@ -49,7 +49,7 @@ int32_t JitCodeSignerBase::SignData(const Byte *const data, uint32_t size)
         return CS_ERR_INVALID_DATA;
     }
     uint32_t cur = 0;
-    int unsignedSize = willSign_.size();
+    size_t unsignedSize = willSign_.size();
     if ((unsignedSize == 0) && (size >= INSTRUCTION_SIZE)) {
         auto insnPtr = reinterpret_cast<const Instr *const>(data);
         while (cur + INSTRUCTION_SIZE <= size) {
@@ -114,7 +114,7 @@ int32_t JitCodeSignerBase::PatchData(Byte *buffer, const Byte *const data, uint3
 
 bool JitCodeSignerBase::ConvertPatchOffsetToIndex(const int offset, int &curIndex)
 {
-    if ((offset < 0) || ((offset & UNALIGNMENT_MASK) != 0)) {
+    if ((offset < 0) || ((static_cast<uint32_t>(offset) & UNALIGNMENT_MASK) != 0)) {
         return false;
     }
     curIndex = GetIndexFromOffset(offset);
@@ -138,7 +138,7 @@ int32_t JitCodeSignerBase::CheckDataCopy(Instr *jitMemory, Byte *tmpBuffer, int 
     // update tmp buffer
     tmpBuffer_ = tmpBuffer;
 
-    if (((size & UNALIGNMENT_MASK) != 0) ||
+    if (((static_cast<uint32_t>(size) & UNALIGNMENT_MASK) != 0) ||
         (static_cast<uint32_t>(size) > signTable_.size() * INSTRUCTION_SIZE)) {
 #ifdef JIT_FORT_DISABLE
         LOG_ERROR("Range invalid, size = %{public}d, table size = %{public}zu",

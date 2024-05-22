@@ -63,7 +63,7 @@ int32_t JitCodeSignerSingle::PatchInstruction(int offset, Instr insn)
         LOG_ERROR("Offset invalid");
         return CS_ERR_PATCH_INVALID;
     }
-    int signature = ctx_.SignSingle(insn, curIndex);
+    uint32_t signature = ctx_.SignSingle(insn, curIndex);
     signTable_[curIndex] = signature;
     return CS_SUCCESS;
 }

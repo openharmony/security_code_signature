@@ -31,12 +31,12 @@ constexpr int32_t LOG_2_INSTRUCTION_SIZE = 2;
 
 static inline int GetIndexFromOffset(int offset)
 {
-    return offset >> LOG_2_INSTRUCTION_SIZE;
+    return static_cast<int>(static_cast<uint32_t>(offset) >> LOG_2_INSTRUCTION_SIZE);
 }
 
 class JitCodeSignerBase {
 public:
-    JitCodeSignerBase() {};
+    JitCodeSignerBase() : tmpBuffer_(nullptr), offset_(0) {};
     virtual ~JitCodeSignerBase() {}
     virtual void Reset() = 0;
     virtual void SignInstruction(Instr insn) = 0;
