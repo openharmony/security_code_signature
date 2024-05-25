@@ -122,7 +122,7 @@ public:
 
     static void SetUpTestCase()
     {
-        EXPECT_EQ(JitCodeSignerFactory::IsSupportJitCodeSigner(), true);
+        EXPECT_EQ(IsSupportJitCodeSigner(), true);
         JitFortPrepare();
         AllocJitMemory();
     };

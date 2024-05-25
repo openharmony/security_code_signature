@@ -14,18 +14,51 @@
  */
 
 #include "jit_code_signer_factory.h"
+
+#ifdef JIT_CODE_SIGN_ENABLE
+#include <asm/hwcap.h>
+#include <cstdio>
+#include <sys/auxv.h>
+
 #include "jit_code_signer_hybrid.h"
 #include "jit_code_signer_single.h"
 #include "log.h"
+#endif
 
 namespace OHOS {
 namespace Security {
 namespace CodeSign {
 
+JitCodeSignerFactory::JitCodeSignerFactory():isSupport_(false)
+{
+#ifdef JIT_CODE_SIGN_ENABLE
+    unsigned long hwcaps = getauxval(AT_HWCAP);
+    if ((hwcaps & HWCAP_PACA) && (hwcaps & HWCAP_PACG)) {
+        isSupport_ = true;
+    } else {
+        isSupport_ = false;
+    }
+#endif
+}
+
+JitCodeSignerFactory &JitCodeSignerFactory::GetInstance()
+{
+    static JitCodeSignerFactory singleJitCodeSignerFactory;
+    return singleJitCodeSignerFactory;
+}
+
+bool JitCodeSignerFactory::IsSupportJitCodeSigner()
+{
+    return isSupport_;
+}
+
 #ifdef JIT_CODE_SIGN_ENABLE
 JitCodeSignerBase *JitCodeSignerFactory::CreateJitCodeSigner(
     JitBufferIntegrityLevel level)
 {
+    if (!IsSupportJitCodeSigner()) {
+        return nullptr;
+    }
     switch (level) {
         case JitBufferIntegrityLevel::Level0:
             return new JitCodeSignerSingle();
@@ -36,24 +69,13 @@ JitCodeSignerBase *JitCodeSignerFactory::CreateJitCodeSigner(
             return nullptr;
     }
 }
-
-bool JitCodeSignerFactory::IsSupportJitCodeSigner()
-{
-    return true;
-}
 #else   // !JIT_CODE_SIGN_ENABLE
 JitCodeSignerBase *JitCodeSignerFactory::CreateJitCodeSigner(
     JitBufferIntegrityLevel level)
 {
     return nullptr;
 }
-
-bool JitCodeSignerFactory::IsSupportJitCodeSigner()
-{
-    return false;
-}
 #endif
-
 }
 }
 }
