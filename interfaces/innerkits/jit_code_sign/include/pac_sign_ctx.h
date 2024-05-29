@@ -35,7 +35,7 @@ enum ContextType {
 
 class PACSignCtx {
 public:
-    PACSignCtx(CTXPurpose purpose = CTXPurpose::SIGN, uint32_t salt = 0);
+    PACSignCtx(CTXPurpose purpose = CTXPurpose::VERIFY, uint32_t salt = 0);
     ~PACSignCtx();
     void Init(int index);
     void InitSalt();

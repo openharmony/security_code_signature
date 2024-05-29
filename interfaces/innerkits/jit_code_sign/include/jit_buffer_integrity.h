@@ -45,7 +45,16 @@ namespace CodeSign {
  */
 static inline JitCodeSignerBase *CreateJitCodeSigner(JitBufferIntegrityLevel level)
 {
-    return JitCodeSignerFactory::CreateJitCodeSigner(level);
+    return JitCodeSignerFactory::GetInstance().CreateJitCodeSigner(level);
+}
+
+/**
+ * @brief Return whether Jit code signing is supported
+ * @return true if supported, otherwise false
+ */
+static bool IsSupportJitCodeSigner()
+{
+    return JitCodeSignerFactory::GetInstance().IsSupportJitCodeSigner();
 }
 
 /**
@@ -204,8 +213,16 @@ __attribute__((no_sanitize("cfi"))) static inline int32_t CopyToJitCode(
         return CS_ERR_JITFORT_IN;
     }
 #endif
-    ret = signer->ValidateCodeCopy(reinterpret_cast<Instr *>(jitMemory),
-        reinterpret_cast<Byte *>(tmpBuffer), size);
+    if (IsSupportJitCodeSigner()) {
+        ret = signer->ValidateCodeCopy(reinterpret_cast<Instr *>(jitMemory),
+            reinterpret_cast<Byte *>(tmpBuffer), size);
+    } else {
+        void *ptr = __builtin_memcpy(jitMemory, tmpBuffer, size);
+        if (reinterpret_cast<uintptr_t>(ptr) - reinterpret_cast<uintptr_t>(jitMemory) !=
+            static_cast<uintptr_t>(size)) {
+            ret = CS_ERR_MEMORY;
+        }
+    }
 #ifndef JIT_FORT_DISABLE
     prctlRet = PrctlWrapper(JITFORT_PRCTL_OPTION, JITFORT_SWITCH_OUT, 0);
     if (prctlRet < 0) {

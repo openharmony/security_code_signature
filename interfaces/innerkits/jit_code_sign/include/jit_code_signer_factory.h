@@ -30,10 +30,16 @@ enum class JitBufferIntegrityLevel {
 
 class JitCodeSignerFactory {
 public:
-static JitCodeSignerBase *CreateJitCodeSigner(
-    JitBufferIntegrityLevel level = JitBufferIntegrityLevel::Level0);
+    static JitCodeSignerFactory &GetInstance();
+    JitCodeSignerBase *CreateJitCodeSigner(
+        JitBufferIntegrityLevel level = JitBufferIntegrityLevel::Level0);
 
-static bool IsSupportJitCodeSigner();
+    bool IsSupportJitCodeSigner();
+
+private:
+    JitCodeSignerFactory();
+    ~JitCodeSignerFactory() = default;
+    bool isSupport_;
 };
 }
 }
