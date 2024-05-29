@@ -127,8 +127,8 @@ int32_t JitCodeSignerHybrid::ValidateSubCode(Instr *jitMemory, PACSignCtx &verif
     return CS_SUCCESS;
 }
 
-int32_t JitCodeSignerHybrid::ValidateCodeCopy(Instr *jitMemory,
-    Byte *tmpBuffer, int size)
+__attribute__((no_sanitize("cfi"))) int32_t JitCodeSignerHybrid::ValidateCodeCopy(
+    Instr *jitMemory, Byte *tmpBuffer, int size)
 {
     int32_t ret = CheckDataCopy(jitMemory, tmpBuffer, size);
     if (ret != CS_SUCCESS) {
