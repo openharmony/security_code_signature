@@ -31,6 +31,7 @@ ohos_shared_library("libcode_sign_utils") {
     "src/code_sign_enable_multi_task.cpp",
     "src/code_sign_helper.cpp",
     "src/code_sign_utils.cpp",
+    "src/code_sign_utils_in_c.cpp",
     "src/stat_utils.cpp",
   ]
   public_configs = [

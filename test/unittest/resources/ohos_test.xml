@@ -73,6 +73,17 @@
             <option name="shell" value="rm -rf /data/service/el0/profiles/tmp"/>
         </cleaner>
     </target>
+    <target name="code_sign_utils_in_c_unittest">
+        <preparer>
+            <option name="shell" value="mkdir -p /data/app/el1/bundle/public/tmp/demo_with_multi_lib/libs/arm64-v8a/code_sign_block"/>
+            <option name="push" value="demo_with_multi_lib/demo_with_code_sign_block.hap ->  /data/app/el1/bundle/public/tmp/demo_with_multi_lib" src="res"/>
+            <option name="push" value="demo_with_multi_lib/libs/arm64-v8a/code_sign_block/libc++_shared.so ->  /data/app/el1/bundle/public/tmp/demo_with_multi_lib/libs/arm64-v8a/code_sign_block" src="res"/>
+            <option name="push" value="demo_with_multi_lib/libs/arm64-v8a/code_sign_block/libentry.so ->  /data/app/el1/bundle/public/tmp/demo_with_multi_lib/libs/arm64-v8a/code_sign_block" src="res"/>
+        </preparer>
+        <cleaner>
+            <option name="shell" value="rm -rf /data/app/el1/bundle/public/tmp"/>
+        </cleaner>
+    </target>
     <target name="local_code_sign_unittest">
         <preparer>
             <option name="shell" value="mkdir -p /data/test/tmp"/>
