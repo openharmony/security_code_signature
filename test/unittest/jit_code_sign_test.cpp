@@ -21,6 +21,7 @@
 #include <random>
 #include <securec.h>
 #include <sys/mman.h>
+#include <sys/ioctl.h>
 #include <unistd.h>
 
 #include "errcode.h"
@@ -75,11 +76,12 @@ static void *g_jitMemory = nullptr;
 void *g_mapJitBase = CAST_VOID_PTR(0x800000000);
 void *g_mapJitBase2 = CAST_VOID_PTR(0x800001000);
 constexpr size_t PAGE_SIZE = 4096;
+const std::string XPM_DEV_PATH = "/dev/xpm";
 
 #define JITFORT_PRCTL_OPTION 0x6a6974
-#define JITFORT_SET_ENABLED         1
 #define JITFORT_CREATE_COPGTABLE    5
 #define MAP_JIT 0x1000
+#define XPM_SET_JITFORT_ENABLE _IOW('x', 0x3, unsigned long)
 
 const JitBufferIntegrityLevel MIN_LEVEL = JitBufferIntegrityLevel::Level0;
 const JitBufferIntegrityLevel MAX_LEVEL = JitBufferIntegrityLevel::Level1;
@@ -99,10 +101,17 @@ static inline void AllocJitMemory()
     EXPECT_NE(g_jitMemory, MAP_FAILED);
 }
 
+void XPMEnableJitFort()
+{
+    int fd = open(XPM_DEV_PATH.c_str(), O_RDWR);
+    EXPECT_GE(fd, 0);
+    EXPECT_GE(ioctl(fd, XPM_SET_JITFORT_ENABLE, 0), 0);
+}
+
 static inline void JitFortPrepare()
 {
 #ifndef JIT_FORT_DISABLE
-    PrctlWrapper(JITFORT_PRCTL_OPTION, JITFORT_SET_ENABLED);
+    XPMEnableJitFort();
     PrctlWrapper(JITFORT_PRCTL_OPTION, JITFORT_CREATE_COPGTABLE);
 #endif
 }

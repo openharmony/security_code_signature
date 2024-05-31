@@ -33,6 +33,6 @@ declare_args() {
 }
 
 if (defined(target_cpu) && target_cpu == "arm64" &&
-    code_signature_support_oh_code_sign) {
+    code_signature_support_oh_code_sign && !is_emulator) {
   jit_code_sign_enable = true
 }

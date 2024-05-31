@@ -15,25 +15,47 @@ import("//build/ohos.gni")
 import("../../../code_signature.gni")
 
 config("public_jit_code_sign_configs") {
-  cflags = [ "-march=armv8.4-a" ]
   include_dirs = [ "include" ]
+}
+
+config("private_jit_code_sign_configs") {
+  cflags = [ "-march=armv8.4-a" ]
+  defines = [ "ARCH_PAC_SUPPORT" ]
+}
+
+ohos_source_set("pac_sign_feature") {
+  sources = [ "src/pac_sign_ctx.cpp" ]
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  branch_protector_ret = "pac_ret"
+  public_configs = [
+    ":public_jit_code_sign_configs",
+    "${code_signature_root_dir}:common_public_config",
+  ]
+  configs = [
+    ":private_jit_code_sign_configs",
+    "${code_signature_root_dir}:common_utils_config",
+  ]
+  external_deps = [ "hilog:libhilog" ]
+  part_name = "code_signature"
+  subsystem_name = "security"
 }
 
 ohos_shared_library("libjit_code_sign") {
   sources = [ "src/jit_code_signer_factory.cpp" ]
-
   if (jit_code_sign_enable) {
-    defines = [
-      "JIT_CODE_SIGN_ENABLE",
-      "ARCH_PAC_SUPPORT",
-    ]
+    defines = [ "JIT_CODE_SIGN_ENABLE" ]
     sources += [
       "src/jit_code_signer_base.cpp",
       "src/jit_code_signer_hybrid.cpp",
       "src/jit_code_signer_single.cpp",
-      "src/pac_sign_ctx.cpp",
     ]
+    deps = [ ":pac_sign_feature" ]
   }
+  branch_protector_ret = "pac_ret"
   sanitize = {
     cfi = true
     cfi_cross_dso = true
@@ -44,7 +66,6 @@ ohos_shared_library("libjit_code_sign") {
     "${code_signature_root_dir}:common_public_config",
   ]
   configs = [ "${code_signature_root_dir}:common_utils_config" ]
-
   external_deps = [ "hilog:libhilog" ]
   part_name = "code_signature"
   subsystem_name = "security"
