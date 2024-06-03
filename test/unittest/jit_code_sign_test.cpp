@@ -76,6 +76,7 @@ static void *g_jitMemory = nullptr;
 void *g_mapJitBase = CAST_VOID_PTR(0x800000000);
 void *g_mapJitBase2 = CAST_VOID_PTR(0x800001000);
 constexpr size_t PAGE_SIZE = 4096;
+constexpr int BUFFER_SIZE = 4096;
 const std::string XPM_DEV_PATH = "/dev/xpm";
 
 #define JITFORT_PRCTL_OPTION 0x6a6974
@@ -166,6 +167,9 @@ HWTEST_F(JitCodeSignTest, JitCodeSignTest_0001, TestSize.Level0)
         EXPECT_EQ(CopyToJitCode(signer, g_jitMemory, g_testInstructionSet,
             INSTRUCTIONS_SET_SIZE_BYTES), CS_SUCCESS);
         EXPECT_EQ(memcmp(g_jitMemory, g_testInstructionSet, INSTRUCTIONS_SET_SIZE_BYTES), 0);
+
+        delete signer;
+        signer = nullptr;
     }
 }
 
@@ -187,6 +191,9 @@ HWTEST_F(JitCodeSignTest, JitCodeSignTest_0002, TestSize.Level0)
         EXPECT_EQ(CopyToJitCode(signer, g_jitMemory, g_testInstructionBuf,
             INSTRUCTIONS_SET_SIZE_BYTES), CS_SUCCESS);
         EXPECT_EQ(memcmp(g_jitMemory, g_testInstructionBuf, INSTRUCTIONS_SET_SIZE_BYTES), 0);
+
+        delete signer;
+        signer = nullptr;
     }
 }
 
@@ -226,6 +233,9 @@ HWTEST_F(JitCodeSignTest, JitCodeSignTest_0003, TestSize.Level0)
         EXPECT_EQ(CopyToJitCode(signer, g_jitMemory, g_afterPatchInstructionBuf,
             INSTRUCTIONS_SET_SIZE_BYTES), CS_SUCCESS);
         EXPECT_EQ(memcmp(g_jitMemory, g_afterPatchInstructionBuf, INSTRUCTIONS_SET_SIZE_BYTES), 0);
+
+        delete signer;
+        signer = nullptr;
     }
 }
 
@@ -272,6 +282,9 @@ HWTEST_F(JitCodeSignTest, JitCodeSignTest_0004, TestSize.Level0)
         EXPECT_EQ(CopyToJitCode(signer, g_jitMemory, g_afterPatchInstructionBuf,
             INSTRUCTIONS_SET_SIZE_BYTES), CS_SUCCESS);
         EXPECT_EQ(memcmp(g_jitMemory, g_afterPatchInstructionBuf, INSTRUCTIONS_SET_SIZE_BYTES), 0);
+
+        delete signer;
+        signer = nullptr;
     }
 }
 
@@ -292,6 +305,9 @@ HWTEST_F(JitCodeSignTest, JitCodeSignTest_0005, TestSize.Level0)
         int sizeInByte = sizeof(g_testInstructionSet);
         EXPECT_EQ(CopyToJitCode(signer, g_jitMemory, g_afterPatchInstructionBuf,
             sizeInByte), CS_ERR_VALIDATE_CODE);
+
+        delete signer;
+        signer = nullptr;
     }
 }
 
@@ -313,6 +329,9 @@ HWTEST_F(JitCodeSignTest, JitCodeSignTest_0006, TestSize.Level0)
 
         EXPECT_EQ(CopyToJitCode(signer, g_jitMemory, g_testInstructionBuf,
             INSTRUCTIONS_SET_SIZE_BYTES - 1), CS_ERR_JIT_SIGN_SIZE);
+
+        delete signer;
+        signer = nullptr;
     }
 }
 
@@ -334,6 +353,9 @@ HWTEST_F(JitCodeSignTest, JitCodeSignTest_0007, TestSize.Level0)
 
         EXPECT_EQ(CopyToJitCode(signer, g_jitMemory, g_afterPatchInstructionBuf,
             INSTRUCTIONS_SET_SIZE_BYTES), CS_ERR_JIT_SIGN_SIZE);
+
+        delete signer;
+        signer = nullptr;
     }
 }
 
@@ -356,6 +378,9 @@ HWTEST_F(JitCodeSignTest, JitCodeSignTest_0008, TestSize.Level0)
 
         EXPECT_EQ(CopyToJitCode(signer, g_jitMemory, g_testInstructionBuf,
             INSTRUCTIONS_SET_SIZE_BYTES), CS_SUCCESS);
+
+        delete signer;
+        signer = nullptr;
     }
 }
 
@@ -393,6 +418,9 @@ HWTEST_F(JitCodeSignTest, JitCodeSignTest_0009, TestSize.Level0)
         offset = TEST_PATCH_INDEX * INSTRUCTION_SIZE;
         EXPECT_EQ(PatchData(signer, offset, g_testPatchInstructionBuf,
             patchSize - 1), CS_ERR_JIT_SIGN_SIZE);
+
+        delete signer;
+        signer = nullptr;
     }
 }
 
@@ -434,6 +462,9 @@ HWTEST_F(JitCodeSignTest, JitCodeSignTest_0010, TestSize.Level0)
         EXPECT_EQ(CopyToJitCode(signer, g_jitMemory, g_afterPatchInstructionBuf,
             INSTRUCTIONS_SET_SIZE_BYTES), CS_SUCCESS);
         EXPECT_EQ(memcmp(g_jitMemory, g_afterPatchInstructionBuf, INSTRUCTIONS_SET_SIZE_BYTES), 0);
+
+        delete signer;
+        signer = nullptr;
     }
 }
 
@@ -457,6 +488,9 @@ HWTEST_F(JitCodeSignTest, JitCodeSignTest_0011, TestSize.Level0)
         RegisterTmpBuffer(signer, nullptr);
         EXPECT_EQ(PatchInstruction(signer, reinterpret_cast<Byte *>(g_afterPatchInstructionBuf),
             INSTRUCTION_SIZE), CS_ERR_PATCH_INVALID);
+
+        delete signer;
+        signer = nullptr;
     }
 }
 
@@ -493,6 +527,9 @@ HWTEST_F(JitCodeSignTest, JitCodeSignTest_00013, TestSize.Level0)
         signer->Reset();
         EXPECT_EQ(CopyToJitCode(signer, g_jitMemory, g_testInstructionBuf,
             INSTRUCTIONS_SET_SIZE_BYTES), CS_ERR_JIT_SIGN_SIZE);
+
+        delete signer;
+        signer = nullptr;
     }
 }
 
@@ -520,6 +557,9 @@ HWTEST_F(JitCodeSignTest, JitCodeSignTest_00014, TestSize.Level0)
         EXPECT_EQ(CopyToJitCode(signer, g_jitMemory, g_testInstructionBuf,
             INSTRUCTIONS_SET_SIZE_BYTES), CS_SUCCESS);
         EXPECT_EQ(memcmp(g_jitMemory, g_testInstructionBuf, INSTRUCTIONS_SET_SIZE_BYTES), 0);
+
+        delete signer;
+        signer = nullptr;
     }
 }
 
@@ -554,6 +594,9 @@ HWMTEST_F(JitCodeSignTest, JitCodeSignTest_00015, TestSize.Level1, MULTI_THREAD_
 #endif
             EXPECT_EQ(memcmp(g_jitMemory, g_testInstructionSet, size), 0);
         }
+
+        delete signer;
+        signer = nullptr;
     }
 }
 
@@ -598,21 +641,49 @@ HWTEST_F(JitCodeSignTest, JitCodeSignTest_00016, TestSize.Level0)
 #endif
             EXPECT_EQ(memcmp(tmpMemory, g_testInstructionSet, size), 0);
         }
+
+        delete signer;
+        signer = nullptr;
     }
     munmap(tmpMemory, PAGE_SIZE);
 }
 
 /**
  * @tc.name: JitCodeSignTest_0017
- * @tc.desc: create failed
+ * @tc.desc: validate and copy code to same buffer in parallel
  * @tc.type: Func
  * @tc.require: I9O6PK
  */
-HWTEST_F(JitCodeSignTest, JitCodeSignTest_0017, TestSize.Level0)
+HWMTEST_F(JitCodeSignTest, JitCodeSignTest_0017, TestSize.Level1, MULTI_THREAD_NUM)
 {
-    EXPECT_EQ(CreateJitCodeSigner(
-        static_cast<JitBufferIntegrityLevel>(static_cast<int>(MAX_LEVEL) + 1)),
-        nullptr);
+    int instructionNum = BUFFER_SIZE / sizeof(uint32_t);
+    uint32_t *tmpBuffer = reinterpret_cast<uint32_t *>(malloc(BUFFER_SIZE));
+    for (int i = 0; i < instructionNum; i++) {
+        tmpBuffer[i] = i;
+    }
+
+    for (JitBufferIntegrityLevel level = MIN_LEVEL;
+        level <= MAX_LEVEL;
+        level = static_cast<JitBufferIntegrityLevel>(static_cast<int>(level) + 1)) {
+        JitCodeSignerBase *signer = CreateJitCodeSigner(level);
+        int i = 0;
+        while (i < instructionNum) {
+            AppendInstruction(signer, tmpBuffer[i]);
+            i++;
+        }
+        int cookie = std::random_device{}();
+        void *tmpJitMemory = mmap(nullptr, PAGE_SIZE,
+            PROT_READ | PROT_WRITE | PROT_EXEC,
+            MAP_ANONYMOUS | MAP_PRIVATE | MAP_JIT, cookie, 0);
+        
+        EXPECT_EQ(CopyToJitCode(signer, tmpJitMemory, tmpBuffer, BUFFER_SIZE), CS_SUCCESS);
+        EXPECT_EQ(memcmp(tmpJitMemory, tmpBuffer, BUFFER_SIZE), 0);
+
+        delete signer;
+        signer = nullptr;
+    }
+    free(tmpBuffer);
+    tmpBuffer = nullptr;
 }
 
 /**
@@ -672,6 +743,9 @@ HWTEST_F(JitCodeSignTest, JitCodeSignTest_0020, TestSize.Level0)
         // offset < 0
         EXPECT_EQ(PatchInstruction(signer, CAST_VOID_PTR(reinterpret_cast<uintptr_t>(
             g_testInstructionBuf) - INSTRUCTION_SIZE), 1), CS_ERR_PATCH_INVALID);
+
+        delete signer;
+        signer = nullptr;
     }
 }
 
@@ -697,6 +771,9 @@ HWTEST_F(JitCodeSignTest, JitCodeSignTest_0021, TestSize.Level0)
         RegisterTmpBuffer(signer, g_testInstructionBuf);
         EXPECT_EQ(PatchData(signer, reinterpret_cast<Byte *>(g_testInstructionBuf),
             nullptr, 0), CS_ERR_INVALID_DATA);
+
+        delete signer;
+        signer = nullptr;
     }
 }
 
@@ -715,6 +792,40 @@ HWTEST_F(JitCodeSignTest, JitCodeSignTest_0022, TestSize.Level0)
         signer = CreateJitCodeSigner(level);
         EXPECT_EQ(ResetJitCode(nullptr, 0), CS_ERR_JIT_MEMORY);
         EXPECT_EQ(CopyToJitCode(signer, nullptr, g_testInstructionBuf, 0), CS_ERR_JIT_MEMORY);
+
+        delete signer;
+        signer = nullptr;
+    }
+}
+
+/**
+ * @tc.name: JitCodeSignTest_0023
+ * @tc.desc: sign instructions and verify succuss
+ * @tc.type: Func
+ * @tc.require: I9O6PK
+ */
+HWTEST_F(JitCodeSignTest, JitCodeSignTest_0023, TestSize.Level0)
+{
+    JitCodeSignerBase *signer = nullptr;
+    for (JitBufferIntegrityLevel level = MIN_LEVEL;
+        level <= MAX_LEVEL; level = static_cast<JitBufferIntegrityLevel>(
+        static_cast<int>(level) + 1)) {
+        signer = CreateJitCodeSigner(level);
+        for (int i = 0; i < INSTRUCTIONS_SET_SIZE_BYTES; i++) {
+            uint32_t tmpBuffer[INSTRUCTIONS_SET_SIZE];
+            memcpy_s(tmpBuffer, INSTRUCTIONS_SET_SIZE, g_testInstructionBuf, INSTRUCTIONS_SET_SIZE_BYTES);
+
+            for (int j = 0; j < INSTRUCTIONS_SET_SIZE; j++) {
+                AppendInstruction(signer, tmpBuffer[j]);
+            }
+            *(reinterpret_cast<Byte *>(tmpBuffer) + i) = 0;
+
+            EXPECT_EQ(CopyToJitCode(signer, g_jitMemory, tmpBuffer,
+                INSTRUCTIONS_SET_SIZE_BYTES), CS_ERR_VALIDATE_CODE);
+        }
+
+        delete signer;
+        signer = nullptr;
     }
 }
 }
