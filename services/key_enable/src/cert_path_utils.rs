@@ -67,8 +67,10 @@ pub enum DebugCertPathType {
     Authed = 0x102,
     /// debug developer code
     Developer = 0x103,
-    /// debug code
-    Debug = 0x104,
+    /// debug block code
+    Block = 0x104,
+    /// debug debug code
+    Debug = 0x105,
 }
 
 impl DebugCertPathType {
@@ -77,6 +79,7 @@ impl DebugCertPathType {
             "Platform" => Ok(DebugCertPathType::Platform as u32),
             "Authed" => Ok(DebugCertPathType::Authed as u32),
             "Developer" => Ok(DebugCertPathType::Developer as u32),
+            "Block" => Ok(DebugCertPathType::Block as u32),
             "Debug" => Ok(DebugCertPathType::Debug as u32),
             _ => Err(()),
         }
