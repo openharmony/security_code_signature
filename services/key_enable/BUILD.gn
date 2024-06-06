@@ -36,15 +36,21 @@ ohos_rust_executable("key_enable") {
     ]
     external_deps += [ "c_utils:utils_rust" ]
   }
+  rustenv = []
+  if (build_variant == "root") {
+    rustenv += [ "code_signature_debuggable=on" ]
+  } else {
+    rustenv += [ "code_signature_debuggable=off" ]
+  }
+  if (code_signature_support_oh_release_app) {
+    rustenv += [ "support_openharmony_ca=on" ]
+  } else {
+    rustenv += [ "support_openharmony_ca=off" ]
+  }
   crate_name = "key_enable"
   crate_type = "bin"
   subsystem_name = "security"
   part_name = "code_signature"
-  if (build_variant == "root") {
-    rustenv = [ "code_signature_debuggable=on" ]
-  } else {
-    rustenv = [ "code_signature_debuggable=off" ]
-  }
 }
 
 ohos_rust_shared_ffi("key_enable_lib") {
@@ -58,23 +64,25 @@ ohos_rust_shared_ffi("key_enable_lib") {
     ]
     external_deps += [ "c_utils:utils_rust" ]
   }
+  rustenv = []
+  if (build_variant == "root") {
+    rustenv += [ "code_signature_debuggable=on" ]
+  } else {
+    rustenv += [ "code_signature_debuggable=off" ]
+  }
+  if (code_signature_support_oh_release_app) {
+    rustenv += [ "support_openharmony_ca=on" ]
+  } else {
+    rustenv += [ "support_openharmony_ca=off" ]
+  }
   crate_name = "key_enable"
   subsystem_name = "security"
   part_name = "code_signature"
-  if (build_variant == "root") {
-    rustenv = [ "code_signature_debuggable=on" ]
-  } else {
-    rustenv = [ "code_signature_debuggable=off" ]
-  }
 }
 
 ohos_prebuilt_etc("trusted_cert_path") {
-  if (code_signature_support_openharmony_ca) {
-    if (code_signature_support_oh_release_app) {
-      source = "config/openharmony/release/trusted_cert_path.json"
-    } else {
-      source = "config/openharmony/dev/trusted_cert_path.json"
-    }
+  if (code_signature_support_oh_release_app) {
+    source = "config/openharmony/release/trusted_cert_path.json"
   } else {
     source = "config/trusted_cert_path.json"
   }
@@ -84,11 +92,7 @@ ohos_prebuilt_etc("trusted_cert_path") {
 }
 
 ohos_prebuilt_etc("trusted_cert_path_test") {
-  if (defined(sign_hap_py_path)) {
-    source = "config/trusted_cert_path_test.json"
-  } else {
-    source = "config/not_sign_hap_py_path/trusted_cert_path_test.json"
-  }
+  source = "config/trusted_cert_path_test.json"
   part_name = "code_signature"
   subsystem_name = "security"
   relative_install_dir = "security"

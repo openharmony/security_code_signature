@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "devices_security.h"
+#include "key_utils.h"
 
 #include <cstdlib>
 #include <dlfcn.h>
@@ -25,72 +25,77 @@
 #include "log.h"
 #include "parameter.h"
 
-constexpr int32_t VALUE_MAX_LEN = 64;
-constexpr int32_t CMDLINE_MAX_BUF_LEN = 4096;
-static const std::string OEM_MODE = "const.boot.oemmode";
-static const std::string OEM_MODE_RD = "rd";
-static const std::string EFUSE_STATE_FILE = "/proc/cmdline";
-
 using namespace OHOS::Security::CodeSign;
 
-int32_t GetEfuseStatus()
+enum DeviceMode {
+    NOT_INITIALIZE = 0,
+    DEVICE_MODE_RD,
+    DEVICE_MODE_NOT_RD
+};
+
+constexpr int32_t CMDLINE_MAX_BUF_LEN = 4096;
+static const std::string PROC_CMDLINE_FILE_PATH = "/proc/cmdline";
+static int32_t g_isRdDevice = NOT_INITIALIZE;
+
+bool CheckDeviceMode(char *buf, ssize_t bunLen)
 {
-    int32_t fd = open(EFUSE_STATE_FILE.c_str(), O_RDONLY);
-    if (fd < 0) {
-        LOG_ERROR(LABEL, "open %{public}s failed, %{public}s", EFUSE_STATE_FILE.c_str(), strerror(errno));
-        return DEVICE_MODE_ERROR;
-    }
-
-    char *buf = static_cast<char *>(malloc(CMDLINE_MAX_BUF_LEN));
-    if (buf == nullptr) {
-        LOG_ERROR(LABEL, "alloc read buffer failed");
-        (void) close(fd);
-        return DEVICE_MODE_ERROR;
-    }
-    (void)memset_s(buf, CMDLINE_MAX_BUF_LEN, 0, CMDLINE_MAX_BUF_LEN);
-
-    int32_t deviceMode = DEVICE_MODE_ERROR;
-    ssize_t ret = read(fd, buf, CMDLINE_MAX_BUF_LEN - 1);
-    (void) close(fd);
-    if (ret < 0) {
-        LOG_ERROR(LABEL, "read %{public}s failed, %{public}s", EFUSE_STATE_FILE.c_str(), strerror(errno));
-        free(buf);
-        buf = nullptr;
-        return deviceMode;
-    }
-
-    if (strstr(buf, "efuse_status=0")) {
-        LOG_DEBUG(LABEL, "device is fused, need to check device id");
-        deviceMode = DEVICE_MODE_USER;
-    } else if (strstr(buf, "efuse_status=1")) {
-        LOG_DEBUG(LABEL, "device is not fused, skip device id check");
-        deviceMode = DEVICE_MODE_RD;
+    if (strstr(buf, "oemmode=rd")) {
+        LOG_DEBUG(LABEL, "Oemode is rd");
+        return true;
     } else {
-        LOG_ERROR(LABEL, "failed to obtain the device efuse status");
+        LOG_DEBUG(LABEL, "Not rd mode, cmdline = %{private}s", buf);
     }
-
-    free(buf);
-    buf = nullptr;
-    return deviceMode;
+    return false;
 }
 
-int32_t GetDeviceMode()
+int32_t CheckEfuseStatus(char *buf, ssize_t bunLen)
 {
-    LOG_DEBUG(LABEL, "start to check the OEM mode of the device");
-
-    char value[VALUE_MAX_LEN] = {0};
-    int32_t ret = GetParameter(OEM_MODE.c_str(), nullptr, value, sizeof(value));
-    if ((ret >= 0) && (strncmp(value, OEM_MODE_RD.c_str(), sizeof(value)) == 0)) {
-        LOG_DEBUG(LABEL, "oem mode is rd, skip device id check");
-        return DEVICE_MODE_RD;
+    if (strstr(buf, "efuse_status=1")) {
+        LOG_DEBUG(LABEL, "device is not efused");
+        return true;
+    } else {
+        LOG_DEBUG(LABEL, "Not efused, cmdline = %{private}s", buf);
     }
-
-    return GetEfuseStatus();
+    return false;
 }
+
+void ParseCMDLine()
+{
+    int32_t fd = open(PROC_CMDLINE_FILE_PATH.c_str(), O_RDONLY);
+    if (fd < 0) {
+        g_isRdDevice = DEVICE_MODE_NOT_RD;
+        LOG_ERROR(LABEL, "open %{public}s failed, %{public}s",
+            PROC_CMDLINE_FILE_PATH.c_str(), strerror(errno));
+        return;
+    }
+    char *buf = nullptr;
+    int32_t status = DEVICE_MODE_NOT_RD;
+    do {
+        buf = static_cast<char *>(malloc(CMDLINE_MAX_BUF_LEN));
+        if (buf == nullptr) {
+            LOG_ERROR(LABEL, "Alloc buffer for reading cmdline failed.");
+            break;
+        }
+        (void) memset_s(buf, CMDLINE_MAX_BUF_LEN, 0, CMDLINE_MAX_BUF_LEN);
+        ssize_t bufLen = read(fd, buf, CMDLINE_MAX_BUF_LEN - 1);
+        if (bufLen < 0) {
+            LOG_ERROR(LABEL, "Read %{public}s failed, %{public}s.",
+                PROC_CMDLINE_FILE_PATH.c_str(), strerror(errno));
+            break;
+        }
+        if (CheckDeviceMode(buf, bufLen) || CheckEfuseStatus(buf, bufLen)) {
+            status = DEVICE_MODE_RD;
+        }
+    } while (0);
+    g_isRdDevice = status;
+    (void) close(fd);
+    free(buf);
+}
+
 bool IsRdDevice()
 {
-    if (GetDeviceMode() != DEVICE_MODE_RD) {
-        return false;
+    if (g_isRdDevice == NOT_INITIALIZE) {
+        ParseCMDLine();
     }
-    return true;
+    return g_isRdDevice == DEVICE_MODE_RD;
 }

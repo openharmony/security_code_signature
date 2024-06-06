@@ -215,10 +215,16 @@ ohos_rust_static_library("rust_key_enable_lib") {
     "hisysevent:hisysevent_rust",
     "ylong_json:lib",
   ]
+  rustenv = []
   if (build_variant == "root") {
-    rustenv = [ "code_signature_debuggable=on" ]
+    rustenv += [ "code_signature_debuggable=on" ]
   } else {
-    rustenv = [ "code_signature_debuggable=off" ]
+    rustenv += [ "code_signature_debuggable=off" ]
+  }
+  if (code_signature_support_oh_release_app) {
+    rustenv += [ "support_openharmony_ca=on" ]
+  } else {
+    rustenv += [ "support_openharmony_ca=off" ]
   }
   crate_name = "key_enable"
   crate_type = "rlib"

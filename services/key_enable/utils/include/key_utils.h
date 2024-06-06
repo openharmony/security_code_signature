@@ -40,6 +40,7 @@ KeySerial KeyctlRestrictKeyring(
     const char *type,
     const char *restriction);
 
+bool IsRdDevice();
 #ifdef __cplusplus
 }
 #endif

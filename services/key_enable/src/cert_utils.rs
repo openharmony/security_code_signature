@@ -16,21 +16,31 @@
 use super::cert_chain_utils::PemCollection;
 use super::cert_path_utils::TrustCertPath;
 const TRUSTED_ROOT_CERT: &str = "/system/etc/security/trusted_root_ca.json";
-const ALLOWED_ROOT_CERT_MEMBER_NAMES: &[&str] = &[
-    "C=CN, O=Huawei, OU=Huawei CBG, CN=Huawei CBG Root CA G2",
-    "C=CN, O=OpenHarmony, OU=OpenHarmony Team, CN=OpenHarmony Application Root CA",
-];
+const ALLOWED_ROOT_CERT_MEMBER_NAMES: &[&str] =
+    &["C=CN, O=Huawei, OU=Huawei CBG, CN=Huawei CBG Root CA G2"];
+const ALLOWED_OH_ROOT_CERT_MEMBER_NAMES: &[&str] =
+    &["C=CN, O=OpenHarmony, OU=OpenHarmony Team, CN=OpenHarmony Application Root CA"];
 const TRUSTED_ROOT_CERT_TEST: &str = "/system/etc/security/trusted_root_ca_test.json";
 const ALLOWED_ROOT_CERT_MEMBER_NAMES_TEST: &[&str] =
     &["C=CN, O=Huawei, OU=Huawei CBG, CN=Huawei CBG Root CA G2 Test"];
 const TRUSTED_CERT_PATH: &str = "/system/etc/security/trusted_cert_path.json";
 const TRUSTED_CERT_PATH_TEST: &str = "/system/etc/security/trusted_cert_path_test.json";
 
+extern "C" {
+    fn IsRdDevice() -> bool;
+}
+
 /// get trusted certs form json file
 pub fn get_trusted_certs() -> PemCollection {
     let mut root_cert = PemCollection::new();
     root_cert.load_pem_certs_from_json_file(TRUSTED_ROOT_CERT, ALLOWED_ROOT_CERT_MEMBER_NAMES);
-    if env!("code_signature_debuggable") == "on" {
+    if env!("support_openharmony_ca") == "on" || unsafe { IsRdDevice() } {
+        root_cert.load_pem_certs_from_json_file(
+            TRUSTED_ROOT_CERT,
+            ALLOWED_OH_ROOT_CERT_MEMBER_NAMES
+        );
+    }
+    if env!("code_signature_debuggable") == "on" || unsafe { IsRdDevice() } {
         root_cert.load_pem_certs_from_json_file(
             TRUSTED_ROOT_CERT_TEST,
             ALLOWED_ROOT_CERT_MEMBER_NAMES_TEST
@@ -43,7 +53,7 @@ pub fn get_trusted_certs() -> PemCollection {
 pub fn get_cert_path() -> TrustCertPath {
     let mut cert_paths = TrustCertPath::new();
     cert_paths.load_cert_path_from_json_file(TRUSTED_CERT_PATH);
-    if env!("code_signature_debuggable") == "on" {
+    if env!("code_signature_debuggable") == "on" || unsafe { IsRdDevice() } {
         cert_paths.load_cert_path_from_json_file(TRUSTED_CERT_PATH_TEST);
     }
     cert_paths

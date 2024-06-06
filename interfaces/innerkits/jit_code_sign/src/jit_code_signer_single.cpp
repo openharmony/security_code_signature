@@ -85,7 +85,7 @@ int32_t JitCodeSignerSingle::ValidateCodeCopy(Instr *jitMemory,
         if (signature != signTable_[index]) {
 #ifdef JIT_FORT_DISABLE
             LOG_ERROR("validate insn(%{public}x) without context failed at index = " \
-                "%{public}x, signature(%{public}x) != wanted(%{pucblic}x)",
+                "%{public}x, signature(%{public}x) != wanted(%{public}x)",
                 insn, index * INSTRUCTION_SIZE, signature, signTable_[index]);
 #endif
 #ifndef JIT_CODE_SIGN_PERMISSIVE

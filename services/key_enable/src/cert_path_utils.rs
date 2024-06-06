@@ -18,6 +18,10 @@ use hilog_rust::{error, hilog, info, HiLogLabel, LogType};
 use std::ffi::{c_char, CString};
 use ylong_json::JsonValue;
 
+extern "C" {
+    fn IsRdDevice() -> bool;
+}
+
 const LOG_LABEL: HiLogLabel = HiLogLabel {
     log_type: LogType::LogCore,
     domain: 0xd005a06, // security domain
@@ -46,6 +50,8 @@ pub enum ReleaseCertPathType {
     Developer = 0x3,
     /// release block code
     Block = 0x4,
+    /// restrict code
+    Restricted = 0xff,
 }
 
 impl ReleaseCertPathType {
@@ -55,6 +61,7 @@ impl ReleaseCertPathType {
             "Authed" => Ok(ReleaseCertPathType::Authed as u32),
             "Developer" => Ok(ReleaseCertPathType::Developer as u32),
             "Block" => Ok(ReleaseCertPathType::Block as u32),
+            "Restricted" => Ok(ReleaseCertPathType::Restricted as u32),
             _ => Err(()),
         }
     }
@@ -71,6 +78,8 @@ pub enum DebugCertPathType {
     Block = 0x104,
     /// debug debug code
     Debug = 0x105,
+    /// restrict code
+    Restricted = 0x1ff,
 }
 
 impl DebugCertPathType {
@@ -81,6 +90,7 @@ impl DebugCertPathType {
             "Developer" => Ok(DebugCertPathType::Developer as u32),
             "Block" => Ok(DebugCertPathType::Block as u32),
             "Debug" => Ok(DebugCertPathType::Debug as u32),
+            "Restricted" => Ok(DebugCertPathType::Restricted as u32),
             _ => Err(()),
         }
     }
@@ -152,8 +162,8 @@ impl TrustCertPath {
             if !unsafe { IsDeveloperModeOn() } && &cert_path.mode == "Dev" {
                 continue;
             }
-            if !cert_path.subject.is_empty() 
-            && !cert_path.issuer_ca.is_empty() 
+            if !cert_path.subject.is_empty()
+            && !cert_path.issuer_ca.is_empty()
             && cert_path.add_subject_cert_path().is_err() {
                     error!(
                         LOG_LABEL,
@@ -388,6 +398,23 @@ pub fn common_format_fabricate_name(common_name: &str, organization: &str, email
     ret
 }
 
+fn convert_cert_type(cert_path_type: u32) -> u32 {
+    if cert_path_type == ReleaseCertPathType::Restricted as u32 {
+        if env!("support_openharmony_ca") == "on" || unsafe { IsRdDevice() } {
+            return ReleaseCertPathType::Authed as u32;
+        } else {
+            return 0;   // return invalid type
+        }
+    } else if cert_path_type == DebugCertPathType::Restricted as u32 {
+        if env!("support_openharmony_ca") == "on" || unsafe { IsRdDevice() } {
+            return DebugCertPathType::Authed as u32;
+        } else {
+            return 0;   // return invalid type
+        }
+    }
+    cert_path_type
+}
+
 fn cert_path_operation<F>(
     subject: String,
     issuer: String,
@@ -404,6 +431,12 @@ where
 
     let subject_cstring = CString::new(subject).expect("convert to subject_cstring error!");
     let issuer_cstring = CString::new(issuer).expect("convert to cstring error!");
+    let converted_cert_type = convert_cert_type(cert_path_type);
+
+    // invalid cert type, skip adding
+    if converted_cert_type == 0u32 {
+        return Ok(());
+    }
 
     let cert_path_info = CertPathInfo {
         signing_length: subject_cstring.as_bytes().len() as u32,
@@ -411,7 +444,7 @@ where
         signing: subject_cstring.as_ptr() as u64,
         issuer: issuer_cstring.as_ptr() as u64,
         path_len: path_length,
-        path_type: cert_path_type,
+        path_type: converted_cert_type,
         __reserved: [0; 32],
     };
     let ret = operation(&cert_path_info);

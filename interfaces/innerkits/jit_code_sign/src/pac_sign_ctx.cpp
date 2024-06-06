@@ -156,7 +156,7 @@ uint32_t PACSignCtx::SignSingle(uint32_t value, uint32_t index)
     uint64_t paddingContext = PaddingContext(SIGN_WITHOUT_CONTEXT, index);
     uint32_t signature = PACGA(value, paddingContext);
 #if defined(JIT_CODE_SIGN_DEBUGGABLE) && defined(JIT_FORT_DISABLE)
-    LOG_ERROR("Get signature = %{public}x", signature);
+    LOG_INFO("Get signature = %{public}x", signature);
 #endif
     return signature;
 }

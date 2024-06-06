@@ -17,7 +17,7 @@
 #include <gtest/gtest.h>
 #include <string>
 
-#include "devices_security.h"
+#include "key_utils.h"
 
 using namespace testing::ext;
 using namespace std;
@@ -38,28 +38,14 @@ public:
 
 /**
  * @tc.name: KeyEnableUtilsTest_0001
- * @tc.desc: Obtaining cmdline node data from aarch64 device
+ * @tc.desc: check status of device
  * @tc.type: Func
  * @tc.require: issueI8FCGF
  */
 HWTEST_F(KeyEnableUtilsTest, KeyEnableUtilsTest_0001, TestSize.Level0)
 {
-    int32_t efuseStatus = GetEfuseStatus();
-    EXPECT_NE(efuseStatus, DEVICE_MODE_ERROR);
+    EXPECT_EQ(IsRdDevice(), true);
 }
-
-/**
- * @tc.name: KeyEnableUtilsTest_0001
- * @tc.desc: Obtaining device mode from aarch64 device
- * @tc.type: Func
- * @tc.require: issueI8FCGF
- */
-HWTEST_F(KeyEnableUtilsTest, KeyEnableUtilsTest_0002, TestSize.Level0)
-{
-    int32_t deviceMode = GetDeviceMode();
-    EXPECT_NE(deviceMode, DEVICE_MODE_ERROR);
-}
-
 } // namespace CodeSign
 } // namespace Security
 } // namespace OHOS

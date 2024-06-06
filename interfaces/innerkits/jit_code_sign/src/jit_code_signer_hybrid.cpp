@@ -110,7 +110,7 @@ int32_t JitCodeSignerHybrid::ValidateSubCode(Instr *jitMemory, PACSignCtx &verif
         if (signature != signTable_[index]) {
 #ifdef JIT_FORT_DISABLE
             LOG_ERROR("Validate insn (%{public}8x) failed at offset = %{public}x, " \
-                "signature(%{public}x) != wanted(%{pucblic}x)",
+                "signature(%{public}x) != wanted(%{public}x)",
                 *(insnPtr), index * INSTRUCTION_SIZE, signature, signTable_[index]);
 #endif
 #ifndef JIT_CODE_SIGN_PERMISSIVE
@@ -149,7 +149,7 @@ __attribute__((no_sanitize("cfi"))) int32_t JitCodeSignerHybrid::ValidateCodeCop
         if (signature != signTable_[index]) {
 #ifdef JIT_FORT_DISABLE
             LOG_ERROR("Validate insn (%{public}x) without context failed at index = %{public}x," \
-                "signature(%{public}x) != wanted(%{pucblic}x).",
+                "signature(%{public}x) != wanted(%{public}x).",
                 insn, index, signature, signTable_[index]);
 #endif
 #ifndef JIT_CODE_SIGN_PERMISSIVE
