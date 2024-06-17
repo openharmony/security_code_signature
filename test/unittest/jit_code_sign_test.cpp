@@ -813,7 +813,7 @@ HWTEST_F(JitCodeSignTest, JitCodeSignTest_0023, TestSize.Level0)
         signer = CreateJitCodeSigner(level);
         for (int i = 0; i < INSTRUCTIONS_SET_SIZE_BYTES; i++) {
             uint32_t tmpBuffer[INSTRUCTIONS_SET_SIZE];
-            memcpy_s(tmpBuffer, INSTRUCTIONS_SET_SIZE, g_testInstructionBuf, INSTRUCTIONS_SET_SIZE_BYTES);
+            (void) memcpy_s(tmpBuffer, INSTRUCTIONS_SET_SIZE_BYTES, g_testInstructionBuf, INSTRUCTIONS_SET_SIZE_BYTES);
 
             for (int j = 0; j < INSTRUCTIONS_SET_SIZE; j++) {
                 AppendInstruction(signer, tmpBuffer[j]);
