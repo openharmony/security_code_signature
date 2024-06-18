@@ -37,7 +37,7 @@ constexpr int32_t CMDLINE_MAX_BUF_LEN = 4096;
 static const std::string PROC_CMDLINE_FILE_PATH = "/proc/cmdline";
 static int32_t g_isRdDevice = NOT_INITIALIZE;
 
-bool CheckDeviceMode(char *buf, ssize_t bunLen)
+static bool CheckDeviceMode(char *buf, ssize_t bunLen)
 {
     if (strstr(buf, "oemmode=rd")) {
         LOG_DEBUG(LABEL, "Oemode is rd");
@@ -48,7 +48,7 @@ bool CheckDeviceMode(char *buf, ssize_t bunLen)
     return false;
 }
 
-int32_t CheckEfuseStatus(char *buf, ssize_t bunLen)
+static int32_t CheckEfuseStatus(char *buf, ssize_t bunLen)
 {
     if (strstr(buf, "efuse_status=1")) {
         LOG_DEBUG(LABEL, "device is not efused");
@@ -59,7 +59,7 @@ int32_t CheckEfuseStatus(char *buf, ssize_t bunLen)
     return false;
 }
 
-void ParseCMDLine()
+static void ParseCMDLine()
 {
     int32_t fd = open(PROC_CMDLINE_FILE_PATH.c_str(), O_RDONLY);
     if (fd < 0) {
