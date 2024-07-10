@@ -44,6 +44,56 @@ CodeSignBlock::CodeSignBlock()
 
 CodeSignBlock::~CodeSignBlock() { }
 
+int32_t CodeSignBlock::ProcessExtension(uintptr_t &extensionAddr,
+    const uintptr_t blockAddrEnd, struct code_sign_enable_arg &arg)
+{
+    if (extensionAddr >= blockAddrEnd) {
+        LOG_ERROR("Extension address is beyond the end of the block");
+        return CS_ERR_INVALID_EXTENSION_OFFSET;
+    }
+    auto extensionHeader = reinterpret_cast<const ExtensionHeader *>(extensionAddr);
+    extensionAddr = extensionAddr + sizeof(ExtensionHeader);
+    if (extensionAddr > blockAddrEnd) {
+        LOG_ERROR("Extension header size exceeds block boundary. ExtensionHeader size: %{public}zu bytes",
+            sizeof(ExtensionHeader));
+        return CS_ERR_INVALID_EXTENSION_OFFSET;
+    }
+    LOG_DEBUG("extensionHeader->type:%{public}d, extensionHeader->size:%{public}d", extensionHeader->type,
+        extensionHeader->size);
+    switch (extensionHeader->type) {
+        case CSB_EXTENSION_TYPE_MERKLE_TREE: {
+            auto merkleExtension = reinterpret_cast<const MerkleTreeExtension *>(extensionAddr);
+            arg.tree_offset = merkleExtension->treeOffset;
+            arg.root_hash_ptr = reinterpret_cast<uintptr_t>(merkleExtension->rootHash);
+            arg.flags |= CSB_SIGN_INFO_MERKLE_TREE;
+            break;
+        }
+        case CSB_EXTENSION_TYPE_PAGE_INFO: {
+            auto pageInfoExtension = reinterpret_cast<const PageInfoExtension *>(extensionAddr);
+            arg.sig_size = pageInfoExtension->sign_size;
+            if (arg.sig_size > extensionHeader->size - sizeof(PageInfoExtension)) {
+                return CS_ERR_EXTENSION_SIGN_SIZE;
+            }
+            if (pageInfoExtension->unitSize > CSB_SIGN_INFO_MAX_PAGEINFO_UNITSIZE) {
+                return CS_ERR_INVALID_PAGE_INFO_EXTENSION;
+            }
+            arg.sig_ptr = reinterpret_cast<uintptr_t>(pageInfoExtension->signature);
+            arg.pgtypeinfo_size = pageInfoExtension->mapSize;
+            arg.pgtypeinfo_off = pageInfoExtension->mapOffset;
+            arg.cs_version = CSB_EXTENSION_TYPE_PAGE_INFO_VERSION;
+            arg.flags |= pageInfoExtension->unitSize << 1;
+            LOG_DEBUG("arg.sig_size:%{public}u, arg.pgtypeinfo_size:%{public}u, "
+                "arg.pgtypeinfo_off:%{public}llu, unitSize:%{public}u,arg.flags:%{public}u", arg.sig_size,
+                arg.pgtypeinfo_size, arg.pgtypeinfo_off, pageInfoExtension->unitSize, arg.flags);
+            break;
+        }
+        default:
+            break;
+    }
+    extensionAddr += extensionHeader->size;
+    return CS_SUCCESS;
+}
+
 int32_t CodeSignBlock::GetOneFileAndCodeSignInfo(std::string &targetFile, struct code_sign_enable_arg &arg)
 {
     int32_t ret;
@@ -67,26 +117,19 @@ int32_t CodeSignBlock::GetOneFileAndCodeSignInfo(std::string &targetFile, struct
     arg.sig_size = signInfo->signSize;
     arg.sig_ptr = reinterpret_cast<uintptr_t>(signInfo->signature);
     arg.data_size = signInfo->dataSize;
-    arg.flags = signInfo->flags;
-    if (!(signInfo->flags & CSB_SIGN_INFO_MERKLE_TREE)) {
+    if (!signInfo->flags) {
         return CS_SUCCESS;
     }
 
     uint32_t extensionCount = 0;
     auto extensionAddr = reinterpret_cast<uintptr_t>(signInfo) + signInfo->extensionOffset;
-    do {
-        if (extensionAddr >= blockAddrEnd) {
-            return CS_ERR_SIGN_EXTENSION_OFFSET_ALIGN;
+    while (extensionCount < signInfo->extensionNum) {
+        ret = ProcessExtension(extensionAddr, blockAddrEnd, arg);
+        if (ret != CS_SUCCESS) {
+            return ret;
         }
-        auto extension = reinterpret_cast<const MerkleTreeExtension *>(extensionAddr);
-        if (extension->type == CSB_EXTENSION_TYPE_MERKLE_TREE) {
-            arg.tree_offset = extension->treeOffset;
-            arg.root_hash_ptr = reinterpret_cast<uintptr_t>(extension->rootHash);
-            break;
-        }
-        extensionAddr += extension->size;
         extensionCount++;
-    } while (extensionCount < signInfo->extensionNum);
+    }
     return CS_SUCCESS;
 }
 
@@ -132,7 +175,7 @@ int32_t CodeSignBlock::ParseNativeLibSignInfo(const EntryMap &entryMap)
     } while (entryInfo < entryInfoEnd);
 
     if (entryMap.size() != signMap_.size() - signMapPreSize) {
-        LOG_DEBUG("signMap_ size:%{public}u, signMapPreSize:%{public}u",
+        LOG_ERROR("Libs signature not found: signMap_ size:%{public}u, signMapPreSize:%{public}u",
             static_cast<uint32_t>(signMap_.size()), static_cast<uint32_t>(signMapPreSize));
         return CS_ERR_NO_SIGNATURE;
     }

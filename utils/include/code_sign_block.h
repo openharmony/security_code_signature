@@ -62,12 +62,24 @@ typedef struct {
 } FsVerityInfo;
 
 typedef struct {
-    uint32_t type; // MERKLE_TREE_INCLUDE
+    uint32_t type;
     uint32_t size;
+} ExtensionHeader;
+
+typedef struct {
     uint64_t treeSize;
     uint64_t treeOffset;
     uint8_t  rootHash[64];
 } MerkleTreeExtension;
+
+typedef struct {
+    uint64_t mapOffset;
+    uint64_t mapSize;
+    uint8_t  unitSize;
+    uint8_t  reversed[3];
+    uint32_t sign_size;
+    uint8_t  signature[0];
+} PageInfoExtension;
 
 typedef struct {
     uint32_t saltSize;
@@ -114,10 +126,15 @@ public:
     static constexpr uint32_t CSB_HAP_HEADER_MAGIC = 0xC1B5CC66;
     static constexpr uint32_t CSB_SO_HEADER_MAGIC = 0xED2E720;
     static constexpr uint32_t CSB_SIGN_INFO_MERKLE_TREE = 0x1;
+    static constexpr uint32_t CSB_SIGN_INFO_RUNTIME_PAGE = 0x2;
     static constexpr uint32_t CSB_EXTENSION_TYPE_MERKLE_TREE = 1;
+    static constexpr uint32_t CSB_EXTENSION_TYPE_PAGE_INFO = 2;
+    static constexpr uint32_t CSB_SIGN_INFO_MAX_PAGEINFO_UNITSIZE = 7;
+    static constexpr uint32_t CSB_EXTENSION_TYPE_PAGE_INFO_VERSION = 2;
 
     int32_t ParseCodeSignBlock(const std::string &realPath, const EntryMap &entryMap, FileType fileType);
     int32_t GetOneFileAndCodeSignInfo(std::string &targetFile, struct code_sign_enable_arg &arg);
+    int32_t ProcessExtension(uintptr_t &extensionAddr, const uintptr_t blockAddrEnd, struct code_sign_enable_arg &arg);
 
 private:
     int32_t ParseNativeLibSignInfo(const EntryMap &entryMap);

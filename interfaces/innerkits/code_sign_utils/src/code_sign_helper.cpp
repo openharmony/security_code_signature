@@ -88,10 +88,11 @@ void CodeSignHelper::ShowCodeSignInfo(const std::string &path, const struct code
         "file:%{public}s version:%{public}d hash_algorithm:%{public}d block_size:%{public}d sig_size:%{public}d "
         "data_size:%{public}lld salt_size:%{public}d salt:[%{public}d, ..., %{public}d, ..., %{public}d] "
         "flags:%{public}d tree_offset:%{public}lld root_hash:[%{public}d, %{public}d, %{public}d, ..., %{public}d, "
-        "..., %{public}d] }",
+        "..., %{public}d] pgtypeinfo_size:%{public}d pgtypeinfo_off:%{public}lld }",
         path.c_str(), arg.cs_version, arg.hash_algorithm, arg.block_size, arg.sig_size,
         arg.data_size, arg.salt_size, salt[0], salt[16], salt[31], arg.flags, arg.tree_offset, // 16, 31 data index
-        rootHashPtr[0], rootHashPtr[1], rootHashPtr[2], rootHashPtr[32], rootHashPtr[63]); // 2, 32, 63 data index
+        rootHashPtr[0], rootHashPtr[1], rootHashPtr[2], rootHashPtr[32], rootHashPtr[63], // 2, 32, 63 data index
+        arg.pgtypeinfo_size, arg.pgtypeinfo_off);
 }
 }
 }

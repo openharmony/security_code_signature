@@ -682,6 +682,162 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0026, TestSize.Level0)
     ret = utils.EnforceCodeSignForAppWithOwnerId("test-app-identifier", hapRealPath, entryMap, FILE_ALL);
     EXPECT_EQ(ret, CS_ERR_NO_SIGNATURE);
 }
+
+/**
+ * @tc.name: CodeSignUtilsTest_0027
+ * @tc.desc: test Extension address is beyond the end of the block
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0027, TestSize.Level0)
+{
+    CodeSignBlock codeSignBlock;
+    uintptr_t block[100] = {0};
+    uintptr_t blockAddrEnd = reinterpret_cast<uintptr_t>(block + sizeof(block));
+    uintptr_t extensionAddr = blockAddrEnd + 1;
+    code_sign_enable_arg arg = {};
+
+    int32_t ret = codeSignBlock.ProcessExtension(extensionAddr, blockAddrEnd, arg);
+    EXPECT_EQ(ret, CS_ERR_INVALID_EXTENSION_OFFSET);
+}
+
+/**
+ * @tc.name: CodeSignUtilsTest_0028
+ * @tc.desc: test Extension header size exceeds block boundary
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0028, TestSize.Level0)
+{
+    CodeSignBlock codeSignBlock;
+    uintptr_t block[100] = {0};
+    uintptr_t blockAddrEnd = reinterpret_cast<uintptr_t>(block + sizeof(block));
+    uintptr_t extensionAddr = blockAddrEnd - sizeof(ExtensionHeader) + 1;
+    code_sign_enable_arg arg = {};
+
+    int32_t ret = codeSignBlock.ProcessExtension(extensionAddr, blockAddrEnd, arg);
+    EXPECT_EQ(ret, CS_ERR_INVALID_EXTENSION_OFFSET);
+}
+
+/**
+ * @tc.name: CodeSignUtilsTest_0029
+ * @tc.desc: test Process Merkle Tree Extension
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0029, TestSize.Level0)
+{
+    CodeSignBlock codeSignBlock;
+    struct {
+        ExtensionHeader header;
+        MerkleTreeExtension merkleTree;
+    } block;
+    block.header.type = CodeSignBlock::CSB_EXTENSION_TYPE_MERKLE_TREE;
+    block.header.size = sizeof(MerkleTreeExtension);
+    block.merkleTree.treeOffset = 123;
+
+    uint8_t fakeRootHash[64] = {0xde, 0xad, 0xbe, 0xef};
+    std::copy(std::begin(fakeRootHash), std::end(fakeRootHash), std::begin(block.merkleTree.rootHash));
+
+    uintptr_t blockAddrEnd = reinterpret_cast<uintptr_t>(&block + 1);
+    uintptr_t extensionAddr = reinterpret_cast<uintptr_t>(&block);
+    code_sign_enable_arg arg = {};
+
+    int32_t ret = codeSignBlock.ProcessExtension(extensionAddr, blockAddrEnd, arg);
+    EXPECT_EQ(ret, CS_SUCCESS);
+    EXPECT_EQ(arg.tree_offset, 123);
+    EXPECT_EQ(arg.root_hash_ptr, reinterpret_cast<uintptr_t>(block.merkleTree.rootHash));
+    EXPECT_EQ(arg.flags, CodeSignBlock::CSB_SIGN_INFO_MERKLE_TREE);
+}
+
+/**
+ * @tc.name: CodeSignUtilsTest_0030
+ * @tc.desc: test Process Page Info Extension
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0030, TestSize.Level0)
+{
+    CodeSignBlock codeSignBlock;
+    struct {
+        ExtensionHeader header;
+        PageInfoExtension pageInfo;
+    } block;
+    block.header.type = CodeSignBlock::CSB_EXTENSION_TYPE_PAGE_INFO;
+    block.header.size = sizeof(PageInfoExtension) + 50;
+    block.pageInfo.sign_size = 30;
+    block.pageInfo.unitSize = 2;
+
+    uint8_t fakeSignature[64] = {0xde, 0xad, 0xbe, 0xef};
+    std::copy(std::begin(fakeSignature), std::begin(fakeSignature)
+            + block.pageInfo.sign_size, block.pageInfo.signature);
+
+    block.pageInfo.mapSize = 100;
+    block.pageInfo.mapOffset = 200;
+
+    uintptr_t blockAddrEnd = reinterpret_cast<uintptr_t>(&block + 1);
+    uintptr_t extensionAddr = reinterpret_cast<uintptr_t>(&block);
+    code_sign_enable_arg arg = {};
+
+    int32_t ret = codeSignBlock.ProcessExtension(extensionAddr, blockAddrEnd, arg);
+    EXPECT_EQ(ret, CS_SUCCESS);
+    EXPECT_EQ(arg.sig_size, 30);
+    EXPECT_EQ(arg.sig_ptr, reinterpret_cast<uintptr_t>(block.pageInfo.signature));
+    EXPECT_EQ(arg.pgtypeinfo_size, 100);
+    EXPECT_EQ(arg.pgtypeinfo_off, 200);
+    EXPECT_EQ(arg.cs_version, CodeSignBlock::CSB_EXTENSION_TYPE_PAGE_INFO_VERSION);
+    EXPECT_EQ(arg.flags, 2 << 1);
+}
+
+/**
+ * @tc.name: CodeSignUtilsTest_0031
+ * @tc.desc: test Invalid Page Info Extension Sign Size
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0031, TestSize.Level0)
+{
+    CodeSignBlock codeSignBlock;
+    struct {
+        ExtensionHeader header;
+        PageInfoExtension pageInfo;
+    } block;
+    block.header.type = CodeSignBlock::CSB_EXTENSION_TYPE_PAGE_INFO;
+    block.header.size = sizeof(PageInfoExtension);
+    block.pageInfo.sign_size = sizeof(PageInfoExtension) + 1;
+
+    uintptr_t blockAddrEnd = reinterpret_cast<uintptr_t>(&block + 1);
+    uintptr_t extensionAddr = reinterpret_cast<uintptr_t>(&block);
+    code_sign_enable_arg arg = {};
+
+    int32_t ret = codeSignBlock.ProcessExtension(extensionAddr, blockAddrEnd, arg);
+    EXPECT_EQ(ret, CS_ERR_EXTENSION_SIGN_SIZE);
+}
+
+/**
+ * @tc.name: CodeSignUtilsTest_0032
+ * @tc.desc: test invalid PageInfoExtension UnitSize
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0032, TestSize.Level0)
+{
+    CodeSignBlock codeSignBlock;
+    struct {
+        ExtensionHeader header;
+        PageInfoExtension pageInfo;
+    } block;
+    block.header.type = CodeSignBlock::CSB_EXTENSION_TYPE_PAGE_INFO;
+    block.header.size = sizeof(PageInfoExtension);
+    block.pageInfo.unitSize = CodeSignBlock::CSB_SIGN_INFO_MAX_PAGEINFO_UNITSIZE + 1;
+
+    uintptr_t blockAddrEnd = reinterpret_cast<uintptr_t>(&block + 1);
+    uintptr_t extensionAddr = reinterpret_cast<uintptr_t>(&block);
+    code_sign_enable_arg arg = {};
+
+    int32_t ret = codeSignBlock.ProcessExtension(extensionAddr, blockAddrEnd, arg);
+    EXPECT_EQ(ret, CS_ERR_INVALID_PAGE_INFO_EXTENSION);
+}
 }  // namespace CodeSign
 }  // namespace Security
 }  // namespace OHOS
