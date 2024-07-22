@@ -121,11 +121,15 @@ group("key_enable_targets") {
   deps = []
   if (host_os == "linux" && !is_asan) {
     deps += [
-      ":key_enable",
       ":key_enable.cfg",
-      ":key_enable_lib",
       ":trusted_cert_path",
       ":trusted_cert_path_test",
     ]
+    if (!use_clang_coverage) {
+      deps += [
+        ":key_enable",
+        ":key_enable_lib",
+      ]
+    }
   }
 }
