@@ -304,9 +304,11 @@ group("unittest_group") {
       ":local_code_sign_unittest",
       ":local_code_sign_utils_unittest",
       ":multi_thread_local_sign_unittest",
-      ":rust_key_enable_unittest",
       ":sign_and_enforce_unittest",
     ]
+    if (!use_clang_coverage) {
+      deps += [ ":rust_key_enable_unittest" ]
+    }
     if (code_signature_support_oh_code_sign) {
       deps += [ ":key_enable_utils_unittest" ]
     }
