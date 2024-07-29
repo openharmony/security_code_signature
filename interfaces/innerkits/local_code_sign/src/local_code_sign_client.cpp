@@ -116,6 +116,9 @@ void LocalCodeSignClient::CheckLocalCodeSignProxy()
         }
         auto remoteObject = samgr->CheckSystemAbility(LOCAL_CODE_SIGN_SA_ID);
         if (remoteObject != nullptr) {
+            if (!remoteObject->AddDeathRecipient(localCodeSignSvrRecipient_)) {
+                LOG_ERROR("AddDeathRecipient failed");
+            }
             localCodeSignProxy_ = iface_cast<LocalCodeSignInterface>(remoteObject);
             return;
         }
