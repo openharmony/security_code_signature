@@ -208,6 +208,7 @@ ohos_rust_static_library("rust_key_enable_lib") {
     "${code_signature_root_dir}/services/key_enable/utils:libkey_enable_utils",
     "${rust_openssl_dir}/openssl:lib",
     "//third_party/rust/crates/cxx:lib",
+    "//third_party/rust/crates/lazy-static.rs:lib",
   ]
   external_deps = [
     "c_utils:utils_rust",
@@ -237,6 +238,7 @@ ohos_rust_unittest("rust_key_enable_unittest") {
   resource_config_file = "resources/ohos_test.xml"
   crate_root = "./rust_key_enable_test.rs"
   sources = [ "./rust_key_enable_test.rs" ]
+  external_deps = [ "ylong_json:lib" ]
   deps = [ ":rust_key_enable_lib" ]
   subsystem_name = "security"
   part_name = "code_signature"

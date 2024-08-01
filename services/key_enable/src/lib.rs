@@ -14,7 +14,7 @@
  */
 
 //!crate key_enable
-
+extern crate lazy_static;
 /// module contains cert chain func
 pub mod cert_chain_utils;
 /// module contains cert path func

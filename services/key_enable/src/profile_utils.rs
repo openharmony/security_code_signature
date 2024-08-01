@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+use lazy_static::lazy_static;
 use super::cert_chain_utils::PemCollection;
 use super::cert_path_utils::{
     add_cert_path_info, remove_cert_path_info, common_format_fabricate_name,
@@ -52,9 +53,15 @@ const PROFILE_DEVICE_IDS_KEY: &str = "device-ids";
 const PROFILE_BUNDLE_INFO_KEY: &str = "bundle-info";
 const PROFILE_BUNDLE_INFO_RELEASE_KEY: &str = "distribution-certificate";
 const PROFILE_BUNDLE_INFO_DEBUG_KEY: &str = "development-certificate";
+const PROFILE_APP_DISTRIBUTION_TYPE_KEY: &str = "app-distribution-type";
+const APP_DISTRIBUTION_TYPE_INTERNALTESTING: &str = "internaltesting";
+const APP_DISTRIBUTION_TYPE_ENTERPRISE: &str = "enterprise";
+const APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL: &str = "enterprise_normal";
+const APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM: &str = "enterprise_mdm";
 const DEFAULT_MAX_CERT_PATH_LEN: u32 = 3;
 const PROFILE_RELEASE_TYPE: &str = "release";
 const PROFILE_DEBUG_TYPE: &str = "debug";
+
 /// profile error
 pub enum ProfileError {
     /// add cert path error
@@ -105,48 +112,91 @@ fn parse_pkcs7_data(
     flags: Pkcs7Flags,
     check_udid: bool,
 ) -> Result<(String, String, u32), Box<dyn Error>> {
+    let profile = verify_pkcs7_signature(pkcs7, root_store, flags)?;
+    let profile_json = parse_and_validate_profile(profile, check_udid)?;
+    get_cert_details(&profile_json)
+}
+
+fn verify_pkcs7_signature(
+    pkcs7: &Pkcs7,
+    root_store: &X509Store,
+    flags: Pkcs7Flags,
+) -> Result<Vec<u8>, Box<dyn Error>> {
     let stack_of_certs = Stack::<X509>::new()?;
-
     let mut profile = Vec::new();
-    if pkcs7.verify(&stack_of_certs, root_store, None, Some(&mut profile), flags).is_err() {
-        error!(LOG_LABEL, "pkcs7 verify failed.");
-        return Err("pkcs7 verify failed.".into());
-    }
-    let profile_json = JsonValue::from_text(profile)?;
-    let bundle_type = profile_json[PROFILE_TYPE_KEY].try_as_string()?.as_str();
+    pkcs7.verify(&stack_of_certs, root_store, None, Some(&mut profile), flags)?;
+    Ok(profile)
+}
 
-    if bundle_type == PROFILE_DEBUG_TYPE && check_udid && verify_udid(&profile_json).is_err() {
-        error!(LOG_LABEL, "udid verify failed.");
-        return Err("Invalid udid .".into());
+/// validate bundle info and debug info
+pub fn validate_bundle_and_distribution_type(
+    profile_json: &JsonValue,
+    check_udid: bool,
+) -> Result<(), Box<dyn Error>> {
+    let bundle_type = profile_json[PROFILE_TYPE_KEY].try_as_string()?.as_str();
+    match bundle_type {
+        PROFILE_DEBUG_TYPE => {
+            if check_udid && verify_udid(profile_json).is_err() {
+                return Err("Invalid UDID.".into());
+            }
+        },
+        PROFILE_RELEASE_TYPE => {
+            let distribution_type = profile_json[PROFILE_APP_DISTRIBUTION_TYPE_KEY].try_as_string()?.as_str();
+            match distribution_type {
+                APP_DISTRIBUTION_TYPE_INTERNALTESTING => {
+                    if check_udid && verify_udid(profile_json).is_err() {
+                        return Err("Invalid UDID.".into());
+                    }
+                },
+                APP_DISTRIBUTION_TYPE_ENTERPRISE |
+                APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL |
+                APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM => {
+                },
+                _ => {
+                    return Err("Invalid app distribution type.".into());
+                }
+            }
+        }
+        _ => {
+            return Err("Invalid bundle type.".into());
+        },
     }
+    Ok(())
+}
+
+fn parse_and_validate_profile(
+    profile: Vec<u8>,
+    check_udid: bool,
+) -> Result<JsonValue, Box<dyn Error>> {
+    let profile_json = JsonValue::from_text(profile)?;
+    validate_bundle_and_distribution_type(&profile_json, check_udid)?;
+    Ok(profile_json)
+}
+
+fn get_cert_details(profile_json: &JsonValue) -> Result<(String, String, u32), Box<dyn Error>> {
+    let bundle_type = profile_json[PROFILE_TYPE_KEY].try_as_string()?.as_str();
     let profile_type = match bundle_type {
         PROFILE_DEBUG_TYPE => DebugCertPathType::Developer as u32,
         PROFILE_RELEASE_TYPE => ReleaseCertPathType::Developer as u32,
-        _ => {
-            error!(LOG_LABEL, "pkcs7 verify failed.");
-            return Err("Invalid bundle type.".into());
-        }
+        _ => return Err("Invalid bundle type.".into()),
     };
     let signed_cert = match bundle_type {
-        PROFILE_DEBUG_TYPE => {
-            profile_json[PROFILE_BUNDLE_INFO_KEY][PROFILE_BUNDLE_INFO_DEBUG_KEY].try_as_string()?
-        }
-        PROFILE_RELEASE_TYPE => profile_json[PROFILE_BUNDLE_INFO_KEY]
-            [PROFILE_BUNDLE_INFO_RELEASE_KEY]
-            .try_as_string()?,
-        _ => {
-            error!(LOG_LABEL, "pkcs7 verify failed.");
-            return Err("Invalid bundle type.".into());
-        }
+        PROFILE_DEBUG_TYPE => profile_json[PROFILE_BUNDLE_INFO_KEY][PROFILE_BUNDLE_INFO_DEBUG_KEY].try_as_string()?,
+        PROFILE_RELEASE_TYPE => profile_json[PROFILE_BUNDLE_INFO_KEY][PROFILE_BUNDLE_INFO_RELEASE_KEY].try_as_string()?,
+        _ => return Err("Invalid bundle type.".into()),
     };
     let signed_pem = X509::from_pem(signed_cert.as_bytes())?;
     let subject = format_x509_fabricate_name(signed_pem.subject_name());
     let issuer = format_x509_fabricate_name(signed_pem.issuer_name());
-
     Ok((subject, issuer, profile_type))
 }
 
-fn get_udid() -> Result<String, String> {
+lazy_static! {
+    /// global udid
+    pub static ref UDID: Result<String, String> = init_udid();
+}
+
+fn init_udid() -> Result<String, String> {
     let mut udid: Vec<u8> = vec![0; 128];
     let result = unsafe { CodeSignGetUdid(udid.as_mut_ptr()) };
 
@@ -163,6 +213,12 @@ fn get_udid() -> Result<String, String> {
         Err(_) => Err("UDID is not valid UTF-8".to_string()),
     }
 }
+
+/// get device udid
+pub fn get_udid() -> Result<String, String> {
+    UDID.clone()
+}
+
 
 fn verify_signers(
     pkcs7: &Pkcs7,
@@ -287,8 +343,9 @@ fn process_profile(
         let (subject, issuer, profile_type) =
             match parse_pkcs7_data(&pkcs7, x509_store, Pkcs7Flags::empty(), check_udid) {
                 Ok(tuple) => tuple,
-                Err(_) => {
-                    error!(LOG_LABEL, "Failed to parse profile file {}", @public(path));
+                Err(e) => {
+                    error!(LOG_LABEL, "Error parsing PKCS7 data: {}, profile file {}",
+                        @public(e), @public(path));
                     report_parse_profile_err(&path, HisyseventProfileError::ParsePkcs7 as i32);
                     continue;
                 }

@@ -33,6 +33,7 @@ ohos_rust_executable("key_enable") {
     deps += [
       "${rust_openssl_dir}/openssl:lib",
       "//third_party/rust/crates/cxx:lib",
+      "//third_party/rust/crates/lazy-static.rs:lib",
     ]
     external_deps += [ "c_utils:utils_rust" ]
   }
@@ -61,6 +62,7 @@ ohos_rust_shared_ffi("key_enable_lib") {
     deps += [
       "${rust_openssl_dir}/openssl:lib",
       "//third_party/rust/crates/cxx:lib",
+      "//third_party/rust/crates/lazy-static.rs:lib",
     ]
     external_deps += [ "c_utils:utils_rust" ]
   }
