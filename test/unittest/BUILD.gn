@@ -277,8 +277,14 @@ ohos_unittest("jit_code_sign_unittest") {
     cfi_cross_dso = true
     debug = false
   }
-  deps = [ "${code_signature_root_dir}/interfaces/innerkits/jit_code_sign:libjit_code_sign" ]
-  external_deps = [ "c_utils:utils" ]
+  deps = [
+    "${code_signature_root_dir}/interfaces/innerkits/code_sign_attr_utils:libcode_sign_attr_utils",
+    "${code_signature_root_dir}/interfaces/innerkits/jit_code_sign:libjit_code_sign",
+  ]
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
   subsystem_name = "security"
   part_name = "code_signature"
 }

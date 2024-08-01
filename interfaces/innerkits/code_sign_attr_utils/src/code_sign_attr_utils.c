@@ -28,36 +28,20 @@
 
 #define XPM_SET_REGION _IOW('x', 0x01, struct XpmConfig)
 #define XPM_SET_OWNERID _IOW('x', 0x02, struct XpmConfig)
+#define XPM_SET_JITFORT_ENABLE _IOW('x', 0x3, unsigned long)
 
-static int XpmIoctl(uint32_t cmd, struct XpmConfig *config)
+static int XpmIoctl(int fd, uint32_t cmd, struct XpmConfig *config)
 {
-    int fd = open(XPM_DEV_PATH, O_RDWR);
-    if (fd == -1) {
-        LOG_INFO("Open device file failed: %{public}s (ignore)", strerror(errno));
-        return CS_SUCCESS;
-    }
-
     int ret = ioctl(fd, cmd, config);
     if (ret == -1) {
         LOG_ERROR("Ioctl cmd %{public}x failed: %{public}s (ignore)", cmd, strerror(errno));
     } else {
         LOG_DEBUG("Ioctl cmd %{public}x success", cmd);
     }
-    close(fd);
-
     return CS_SUCCESS;
 }
 
-int InitXpmRegion(void)
-{
-    struct XpmConfig config = {0};
-
-    config.regionAddr = 0;
-    config.regionLength = XPM_REGION_LEN;
-    return XpmIoctl(XPM_SET_REGION, &config);
-}
-
-int SetXpmOwnerId(uint32_t idType, const char *ownerId)
+static int DoSetXpmOwnerId(int fd, uint32_t idType, const char *ownerId)
 {
     struct XpmConfig config = {0};
 
@@ -75,5 +59,49 @@ int SetXpmOwnerId(uint32_t idType, const char *ownerId)
     }
 
     LOG_DEBUG("Set type = %{public}u, ownerId = %{public}s", idType, ownerId ? ownerId : "NULL");
-    return XpmIoctl(XPM_SET_OWNERID, &config);
+    (void)XpmIoctl(fd, XPM_SET_OWNERID, &config);
+    return CS_SUCCESS;
+}
+
+int InitXpm(int enableJitFort, uint32_t idType, const char *ownerId)
+{
+    // open /dev/xpm
+    int fd = open(XPM_DEV_PATH, O_RDWR);
+    if (fd == -1) {
+        LOG_INFO("Open device file failed: %{public}s (ignore)", strerror(errno));
+        return CS_SUCCESS;
+    }
+
+    // init xpm region
+    struct XpmConfig config = {0};
+    config.regionAddr = 0;
+    config.regionLength = XPM_REGION_LEN;
+    (void)XpmIoctl(fd, XPM_SET_REGION, &config);
+
+    // enable jitfort
+    if (enableJitFort != 0) {
+        (void)XpmIoctl(fd, XPM_SET_JITFORT_ENABLE, NULL);
+    }
+
+    // set owner id
+    int ret = CS_SUCCESS;
+    if (idType != PROCESS_OWNERID_UNINIT) {
+        ret = DoSetXpmOwnerId(fd, idType, ownerId);
+    }
+
+    // close /dev/xpm
+    close(fd);
+    return ret;
+}
+
+int SetXpmOwnerId(uint32_t idType, const char *ownerId)
+{
+    int fd = open(XPM_DEV_PATH, O_RDWR);
+    if (fd == -1) {
+        LOG_INFO("Open device file failed: %{public}s (ignore)", strerror(errno));
+        return CS_SUCCESS;
+    }
+    int ret = DoSetXpmOwnerId(fd, idType, ownerId);
+    close(fd);
+    return ret;
 }

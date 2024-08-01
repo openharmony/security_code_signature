@@ -51,7 +51,7 @@
 | int32_t InitLocalCertificate(ByteBuffer &cert); | 初始化本地签名证书 |
 | int32_t SignLocalCode(const std::string &filePath, ByteBuffer &signature); | 本地代码签名 |
 | int32_t SignLocalCode(const std::string &ownerID, const std::string &filePath, ByteBuffer &signature); | 带OwnerId的本地代码签名 |
-| int InitXpmRegion(void); | 初始化XPM地址 |
+| int InitXpm(int enableJitFort, uint32_t idType, const char *ownerId); | 初始化XPM相关资源（XPM地址范围、JitFort模式、OwnerId配置）|
 | int SetXpmOwnerId(uint32_t idType, const char *ownerId); | 设置OwnerId |
 | int32_t RegisterTmpBuffer(JitCodeSignerBase *signer, void *tmpBuffer); | 注册临时Buffer起始地址 |
 | int32_t AppendInstruction(JitCodeSignerBase *signer, Instr instr); | 对添加到临时Buffer的指令签名 |

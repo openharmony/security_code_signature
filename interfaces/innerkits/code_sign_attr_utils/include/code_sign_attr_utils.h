@@ -72,7 +72,7 @@ struct XpmConfig {
     char ownerId[MAX_OWNERID_LEN];
 };
 
-int InitXpmRegion(void);
+int InitXpm(int enableJitFort, uint32_t idType, const char *ownerId);
 
 int SetXpmOwnerId(uint32_t idType, const char *ownerId);
 
