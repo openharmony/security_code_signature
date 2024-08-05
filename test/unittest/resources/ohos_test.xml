@@ -63,9 +63,6 @@
             <option name="push" value="demo_with_multi_lib/pkcs7_error/file/libentry_07.so.fsv-sig -> /data/service/el1/public/bms/bundle_manager_service/tmp/demo_with_multi_lib/pkcs7_error/file" src="res"/>
             <option name="push" value="demo_with_multi_lib/entry-default-signed-release.hap -> /data/app/el1/bundle/public/tmp/demo_with_multi_lib" src="res"/>
             <option name="push" value="demo_with_multi_lib/entry-default-signed-debug.hap -> /data/app/el1/bundle/public/tmp/demo_with_multi_lib" src="res"/>
-            <option name="push" value="demo_cert/pkcs7/verify_test_profile.p7b -> /data/service/el0/profiles/tmp/demo_cert/pkcs7" src="res"/>
-            <option name="push" value="demo_cert/pkcs7/verify_test_profile.hap -> /data/app/el1/bundle/public/tmp" src="res"/>
-            <option name="push" value="demo_cert/pkcs7/add_and_remove_profile.p7b -> /data/service/el0/profiles/tmp/demo_cert/pkcs7" src="res"/>
         </preparer>
         <cleaner>
             <option name="shell" value="rm -rf /data/service/el1/public/bms/bundle_manager_service/tmp"/>

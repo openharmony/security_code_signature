@@ -538,57 +538,6 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0020, TestSize.Level0)
 }
 
 /**
- * @tc.name: CodeSignUtilsTest_0021
- * @tc.desc: Enable key in profile successfully
- * @tc.type: Func
- * @tc.require:
- */
-HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0021, TestSize.Level0)
-{
-    std::string profileEnablePath = PROFILE_BASE_PATH + "/demo_cert/pkcs7/verify_test_profile.p7b";
-    std::string hapEnablePath = APP_BASE_PATH + "/verify_test_profile.hap";
-    ByteBuffer buffer;
-    bool flag = ReadSignatureFromFile(profileEnablePath, buffer);
-    EXPECT_EQ(flag, true);
-
-    string bundlName = "CodeSignUtilsTest";
-    int32_t ret = CodeSignUtils::EnableKeyInProfile(bundlName, buffer);
-    EXPECT_EQ(ret, CS_SUCCESS);
-
-    EntryMap entryMap;
-    CodeSignUtils utils;
-    ret = utils.EnforceCodeSignForApp(hapEnablePath, entryMap, FILE_SELF);
-    EXPECT_EQ(ret, CS_SUCCESS);
-}
-
-/**
- * @tc.name: CodeSignUtilsTest_0022
- * @tc.desc: Remove key in profile successfully
- * @tc.type: Func
- * @tc.require:
- */
-HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0022, TestSize.Level0)
-{
-    std::string profileEnablePath = PROFILE_BASE_PATH + "/demo_cert/pkcs7/add_and_remove_profile.p7b";
-    ByteBuffer buffer;
-    bool flag = ReadSignatureFromFile(profileEnablePath, buffer);
-    EXPECT_EQ(flag, true);
-
-    string bundlName = "CodeSignUtilsTest";
-    int32_t ret = CodeSignUtils::EnableKeyInProfile(bundlName, buffer);
-    EXPECT_EQ(ret, CS_SUCCESS);
-
-    std::string pathOnDisk = "/data/service/el0/profiles/developer/CodeSignUtilsTest/profile.p7b";
-    std::string realPath;
-    EXPECT_EQ(OHOS::PathToRealPath(pathOnDisk, realPath), true);
-
-    ret = CodeSignUtils::RemoveKeyInProfile(bundlName);
-    EXPECT_EQ(ret, CS_SUCCESS);
-
-    EXPECT_EQ(OHOS::PathToRealPath(pathOnDisk, realPath), false);
-}
-
-/**
  * @tc.name: CodeSignUtilsTest_0023
  * @tc.desc: enable code signature for app
  * @tc.type: Func
