@@ -80,7 +80,8 @@ void CodeSignHelper::ShowCodeSignInfo(const std::string &path, const struct code
     uint8_t *salt = reinterpret_cast<uint8_t *>(arg.salt_ptr);
     uint8_t rootHash[64] = {0};
     uint8_t *rootHashPtr = rootHash;
-    if (arg.flags & CodeSignBlock::CSB_SIGN_INFO_MERKLE_TREE) {
+    if (arg.flags & CodeSignBlock::CSB_SIGN_INFO_MERKLE_TREE
+        && reinterpret_cast<uint8_t *>(arg.root_hash_ptr) != nullptr) {
         rootHashPtr = reinterpret_cast<uint8_t *>(arg.root_hash_ptr);
     }
 
