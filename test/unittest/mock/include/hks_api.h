@@ -18,6 +18,7 @@
 
 #include "hks_type.h"
 
+extern int gCount;
 namespace OHOS {
 namespace Security {
 namespace CodeSign {

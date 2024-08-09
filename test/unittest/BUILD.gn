@@ -63,24 +63,6 @@ ohos_unittest("code_sign_utils_unittest") {
   ]
 }
 
-ohos_unittest("code_sign_attr_utils_unittest") {
-  module_out_path = "security/code_signature"
-  sources = [ "code_sign_attr_utils_test.cpp" ]
-
-  deps = [ "${code_signature_root_dir}/interfaces/innerkits/code_sign_attr_utils:libcode_sign_attr_utils" ]
-
-  include_dirs = [
-    "utils/include",
-    "${code_signature_root_dir}/interfaces/innerkits/common/include",
-    "${code_signature_root_dir}/utils/include",
-  ]
-
-  external_deps = [
-    "c_utils:utils",
-    "hilog:libhilog",
-  ]
-}
-
 ohos_unittest("code_sign_utils_in_c_unittest") {
   module_out_path = "security/code_signature"
   resource_config_file = "resources/ohos_test.xml"
@@ -142,6 +124,34 @@ ohos_unittest("local_code_sign_utils_unittest") {
     "${code_signature_root_dir}/utils/src/cert_utils.cpp",
     "local_code_sign_utils_test.cpp",
     "mock/src/hks_api.cpp",
+    "mock/src/hks_api_mock_helper.cpp",
+  ]
+  deps = [ "${code_signature_root_dir}/interfaces/innerkits/code_sign_utils:libcode_sign_utils" ]
+
+  include_dirs = [
+    "mock/include",
+    "utils/include",
+    "${code_signature_root_dir}/services/local_code_sign/include",
+  ]
+
+  configs = [ "${code_signature_root_dir}:common_utils_config" ]
+  external_deps = [
+    "c_utils:utils",
+    "fsverity-utils:libfsverity_utils",
+    "hilog:libhilog",
+    "huks:libhukssdk",
+    "openssl:libcrypto_shared",
+  ]
+}
+
+ohos_unittest("local_code_sign_utils_mock_unittest") {
+  module_out_path = "security/code_signature"
+  resource_config_file = "resources/ohos_test.xml"
+  sources = [
+    "${code_signature_root_dir}/services/local_code_sign/src/local_sign_key.cpp",
+    "${code_signature_root_dir}/utils/src/cert_utils.cpp",
+    "local_code_sign_utils_mock_test.cpp",
+    "mock/src/hks_api_mock_test.cpp",
     "mock/src/hks_api_mock_helper.cpp",
   ]
   deps = [ "${code_signature_root_dir}/interfaces/innerkits/code_sign_utils:libcode_sign_utils" ]
@@ -226,7 +236,6 @@ ohos_rust_static_library("rust_key_enable_lib") {
     "${code_signature_root_dir}/services/key_enable/utils:libkey_enable_utils",
     "${rust_openssl_dir}/openssl:lib",
     "//third_party/rust/crates/cxx:lib",
-    "//third_party/rust/crates/lazy-static.rs:lib",
   ]
   external_deps = [
     "c_utils:utils_rust",
@@ -256,7 +265,6 @@ ohos_rust_unittest("rust_key_enable_unittest") {
   resource_config_file = "resources/ohos_test.xml"
   crate_root = "./rust_key_enable_test.rs"
   sources = [ "./rust_key_enable_test.rs" ]
-  external_deps = [ "ylong_json:lib" ]
   deps = [ ":rust_key_enable_lib" ]
   subsystem_name = "security"
   part_name = "code_signature"
@@ -317,6 +325,7 @@ ohos_unittest("key_enable_utils_unittest") {
   deps = [
     "${code_signature_root_dir}/services/key_enable/utils:libkey_enable_utils",
   ]
+  external_deps = [ "hilog:libhilog" ]
 }
 
 group("unittest_group") {
@@ -324,12 +333,12 @@ group("unittest_group") {
   if (!defined(ohos_lite)) {
     deps = [
       ":add_cert_path_unittest",
-      ":code_sign_attr_utils_unittest",
       ":code_sign_utils_in_c_unittest",
       ":code_sign_utils_unittest",
       ":enable_verity_ioctl_unittest",
       ":local_code_sign_unittest",
       ":local_code_sign_utils_unittest",
+      ":local_code_sign_utils_mock_unittest",
       ":multi_thread_local_sign_unittest",
       ":sign_and_enforce_unittest",
     ]

@@ -266,6 +266,31 @@ HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0014, TestSize.Level0)
     NativeTokenReset(selfTokenId);
     EXPECT_EQ(ret, CS_ERR_INVALID_OWNER_ID);
 }
+
+/**
+ * @tc.name: LocalCodeSignTest_0015
+ * @tc.desc: sign local code failed with ownerID exceed 128 bytes
+ * @tc.type: Func
+ * @tc.require: issueI8FCGF
+ */
+HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0015, TestSize.Level0)
+{
+    ByteBuffer sig;
+    uint64_t selfTokenId = NativeTokenSet("compiler_service");
+    std::string ownerID = "AppName123";
+    
+    int ret = LocalCodeSignKit::SignLocalCode(ownerID, DEMO_AN_PATH2, sig);
+    
+    NativeTokenSet("local_code_sign");
+    sptr<ISystemAbilityManager> samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    EXPECT_NQ(samgr, nullptr);
+
+    ret = samgr->UnloadSystemAbility(LOCAL_CODE_SIGN_SA_ID);
+    EXPECT_EQ(ret, ERR_OK);
+    NativeTokenSet("compiler_service");
+    LocalCodeSignKit::SignLocalCode(ownerID, DEMO_AN_PATH2, sig);
+    NativeTokenReset(selfTokenId);
+}
 } // namespace CodeSign
 } // namespace Security
 } // namespace OHOS
