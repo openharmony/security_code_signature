@@ -23,6 +23,7 @@ namespace OHOS {
 namespace Security {
 namespace CodeSign {
 bool GetVerifiedCert(const ByteBuffer &buffer, const ByteBuffer &challenge, ByteBuffer &cert);
+bool VerifyCertAndExtension(X509 *signCert, X509 *issuerCert, const ByteBuffer &challenge);
 }
 }
 }

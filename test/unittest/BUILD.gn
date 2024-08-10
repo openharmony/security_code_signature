@@ -319,11 +319,43 @@ ohos_unittest("key_enable_utils_unittest") {
   ]
 }
 
+ohos_unittest("cert_chain_verifier_unittest") {
+  module_out_path = "security/code_signature"
+  sources = [
+    "${code_signature_root_dir}/utils/src/cert_utils.cpp",
+    "${code_signature_root_dir}/utils/src/huks_attest_verifier.cpp",
+    "${code_signature_root_dir}/utils/src/openssl_utils.cpp",
+    "cert_chain_verifier_test.cpp",
+  ]
+  include_dirs = [ "utils/include" ]
+  configs = [
+    "${code_signature_root_dir}:common_utils_config",
+    "${code_signature_root_dir}:common_public_config",
+  ]
+  defines = [ "CODE_SIGNATURE_DEBUGGABLE" ]
+  if (code_signature_support_oh_release_app) {
+    defines += [ "CODE_SIGNATURE_OH_ROOT_CA" ]
+  }
+  deps = [
+    "${code_signature_root_dir}/services/key_enable/utils:libkey_enable_utils",
+  ]
+  external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "access_token:libnativetoken",
+    "access_token:libtoken_setproc",
+    "c_utils:utils",
+    "hilog:libhilog",
+    "huks:libhukssdk",
+    "openssl:libcrypto_shared",
+  ]
+}
+
 group("unittest_group") {
   testonly = true
   if (!defined(ohos_lite)) {
     deps = [
       ":add_cert_path_unittest",
+      ":cert_chain_verifier_unittest",
       ":code_sign_attr_utils_unittest",
       ":code_sign_utils_in_c_unittest",
       ":code_sign_utils_unittest",

@@ -177,7 +177,7 @@ static bool CompareTargetValue(int nid, uint8_t *data, int size, const ByteBuffe
     } else if (nid == g_challengeNid) {
         LOG_INFO("compare with challenge");
         return (static_cast<uint32_t>(size) == challenge.GetSize())
-                    || (memcmp(data, challenge.GetBuffer(), size) == 0);
+                    && (memcmp(data, challenge.GetBuffer(), size) == 0);
     }
     return true;
 }
@@ -206,14 +206,19 @@ static bool ParseASN1Sequence(uint8_t *data, int size, const ByteBuffer &challen
             ret = CompareTargetValue(curNid, value->data, value->length, challenge);
         }
         if (!ret) {
+            LOG_ERROR("Value is unexpected");
             break;
         }
     }
-    return true;
+    return ret;
 }
 
 static bool VerifyExtension(X509 *cert, const ByteBuffer &challenge)
 {
+    if (challenge.GetBuffer() == nullptr) {
+        return false;
+    }
+
     const STACK_OF(X509_EXTENSION) *exts = X509_get0_extensions(cert);
     int num;
 
@@ -233,7 +238,10 @@ static bool VerifyExtension(X509 *cert, const ByteBuffer &challenge)
         int curNid = OBJ_obj2nid(obj);
         if (g_attestationNid == curNid) {
             const ASN1_OCTET_STRING *extData = X509_EXTENSION_get_data(ext);
-            ParseASN1Sequence(extData->data, extData->length, challenge);
+            if (!ParseASN1Sequence(extData->data, extData->length, challenge)) {
+                LOG_INFO("extension verify failed.");
+                return false;
+            }
         }
     }
     return true;
@@ -261,7 +269,7 @@ static void ShowCertInfo(const std::vector<ByteBuffer> &certChainBuffer,
 }
 #endif
 
-static bool VerifyCertAndExtension(X509 *signCert, X509 *issuerCert, const ByteBuffer &challenge)
+bool VerifyCertAndExtension(X509 *signCert, X509 *issuerCert, const ByteBuffer &challenge)
 {
     if (!VerifySigningCert(signCert, issuerCert)) {
         return false;
@@ -329,7 +337,6 @@ bool GetVerifiedCert(const ByteBuffer &buffer, const ByteBuffer &challenge, Byte
     std::vector<ByteBuffer> certChainBuffer;
     ByteBuffer issuerBuffer;
     if (!GetCertChainFormBuffer(buffer, certBuffer, issuerBuffer, certChainBuffer)) {
-        LOG_ERROR("Get cert chain failed.");
         return false;
     }
     X509 *issuerCert = LoadCertFromBuffer(issuerBuffer.GetBuffer(), issuerBuffer.GetSize());
@@ -373,6 +380,7 @@ bool GetVerifiedCert(const ByteBuffer &buffer, const ByteBuffer &challenge, Byte
         ShowCertInfo(certChainBuffer, issuerBuffer, certBuffer);
     }
 #endif
+    LOG_INFO("verify finished.");
     return ret;
 }
 }
