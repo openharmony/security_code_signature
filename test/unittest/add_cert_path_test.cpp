@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
-#include <time.h>
+#include <ctime>
 #include <unistd.h>
 
 #include "cert_path.h"
@@ -59,6 +59,8 @@ static CertPathInfo MakeCertPathInfo(const char *signing, const char *issuer,
     uint32_t max_cert_chain, uint32_t cert_path_type)
 {
     CertPathInfo arg = { 0 };
+    arg.signing = reinterpret_cast<uint64_t>(signing);
+    arg.issuer = reinterpret_cast<uint64_t>(issuer);
     arg.signing_length = strlen(signing);
     arg.issuer_length = strlen(issuer);
     arg.path_len = max_cert_chain;
