@@ -359,7 +359,11 @@ HWTEST_F(CertChainVerifierTest, CertChainVerifierTest_008, TestSize.Level0)
     FormattedCertChain(certs, formattedCert);
     // verify extension success
     challenge.CopyFrom(CHALLENGE, sizeof(CHALLENGE));
+#ifdef CODE_SIGNATURE_OH_ROOT_CA
     EXPECT_EQ(GetVerifiedCert(formattedCert, challenge, certBuffer), true);
+#else
+    EXPECT_EQ(GetVerifiedCert(formattedCert, challenge, certBuffer), false);
+#endif
 }
 
 } // namespace CodeSign
