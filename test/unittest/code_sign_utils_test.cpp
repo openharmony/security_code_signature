@@ -787,6 +787,36 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0032, TestSize.Level0)
     int32_t ret = codeSignBlock.ProcessExtension(extensionAddr, blockAddrEnd, arg);
     EXPECT_EQ(ret, CS_ERR_INVALID_PAGE_INFO_EXTENSION);
 }
+
+/**
+ * @tc.name: CodeSignUtilsTest_0033
+ * @tc.desc: enable code signature for app, entryPath is nullptr
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0033, TestSize.Level0)
+{
+    EntryMap entryPath = {};
+    int32_t ret = CodeSignUtils::EnforceCodeSignForApp(entryPath, g_sigWithMultiLibRetSucPath);
+    EXPECT_EQ(ret, CS_SUCCESS);
+}
+
+/**
+ * @tc.name: CodeSignUtilsTest_0034
+ * @tc.desc: enable code signature for file successfully, path is O_WRONLY
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0034, TestSize.Level0)
+{
+    ByteBuffer buffer;
+    bool flag = ReadSignatureFromFile(g_filesigEnablePath, buffer);
+    EXPECT_EQ(flag, true);
+
+    open(g_filesigEnablePath.c_str(), O_WRONLY);
+    int32_t ret = CodeSignUtils::EnforceCodeSignForFile(g_fileEnableSuc, buffer);
+    EXPECT_EQ(ret, CS_SUCCESS);
+}
 }  // namespace CodeSign
 }  // namespace Security
 }  // namespace OHOS

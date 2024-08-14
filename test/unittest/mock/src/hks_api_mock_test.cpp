@@ -53,7 +53,7 @@ int32_t HksGenerateKey(const struct HksBlob *keyAlias,
     const struct HksParamSet *paramSetIn, struct HksParamSet *paramSetOut)
 {
     LOG_INFO("Mock HksGenerateKey");
-    if (g_count == GENERATEKEY) {
+    if (g_count == GENERATEKEY || g_count == ERROR) {
         return -1;
     }
     return HKS_SUCCESS;

@@ -36,6 +36,15 @@ LocalCodeSignClient::LocalCodeSignClient()
     }
 }
 
+LocalCodeSignClient::~LocalCodeSignClient()
+{
+    std::lock_guard<std::mutex> lock(proxyMutex_);
+    if (localCodeSignProxy_ != nullptr && localCodeSignSvrRecipient_ != nullptr) {
+        localCodeSignProxy_->AsObject()->RemoveDeathRecipient(localCodeSignSvrRecipient_);
+    }
+    localCodeSignSvrRecipient_ = nullptr;
+}
+
 void LocalCodeSignClient::LocalCodeSignSvrRecipient::OnRemoteDied(const wptr<IRemoteObject> &remote)
 {
     if (remote == nullptr) {
