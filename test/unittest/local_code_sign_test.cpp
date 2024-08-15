@@ -291,6 +291,23 @@ HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0015, TestSize.Level0)
     LocalCodeSignKit::SignLocalCode(ownerID, DEMO_AN_PATH2, sig);
     NativeTokenReset(selfTokenId);
 }
+
+/**
+ * @tc.name: LocalCodeSignTest_0016
+ * @tc.desc: load sa success and return remote object is not null
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0016, TestSize.Level0)
+{
+    LocalCodeSignLoadCallback cb;
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    EXPECT_NE(systemAbilityManager, nullptr);
+    sptr<IRemoteObject> remoteObject =
+        systemAbilityManager->GetSystemAbility(LOCAL_CODE_SIGN_SA_ID);
+    cb.OnLoadSystemAbilitySuccess(LOCAL_CODE_SIGN_SA_ID, remoteObject);
+}
 } // namespace CodeSign
 } // namespace Security
 } // namespace OHOS

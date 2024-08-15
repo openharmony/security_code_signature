@@ -180,6 +180,7 @@ ohos_unittest("local_code_sign_utils_mock_unittest") {
   module_out_path = "security/code_signature"
   resource_config_file = "resources/ohos_test.xml"
   sources = [
+    "${code_signature_root_dir}/services/key_enable/utils/src/cert_path.cpp",
     "${code_signature_root_dir}/services/local_code_sign/src/local_sign_key.cpp",
     "${code_signature_root_dir}/utils/src/cert_utils.cpp",
     "local_code_sign_utils_mock_test.cpp",
@@ -192,6 +193,7 @@ ohos_unittest("local_code_sign_utils_mock_unittest") {
     "mock/include",
     "utils/include",
     "${code_signature_root_dir}/services/local_code_sign/include",
+    "${code_signature_root_dir}/services/key_enable/utils/include",
   ]
 
   configs = [ "${code_signature_root_dir}:common_utils_config" ]
@@ -200,6 +202,7 @@ ohos_unittest("local_code_sign_utils_mock_unittest") {
     "fsverity-utils:libfsverity_utils",
     "hilog:libhilog",
     "huks:libhukssdk",
+    "init:libbegetutil",
     "openssl:libcrypto_shared",
   ]
 }

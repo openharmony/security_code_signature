@@ -36,6 +36,7 @@ class FsverityUtilsHelper {
 public:
     static FsverityUtilsHelper &GetInstance();
     bool GenerateFormattedDigest(const char *path, ByteBuffer &ret);
+    static void ErrorMsgLogCallback(const char *msg);
 
 private:
     FsverityUtilsHelper();
@@ -47,7 +48,6 @@ private:
     void Init();
     bool ComputeDigest(const char *path, struct libfsverity_digest **digest);
     bool FormatDigest(libfsverity_digest *digest, uint8_t *buffer);
-    static void ErrorMsgLogCallback(const char *msg);
 
     class FileReader {
     public:
