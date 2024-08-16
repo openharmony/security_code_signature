@@ -15,11 +15,8 @@
 
 #include "jit_code_signer_factory.h"
 
+#include "jit_fort_helper.h"
 #ifdef JIT_CODE_SIGN_ENABLE
-#include <asm/hwcap.h>
-#include <cstdio>
-#include <sys/auxv.h>
-
 #include "jit_code_signer_hybrid.h"
 #include "jit_code_signer_single.h"
 #include "log.h"
@@ -29,17 +26,7 @@ namespace OHOS {
 namespace Security {
 namespace CodeSign {
 
-JitCodeSignerFactory::JitCodeSignerFactory():isSupport_(false)
-{
-#ifdef JIT_CODE_SIGN_ENABLE
-    unsigned long hwcaps = getauxval(AT_HWCAP);
-    if ((hwcaps & HWCAP_PACA) && (hwcaps & HWCAP_PACG)) {
-        isSupport_ = true;
-    } else {
-        isSupport_ = false;
-    }
-#endif
-}
+JitCodeSignerFactory::JitCodeSignerFactory() {}
 
 JitCodeSignerFactory &JitCodeSignerFactory::GetInstance()
 {
@@ -47,16 +34,11 @@ JitCodeSignerFactory &JitCodeSignerFactory::GetInstance()
     return singleJitCodeSignerFactory;
 }
 
-bool JitCodeSignerFactory::IsSupportJitCodeSigner()
-{
-    return isSupport_;
-}
-
 #ifdef JIT_CODE_SIGN_ENABLE
 JitCodeSignerBase *JitCodeSignerFactory::CreateJitCodeSigner(
     JitBufferIntegrityLevel level)
 {
-    if (!IsSupportJitCodeSigner()) {
+    if (!IsSupportPACFeature()) {
         return nullptr;
     }
     switch (level) {
