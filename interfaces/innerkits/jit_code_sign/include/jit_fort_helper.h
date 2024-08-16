@@ -19,6 +19,13 @@
 #include <stdint.h>
 #include <stdarg.h>
 #include <sys/syscall.h>
+#ifdef __aarch64__
+#include <asm/hwcap.h>
+#include <cstdio>
+#include <sys/auxv.h>
+#endif
+
+#include "errcode.h"
 
 namespace OHOS {
 namespace Security {
@@ -26,6 +33,7 @@ namespace CodeSign {
 #define JITFORT_PRCTL_OPTION 0x6a6974
 #define JITFORT_SWITCH_IN   3
 #define JITFORT_SWITCH_OUT  4
+#define JITFORT_CPU_FEATURES 7
 
 __attribute__((always_inline)) static inline long Syscall(
     unsigned long n, unsigned long a, unsigned long b,
@@ -46,7 +54,7 @@ __attribute__((always_inline)) static inline long Syscall(
 #endif
 }
 
-__attribute__((always_inline))  static int inline PrctlWrapper(
+__attribute__((always_inline)) static int inline PrctlWrapper(
     int op, unsigned long a, unsigned long b = 0)
 {
 #ifdef __aarch64__
@@ -54,6 +62,17 @@ __attribute__((always_inline))  static int inline PrctlWrapper(
 #else
     return CS_ERR_UNSUPPORT;
 #endif
+}
+
+__attribute__((always_inline)) static inline bool IsSupportPACFeature()
+{
+#ifdef __aarch64__
+    long hwcaps = PrctlWrapper(JITFORT_PRCTL_OPTION, JITFORT_CPU_FEATURES, 0);
+    if ((hwcaps & HWCAP_PACA) && (hwcaps & HWCAP_PACG)) {
+        return true;
+    }
+#endif
+    return false;
 }
 }
 }
