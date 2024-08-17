@@ -41,8 +41,8 @@ const KEYRING_TYPE: &str = "keyring";
 const FSVERITY_KEYRING_NAME: &str = ".fs-verity";
 const LOCAL_KEY_NAME: &str = "local_key";
 const CODE_SIGN_KEY_NAME_PREFIX: &str = "fs_verity_key";
-const PROFILE_STORE_EL1: &str = "/data/service/el1/profiles";
-const PROFILE_SEARCH_SLEEP_TIME: u64 = 1;
+const PROFILE_STORE_EL1: &str = "/data/service/el1/public/profiles";
+const PROFILE_SEARCH_SLEEP_TIME: u64 = 200;
 const PROFILE_SEARCH_SLEEP_OUT_TIME: u64 = 600;
 const SUCCESS: i32 = 0;
 
@@ -197,7 +197,7 @@ fn add_profile_cert_path_thread(
                 error!(LOG_LABEL, "Timeout while waiting for PROFILE_STORE_EL1.");
                 break;
             } else {
-                thread::sleep(Duration::from_secs(PROFILE_SEARCH_SLEEP_TIME));
+                thread::sleep(Duration::from_millis(PROFILE_SEARCH_SLEEP_TIME));
             }
         }
     })
