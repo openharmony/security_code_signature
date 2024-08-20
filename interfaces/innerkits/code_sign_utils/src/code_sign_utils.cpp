@@ -122,21 +122,6 @@ int32_t CodeSignUtils::IsSupportFsVerity(const std::string &path)
     return CS_ERR_FSVREITY_NOT_SUPPORTED;
 }
 
-int32_t CodeSignUtils::IsFsVerityEnabled(int fd)
-{
-    unsigned int flags;
-    int ret = ioctl(fd, FS_IOC_GETFLAGS, &flags);
-    if (ret < 0) {
-        LOG_ERROR("Get verity flags by ioctl failed. errno = <%{public}d, %{public}s>",
-            errno, strerror(errno));
-        return CS_ERR_FILE_INVALID;
-    }
-    if (flags & FS_VERITY_FL) {
-        return CS_SUCCESS;
-    }
-    return CS_ERR_FSVERITY_NOT_ENABLED;
-}
-
 int32_t CodeSignUtils::EnforceCodeSignForFile(const std::string &path, const ByteBuffer &signature)
 {
     return EnforceCodeSignForFile(path, signature.GetBuffer(), signature.GetSize());
@@ -154,7 +139,7 @@ int32_t CodeSignUtils::EnableCodeSignForFile(const std::string &path, const stru
     }
 
     do {
-        ret = IsFsVerityEnabled(fd);
+        ret = CodeSignEnableMultiTask::IsFsVerityEnabled(fd);
         if (ret == CS_SUCCESS) {
             LOG_INFO("Fs-verity has been enabled.");
             break;
@@ -179,7 +164,7 @@ int32_t CodeSignUtils::EnableCodeSignForFile(const std::string &path, const stru
         ret = CS_SUCCESS;
     } while (0);
     close(fd);
-    LOG_INFO("Enforcing file complete and ret = %{public}d", ret);
+    LOG_INFO("Enforcing file complete, path = %{public}s, ret = %{public}d", path.c_str(), ret);
     return ret;
 }
 
@@ -226,7 +211,15 @@ int32_t CodeSignUtils::EnforceCodeSignForAppWithOwnerId(const std::string &owner
     } else if (type >= FILE_TYPE_MAX) {
         return CS_ERR_PARAM_INVALID;
     }
-    return ProcessCodeSignBlock(ownerId, path, type);
+    std::lock_guard<std::mutex> lock(storedEntryMapLock_);
+    int ret = ProcessCodeSignBlock(ownerId, path, type);
+    if (ret != CS_SUCCESS) {
+        // retry once to make sure stability
+        ret = ProcessCodeSignBlock(ownerId, path, type);
+    }
+    storedEntryMap_.clear();
+    LOG_INFO("Enforcing done, ret = %{public}d", ret);
+    return ret;
 }
 
 int32_t CodeSignUtils::ProcessCodeSignBlock(const std::string &ownerId, const std::string &path, FileType type)
@@ -237,15 +230,12 @@ int32_t CodeSignUtils::ProcessCodeSignBlock(const std::string &ownerId, const st
     }
     int32_t ret;
     CodeSignHelper codeSignHelper;
-    {
-        std::lock_guard<std::mutex> lock(storedEntryMapLock_);
-        ret = codeSignHelper.ParseCodeSignBlock(realPath, storedEntryMap_, type);
-        storedEntryMap_.clear();
-    }
+    ret = codeSignHelper.ParseCodeSignBlock(realPath, storedEntryMap_, type);
     if (ret != CS_SUCCESS) {
         return HandleCodeSignBlockFailure(realPath, ret);
     }
-    return codeSignHelper.ProcessMultiTask(ownerId, path, EnableCodeSignForFile);
+    ret = codeSignHelper.ProcessMultiTask(ownerId, path, EnableCodeSignForFile);
+    return ret;
 }
 
 int32_t CodeSignUtils::HandleCodeSignBlockFailure(const std::string &realPath, int32_t ret)
@@ -269,7 +259,7 @@ int32_t CodeSignUtils::EnableKeyInProfile(const std::string &bundleName, const B
     if (ret == CS_SUCCESS) {
         return ret;
     }
-    LOG_ERROR("Enable key in profile failed. errno = <%{public}d, %{public}s>", errno, strerror(errno));
+    LOG_ERROR("Enable key in profile failed. ret = %{public}d", ret);
     return CS_ERR_PROFILE;
 }
 
@@ -279,7 +269,7 @@ int32_t CodeSignUtils::RemoveKeyInProfile(const std::string &bundleName)
     if (ret == CS_SUCCESS) {
         return ret;
     }
-    LOG_ERROR("Remove key in profile failed. errno = <%{public}d, %{public}s>", errno, strerror(errno));
+    LOG_ERROR("Remove key in profile failed. ret = %{public}d", ret);
     return CS_ERR_PROFILE;
 }
 
