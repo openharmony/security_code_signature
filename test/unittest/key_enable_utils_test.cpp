@@ -49,7 +49,7 @@ HWTEST_F(KeyEnableUtilsTest, KeyEnableUtilsTest_0001, TestSize.Level0)
 
 /**
  * @tc.name: KeyEnableUtilsTest_0002
- * @tc.desc: check efuse status
+ * @tc.desc: check efuse status buf is nullptr
  * @tc.type: Func
  * @tc.require: issueI8FCGF
  */
@@ -62,12 +62,12 @@ HWTEST_F(KeyEnableUtilsTest, KeyEnableUtilsTest_0002, TestSize.Level0)
 }
 
 /**
- * @tc.name: KeyEnableUtilsTest_0002
+ * @tc.name: KeyEnableUtilsTest_0003
  * @tc.desc: check efuse status
  * @tc.type: Func
  * @tc.require: issueI8FCGF
  */
-HWTEST_F(KeyEnableUtilsTest, KeyEnableUtilsTest_0002, TestSize.Level0)
+HWTEST_F(KeyEnableUtilsTest, KeyEnableUtilsTest_0003, TestSize.Level0)
 {
     std::string str = "efuse_status=1";
     char *buf = const_cast<char*>(str.c_str());
