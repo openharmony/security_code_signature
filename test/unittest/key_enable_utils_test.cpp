@@ -55,7 +55,8 @@ HWTEST_F(KeyEnableUtilsTest, KeyEnableUtilsTest_0001, TestSize.Level0)
  */
 HWTEST_F(KeyEnableUtilsTest, KeyEnableUtilsTest_0002, TestSize.Level0)
 {
-    char *buf = nullptr;
+    std::string str = "efuse_status=0";
+    char *buf = const_cast<char*>(str.c_str());
     ssize_t bunLen = 0;
     int32_t ret = CheckEfuseStatus(buf, bunLen);
     EXPECT_EQ(ret, false);

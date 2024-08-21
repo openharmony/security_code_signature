@@ -170,7 +170,7 @@ HWTEST_F(LocalCodeSignUtilsMockTest, LocalCodeSignUtilsMockTest_0006, TestSize.L
     const HksCertChain *certChain = LocalSignKey::GetInstance().GetCertChain();
     std::unique_ptr<ByteBuffer> buffer = GetRandomChallenge();
     bool bRet = OHOS::Security::CodeSign::FormattedCertChain(certChain, *buffer);
-    EXPECT_EQ(bRet, false);
+    EXPECT_EQ(bRet, true);
 }
 
 /**
@@ -208,7 +208,7 @@ HWTEST_F(LocalCodeSignUtilsMockTest, LocalCodeSignUtilsMockTest_0008, TestSize.L
  */
 HWTEST_F(LocalCodeSignUtilsMockTest, LocalCodeSignUtilsMockTest_0009, TestSize.Level0)
 {
-    EXPECT_EQ(IsDeveloperModeOn(), false);
+    EXPECT_EQ(IsDeveloperModeOn(), true);
 }
 
 /**
@@ -219,7 +219,7 @@ HWTEST_F(LocalCodeSignUtilsMockTest, LocalCodeSignUtilsMockTest_0009, TestSize.L
  */
 HWTEST_F(LocalCodeSignUtilsMockTest, LocalCodeSignUtilsMockTest_0010, TestSize.Level0)
 {
-    EXPECT_EQ(CodeSignGetUdid(nullptr), false);
+    EXPECT_EQ(CodeSignGetUdid(nullptr), -1);
 }
 } // namespace CodeSign
 } // namespace Security

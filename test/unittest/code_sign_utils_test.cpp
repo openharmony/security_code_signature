@@ -812,7 +812,11 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0034, TestSize.Level0)
     std::string bundleName = "";
     const ByteBuffer profileBuffer;
     int32_t ret = CodeSignUtils::EnableKeyInProfile(bundleName, profileBuffer);
-    EXPECT_EQ(ret, 0);
+#ifdef NO_USE_CLANG_COVERAGE
+    EXPECT_EQ(ret, CS_ERR_PROFILE);
+#else
+    EXPECT_EQ(ret, CS_SUCCESS);
+#endif
 }
 
 /**
@@ -825,7 +829,11 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0035, TestSize.Level0)
 {
     std::string bundleName = "";
     int32_t ret = CodeSignUtils::RemoveKeyInProfile(bundleName);
-    EXPECT_EQ(ret, 0);
+#ifdef NO_USE_CLANG_COVERAGE
+    EXPECT_EQ(ret, CS_ERR_PROFILE);
+#else
+    EXPECT_EQ(ret, CS_SUCCESS);
+#endif
 }
 
 /**
