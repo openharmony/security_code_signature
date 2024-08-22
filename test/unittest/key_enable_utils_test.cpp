@@ -49,7 +49,7 @@ HWTEST_F(KeyEnableUtilsTest, KeyEnableUtilsTest_0001, TestSize.Level0)
 
 /**
  * @tc.name: KeyEnableUtilsTest_0002
- * @tc.desc: check efuse status buf is nullptr
+ * @tc.desc: check efuse status
  * @tc.type: Func
  * @tc.require: issueI8FCGF
  */
