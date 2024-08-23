@@ -34,12 +34,9 @@ public:
     JitCodeSignerBase *CreateJitCodeSigner(
         JitBufferIntegrityLevel level = JitBufferIntegrityLevel::Level0);
 
-    bool IsSupportJitCodeSigner();
-
 private:
     JitCodeSignerFactory();
     ~JitCodeSignerFactory() = default;
-    bool isSupport_;
 };
 }
 }
