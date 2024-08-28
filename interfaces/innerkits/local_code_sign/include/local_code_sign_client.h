@@ -49,7 +49,7 @@ private:
     };
 
     LocalCodeSignClient();
-    ~LocalCodeSignClient() = default;
+    ~LocalCodeSignClient();
 
     LocalCodeSignClient(const LocalCodeSignClient &source) = delete;
     LocalCodeSignClient &operator = (const LocalCodeSignClient &source) = delete;
