@@ -74,7 +74,7 @@
         },
         {   
             "mode":"Dev",
-            "type":"Platform",
+            "type":"Developer",
             "subject":"C=CN, O=Huawei, OU=Huawei CBG, CN=HOS Application Provision Debug V2",
             "issuer":"C=CN, O=Huawei, OU=Huawei CBG, CN=Huawei CBG Software Signing Service CA",
             "max-certs-path":3
