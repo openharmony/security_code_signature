@@ -41,7 +41,7 @@ int32_t CodeSignHelper::ProcessMultiTask(const std::string &ownerId, const std::
             return ret;
         }
     } while (ret == CS_SUCCESS);
-    return ExecuteMultiTask(ret, ownerId, path, func);
+    return ExecuteMultiTask(ownerId, path, func);
 }
 
 int32_t CodeSignHelper::ProcessOneFile()
@@ -64,15 +64,10 @@ int32_t CodeSignHelper::ProcessOneFile()
     return ret;
 }
 
-int32_t CodeSignHelper::ExecuteMultiTask(int32_t ret, const std::string &ownerId,
+int32_t CodeSignHelper::ExecuteMultiTask(const std::string &ownerId,
     const std::string &path, CallbackFunc &func)
 {
-    bool waitStatus = multiTask_.ExecuteEnableCodeSignTask(ret, ownerId, path, func);
-    if (!waitStatus) {
-        LOG_ERROR("enable code sign timeout");
-        return CS_ERR_ENABLE_TIMEOUT;
-    }
-    return ret;
+    return multiTask_.ExecuteEnableCodeSignTask(ownerId, path, func);
 }
 
 void CodeSignHelper::ShowCodeSignInfo(const std::string &path, const struct code_sign_enable_arg &arg)

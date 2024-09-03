@@ -123,7 +123,6 @@ public:
      */
     static int32_t IsSupportFsVerity(const std::string &path);
 private:
-    static int32_t IsFsVerityEnabled(int fd);
     static int32_t EnableCodeSignForFile(const std::string &path, const struct code_sign_enable_arg &arg);
     int32_t ProcessCodeSignBlock(const std::string &ownerId, const std::string &path, FileType type);
     int32_t HandleCodeSignBlockFailure(const std::string &realPath, int32_t ret);

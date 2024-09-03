@@ -43,15 +43,21 @@ public:
     void AddTaskData(const std::string &targetFile, const struct code_sign_enable_arg &arg);
     /**
      * @brief Execute code signature addition task
-     * @param taskRet Returned execution results
      * @param ownerId app-identifier of the signature
      * @param path hap real path on disk
      * @param func Callback enable function
-     * @return Timed out or not
+     * @return err code, see err_code.h
      */
-    bool ExecuteEnableCodeSignTask(int32_t &taskRet, const std::string &ownerId,
+    int32_t ExecuteEnableCodeSignTask(const std::string &ownerId,
         const std::string &path, CallbackFunc &func);
+    /**
+     * @brief Check whether file is verity enabled by fd
+     * @param fd file descriptor
+     * @return err code, see err_code.h
+     */
+    static int32_t IsFsVerityEnabled(int fd);
 private:
+    static int32_t IsFsVerityEnabled(const std::string &path);
     void SortTaskData();
     void ExecuteEnableCodeSignTask(uint32_t &index, int32_t &taskRet, const std::string &ownerId,
         const std::string &path, CallbackFunc &func);

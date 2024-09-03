@@ -43,7 +43,7 @@ public:
     int32_t ProcessMultiTask(const std::string &ownerId, const std::string &path, CallbackFunc &func);
 private:
     int32_t ProcessOneFile();
-    int32_t ExecuteMultiTask(int32_t ret, const std::string &ownerId, const std::string &path, CallbackFunc &func);
+    int32_t ExecuteMultiTask(const std::string &ownerId, const std::string &path, CallbackFunc &func);
     void ShowCodeSignInfo(const std::string &path, const struct code_sign_enable_arg &arg);
 private:
     CodeSignBlock codeSignBlock_;
