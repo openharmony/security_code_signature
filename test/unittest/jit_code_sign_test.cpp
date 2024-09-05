@@ -820,6 +820,29 @@ HWTEST_F(JitCodeSignTest, JitCodeSignTest_0023, TestSize.Level0)
         signer = nullptr;
     }
 }
+
+/**
+ * @tc.name: JitCodeSignTest_0024
+ * @tc.desc: pac sign with auth
+ * @tc.type: Func
+ * @tc.require: IAKH9D
+ */
+HWTEST_F(JitCodeSignTest, JitCodeSignTest_0024, TestSize.Level0)
+{
+    PACSignCtx signCtx(CTXPurpose::SIGN);
+    signCtx.InitSalt();
+    signCtx.Init(0);
+    uint32_t signature[INSTRUCTIONS_SET_SIZE];
+    int i;
+    for (i = 0; i < INSTRUCTIONS_SET_SIZE; i++) {
+        signature[i] = signCtx.Update(g_testInstructionSet[i]);
+    }
+    PACSignCtx verifyCtx(CTXPurpose::VERIFY, signCtx.GetSalt());
+    verifyCtx.Init(0);
+    for (i = 0; i < INSTRUCTIONS_SET_SIZE; i++) {
+        EXPECT_EQ(signature[i], verifyCtx.Update(g_testInstructionSet[i]));
+    }
+}
 }
 }
 }
