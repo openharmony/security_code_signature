@@ -27,8 +27,8 @@
 namespace OHOS {
 namespace Security {
 namespace CodeSign {
-constexpr int32_t SEELP_TIME_FOR_COMMON_EVENT_MGR = 500 * 1000; // 500 ms
-constexpr int32_t SEELP_TIME_FOR_COMMON_EVENT_MGR_TIME_OUT = 10 * 60; // 10 min
+constexpr int32_t SLEEP_TIME_FOR_COMMON_EVENT_MGR = 500 * 1000; // 500 ms
+constexpr int32_t SLEEP_TIME_FOR_COMMON_EVENT_MGR_TIME_OUT = 10 * 60; // 10 min
 constexpr int32_t COMMON_EVENT_MANAGER_ID = 3299;
 
 void UnlockEventHelper::UnlockEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData& event)
@@ -119,7 +119,7 @@ bool UnlockEventHelper::WaitForCommonEventManager()
     if (!OHOS::GetSystemCurrentTime(&startTime)) {
         return false;
     }
-    while (seconds <= SEELP_TIME_FOR_COMMON_EVENT_MGR_TIME_OUT) {
+    while (seconds <= SLEEP_TIME_FOR_COMMON_EVENT_MGR_TIME_OUT) {
         sptr<ISystemAbilityManager> samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
         if (samgr != nullptr &&
             samgr->CheckSystemAbility(COMMON_EVENT_MANAGER_ID) != nullptr) {
@@ -128,7 +128,7 @@ bool UnlockEventHelper::WaitForCommonEventManager()
             break;
         }
         LOG_DEBUG(LABEL, "Get common event manager failed.");
-        usleep(SEELP_TIME_FOR_COMMON_EVENT_MGR);
+        usleep(SLEEP_TIME_FOR_COMMON_EVENT_MGR);
         if (OHOS::GetSystemCurrentTime(&doingTime)) {
             seconds = OHOS::GetSecondsBetween(startTime, doingTime);
         }

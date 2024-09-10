@@ -20,8 +20,8 @@
 namespace OHOS {
 namespace Security {
 namespace CodeSign {
-constexpr int DEFUALT_CERT_CHAIN_LEN = 3;
-constexpr int DEFUALT_CERT_PATH_TYPE = 0X103;
+constexpr int DEFAULT_CERT_CHAIN_LEN = 3;
+constexpr int DEFAULT_CERT_PATH_TYPE = 0X103;
 
 int32_t EnableTestKey(const char *signing, const char *issuer)
 {
@@ -30,8 +30,8 @@ int32_t EnableTestKey(const char *signing, const char *issuer)
     arg.issuer = reinterpret_cast<uint64_t>(issuer);
     arg.signing_length = strlen(signing) + 1;
     arg.issuer_length = strlen(issuer) + 1;
-    arg.path_len = DEFUALT_CERT_CHAIN_LEN;
-    arg.path_type = DEFUALT_CERT_PATH_TYPE;
+    arg.path_len = DEFAULT_CERT_CHAIN_LEN;
+    arg.path_type = DEFAULT_CERT_PATH_TYPE;
     return AddCertPath(arg);
 }
 }
