@@ -14,6 +14,7 @@
  */
 
 #include "code_sign_attr_utils.h"
+#include "ownerid_utils.h"
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -86,6 +87,7 @@ int InitXpm(int enableJitFort, uint32_t idType, const char *ownerId)
     // set owner id
     int ret = CS_SUCCESS;
     if (idType != PROCESS_OWNERID_UNINIT) {
+        idType = ConvertIdType(idType, ownerId);
         ret = DoSetXpmOwnerId(fd, idType, ownerId);
     }
 

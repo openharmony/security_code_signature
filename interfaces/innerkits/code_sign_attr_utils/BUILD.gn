@@ -19,7 +19,10 @@ config("public_attr_utils_configs") {
 }
 
 ohos_static_library("libcode_sign_attr_utils") {
-  sources = [ "src/code_sign_attr_utils.c" ]
+  sources = [
+    "src/code_sign_attr_utils.c",
+    "src/ownerid_utils.cpp",
+  ]
 
   configs = [
     ":public_attr_utils_configs",
