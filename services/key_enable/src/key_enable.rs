@@ -26,10 +26,12 @@ use std::io::{BufRead, BufReader};
 use std::option::Option;
 use std::ptr;
 use std::thread;
+use std::time::{Duration, Instant};
+use std::path::Path;
 
 const LOG_LABEL: HiLogLabel = HiLogLabel {
     log_type: LogType::LogCore,
-    domain: 0xd005a06, // security domain
+    domain: 0xd005a06,
     tag: "CODE_SIGN",
 };
 
@@ -39,6 +41,9 @@ const KEYRING_TYPE: &str = "keyring";
 const FSVERITY_KEYRING_NAME: &str = ".fs-verity";
 const LOCAL_KEY_NAME: &str = "local_key";
 const CODE_SIGN_KEY_NAME_PREFIX: &str = "fs_verity_key";
+const PROFILE_STORE_EL1: &str = "/data/service/el1/public/profiles";
+const PROFILE_SEARCH_SLEEP_TIME: u64 = 200;
+const PROFILE_SEARCH_SLEEP_OUT_TIME: u64 = 600;
 const SUCCESS: i32 = 0;
 
 type KeySerial = i32;
@@ -164,24 +169,37 @@ fn enable_trusted_keys(key_id: KeySerial, root_cert: &PemCollection) {
     }
 }
 
+fn check_and_add_cert_path(root_cert: &PemCollection, cert_paths: &TrustCertPath) -> bool {
+    if Path::new(PROFILE_STORE_EL1).exists() {
+        if add_profile_cert_path(root_cert, cert_paths).is_err() {
+            error!(LOG_LABEL, "Add cert path from local profile err.");
+        }
+        info!(LOG_LABEL, "Finished cert path adding.");
+        true
+    } else {
+        false
+    }
+}
+
 // start cert path ops thread add trusted cert & developer cert
-fn add_cert_path_thread(
+fn add_profile_cert_path_thread(
     root_cert: PemCollection,
     cert_paths: TrustCertPath,
 ) -> std::thread::JoinHandle<()> {
     thread::spawn(move || {
-        // enable trusted cert in prebuilt config
-        info!(LOG_LABEL, "Starting enable trusted cert.");
-        if cert_paths.add_cert_paths().is_err() {
-            error!(LOG_LABEL, "Add trusted cert path err.");
-        }
-
         // enable developer certs
         info!(LOG_LABEL, "Starting enable developer cert.");
-        if add_profile_cert_path(&root_cert, &cert_paths).is_err() {
-            error!(LOG_LABEL, "Add cert path from local profile err.");
+        let start_time = Instant::now();
+        loop {
+            if check_and_add_cert_path(&root_cert, &cert_paths) {
+                break;
+            } else if start_time.elapsed() >= Duration::from_secs(PROFILE_SEARCH_SLEEP_OUT_TIME) {
+                error!(LOG_LABEL, "Timeout while waiting for PROFILE_STORE_EL1.");
+                break;
+            } else {
+                thread::sleep(Duration::from_millis(PROFILE_SEARCH_SLEEP_TIME));
+            }
         }
-        info!(LOG_LABEL, "Finished cert path adding.");
     })
 }
 
@@ -230,12 +248,16 @@ pub fn enable_all_keys() {
     enable_trusted_keys(key_id, &root_cert);
 
     let cert_paths = get_cert_path();
-    let cert_thread = add_cert_path_thread(root_cert, cert_paths);
+    // enable trusted cert in prebuilt config
+    if cert_paths.add_cert_paths().is_err() {
+        error!(LOG_LABEL, "Add trusted cert path err.");
+    }
+    
+    let cert_thread = add_profile_cert_path_thread(root_cert, cert_paths);
     enable_keys_after_user_unlock(key_id);
 
     if let Err(e) = cert_thread.join() {
         error!(LOG_LABEL, "add cert path thread panicked: {:?}", e);
     }
-
     info!(LOG_LABEL, "Fnished enable all keys.");
 }

@@ -30,7 +30,6 @@
         "hitrace",
         "hisysevent",
         "ability_base",
-        "bounds_checking_function",
         "c_utils",
         "ipc",
         "samgr",
