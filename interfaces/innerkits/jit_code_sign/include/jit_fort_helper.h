@@ -22,7 +22,6 @@
 #ifdef __aarch64__
 #include <asm/hwcap.h>
 #include <cstdio>
-#include <sys/auxv.h>
 #endif
 
 #include "errcode.h"
@@ -67,7 +66,8 @@ __attribute__((always_inline)) static int inline PrctlWrapper(
 __attribute__((always_inline)) static inline bool IsSupportPACFeature()
 {
 #ifdef __aarch64__
-    long hwcaps = PrctlWrapper(JITFORT_PRCTL_OPTION, JITFORT_CPU_FEATURES, 0);
+    unsigned long hwcaps = static_cast<unsigned long>(PrctlWrapper(
+        JITFORT_PRCTL_OPTION, JITFORT_CPU_FEATURES, 0));
     if ((hwcaps & HWCAP_PACA) && (hwcaps & HWCAP_PACG)) {
         return true;
     }

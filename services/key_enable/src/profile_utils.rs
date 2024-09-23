@@ -42,8 +42,10 @@ const LOG_LABEL: HiLogLabel = HiLogLabel {
 };
 const PROFILE_STORE_EL0_PREFIX: &str = "/data/service/el0/profiles/developer";
 const PROFILE_STORE_EL1_PREFIX: &str = "/data/service/el1/profiles/release";
+const PROFILE_STORE_EL1_PUBLIC_PREFIX: &str = "/data/service/el1/public/profiles/release";
 const DEBUG_PROFILE_STORE_EL0_PREFIX: &str = "/data/service/el0/profiles/debug";
 const DEBUG_PROFILE_STORE_EL1_PREFIX: &str = "/data/service/el1/profiles/debug";
+const DEBUG_PROFILE_STORE_EL1_PUBLIC_PREFIX: &str = "/data/service/el1/public/profiles/debug";
 const PROFILE_STORE_TAIL: &str = "profile.p7b";
 const PROFILE_TYPE_KEY: &str = "type";
 const PROFILE_DEVICE_ID_TYPE_KEY: &str = "device-id-type";
@@ -220,8 +222,8 @@ fn format_x509_fabricate_name(name: &X509NameRef) -> String {
 fn get_profile_paths(is_debug: bool) -> Vec<String> {
     let mut paths = Vec::new();
     let profile_prefixes = match is_debug {
-        false => vec![PROFILE_STORE_EL0_PREFIX, PROFILE_STORE_EL1_PREFIX],
-        true => vec![DEBUG_PROFILE_STORE_EL0_PREFIX, DEBUG_PROFILE_STORE_EL1_PREFIX],
+        false => vec![PROFILE_STORE_EL0_PREFIX, PROFILE_STORE_EL1_PREFIX, PROFILE_STORE_EL1_PUBLIC_PREFIX],
+        true => vec![DEBUG_PROFILE_STORE_EL0_PREFIX, DEBUG_PROFILE_STORE_EL1_PREFIX, DEBUG_PROFILE_STORE_EL1_PUBLIC_PREFIX],
     };
     for profile_prefix in profile_prefixes {
         paths.extend(get_paths_from_prefix(profile_prefix));
@@ -375,10 +377,10 @@ fn process_data(profile_data: &[u8]) -> Result<(String, String, u32), ()> {
 fn create_bundle_path(bundle_name: &str, profile_type: u32) -> Result<String, ()> {
     let bundle_path = match profile_type {
         value if value == DebugCertPathType::Developer as u32 => {
-            fmt_store_path(DEBUG_PROFILE_STORE_EL1_PREFIX, bundle_name)
+            fmt_store_path(DEBUG_PROFILE_STORE_EL1_PUBLIC_PREFIX, bundle_name)
         }
         value if value == ReleaseCertPathType::Developer as u32 => {
-            fmt_store_path(PROFILE_STORE_EL1_PREFIX, bundle_name)
+            fmt_store_path(PROFILE_STORE_EL1_PUBLIC_PREFIX, bundle_name)
         }
         _ => {
             error!(LOG_LABEL, "invalid profile type");
@@ -422,24 +424,16 @@ fn enable_key_in_profile_internal(
     Ok(())
 }
 
-fn remove_key_in_profile_internal(bundle_name: *const c_char) -> Result<(), ()> {
-    let _bundle_name = c_char_to_string(bundle_name);
-    if _bundle_name.is_empty() {
-        error!(LOG_LABEL, "Invalid bundle name");
+fn process_remove_bundle(
+    prefix: &str,
+    bundle_name: &str,
+) -> Result<(), ()> {
+    let bundle_path = fmt_store_path(prefix, bundle_name);
+
+    if !file_exists(&bundle_path) {
         return Err(());
     }
 
-    let debug_bundle_path = fmt_store_path(DEBUG_PROFILE_STORE_EL1_PREFIX, &_bundle_name);
-    let release_bundle_path = fmt_store_path(PROFILE_STORE_EL1_PREFIX, &_bundle_name);
-
-    let bundle_path = if file_exists(&debug_bundle_path) {
-        debug_bundle_path
-    } else if file_exists(&release_bundle_path) {
-        release_bundle_path
-    } else {
-        error!(LOG_LABEL, "bundle path does not exists!");
-        return Err(());
-    };
     let filename = fmt_store_path(&bundle_path, PROFILE_STORE_TAIL);
     let mut profile_data = Vec::new();
     if load_bytes_from_file(&filename, &mut profile_data).is_err() {
@@ -452,17 +446,46 @@ fn remove_key_in_profile_internal(bundle_name: *const c_char) -> Result<(), ()> 
         error!(LOG_LABEL, "remove profile data error!");
         return Err(());
     }
+
     info!(LOG_LABEL, "remove bundle_path path {}!", @public(bundle_path));
-    if unsafe { !IsDeveloperModeOn() } && profile_type == DebugCertPathType::Developer as u32 {
-        info!(LOG_LABEL, "not remove profile_type:{} when development off", @public(profile_type));
-        return Ok(());
-    }
+
     if remove_cert_path_info(subject, issuer, profile_type, DEFAULT_MAX_CERT_PATH_LEN).is_err() {
         error!(LOG_LABEL, "remove profile data error!");
         return Err(());
     }
+
     info!(LOG_LABEL, "finish remove cert path in ioctl!");
     Ok(())
+}
+
+fn remove_key_in_profile_internal(bundle_name: *const c_char) -> Result<(), ()> {
+    let _bundle_name = c_char_to_string(bundle_name);
+    if _bundle_name.is_empty() {
+        error!(LOG_LABEL, "Invalid bundle name");
+        return Err(());
+    }
+
+    let profile_prefix = vec![
+        DEBUG_PROFILE_STORE_EL0_PREFIX,
+        PROFILE_STORE_EL0_PREFIX,
+        DEBUG_PROFILE_STORE_EL1_PREFIX,
+        PROFILE_STORE_EL1_PREFIX,
+        DEBUG_PROFILE_STORE_EL1_PUBLIC_PREFIX,
+        PROFILE_STORE_EL1_PUBLIC_PREFIX,
+    ];
+
+    let mut rm_succ = false;
+    for prefix in profile_prefix {
+        if process_remove_bundle(prefix, &_bundle_name).is_ok() {
+            rm_succ = true;
+        }
+    }
+    if rm_succ {
+        Ok(())
+    } else {
+        error!(LOG_LABEL, "Failed to remove bundle profile info, bundleName: {}.", @public(_bundle_name));
+        Err(())
+    }
 }
 
 fn c_char_to_string(c_str: *const c_char) -> String {
