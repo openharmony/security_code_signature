@@ -35,6 +35,7 @@ ohos_static_library("libcode_sign_attr_utils") {
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
+    "init:libbegetutil",
   ]
 
   part_name = "code_signature"

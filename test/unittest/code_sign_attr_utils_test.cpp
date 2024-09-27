@@ -91,8 +91,11 @@ HWTEST_F(CodeSignAttrUtilsTest, CodeSignAttrUtilsTest_0003, TestSize.Level0)
 {
     // test non OWNERID_APP, retval is origin idType
     EXPECT_EQ(ConvertIdType(PROCESS_OWNERID_DEBUG, nullptr), PROCESS_OWNERID_DEBUG);
+    EXPECT_EQ(ConvertIdType(PROCESS_OWNERID_DEBUG, "1"), PROCESS_OWNERID_DEBUG);
     // test app not in list, retval is OWNERID_APP
     EXPECT_EQ(ConvertIdType(PROCESS_OWNERID_APP, "1"), PROCESS_OWNERID_APP);
+    // test OWNERID_APP_TEMPA_ALLOW, retval is origin idType
+    EXPECT_EQ(ConvertIdType(PROCESS_OWNERID_APP_TEMP_ALLOW, "1"), PROCESS_OWNERID_APP_TEMP_ALLOW);
     // test nullptr
     EXPECT_EQ(ConvertIdType(PROCESS_OWNERID_APP, nullptr), PROCESS_OWNERID_APP);
 }

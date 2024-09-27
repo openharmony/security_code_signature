@@ -15,20 +15,38 @@
 
 #include "ownerid_utils.h"
 #include "code_sign_attr_utils.h"
+#include "parameter.h"
 #include "log.h"
 
 #include <string>
 #include <unordered_set>
 
+#define SECURE_SHIELD_MODE_KEY "ohos.boot.advsecmode.state"
+#define VALUE_MAX_LEN 32
+
 // the list will be removed before 930
 static const std::unordered_set<std::string> g_tempAllowList;
 
+static uint32_t IsSecureShieldModeOn()
+{
+    char secureShieldModeValue[VALUE_MAX_LEN] = {0};
+    (void)GetParameter(SECURE_SHIELD_MODE_KEY, "0", secureShieldModeValue, VALUE_MAX_LEN - 1);
+    return (strcmp(secureShieldModeValue, "0") != 0);
+}
+
 uint32_t ConvertIdType(int idType, const char *ownerId)
 {
-    if (idType != PROCESS_OWNERID_APP || ownerId == nullptr) {
+    if (ownerId == nullptr) {
+        return idType;
+    }
+    if ((idType != PROCESS_OWNERID_APP) && (idType != PROCESS_OWNERID_APP_TEMP_ALLOW)) {
         return idType;
     }
     std::string ownerIdStr(ownerId);
+    // discard PROCESS_OWNERID_APP_TEMP_ALLOW under Secure Shield Mode
+    if (IsSecureShieldModeOn()) {
+        idType = PROCESS_OWNERID_APP;
+    }
     if (g_tempAllowList.count(ownerIdStr) != 0) {
         LOG_INFO("Xpm: app in temporary allow list");
         return PROCESS_OWNERID_APP_TEMP_ALLOW;
