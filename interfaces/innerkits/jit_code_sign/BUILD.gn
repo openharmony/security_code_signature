@@ -58,6 +58,11 @@ ohos_shared_library("libjit_code_sign") {
     ]
     deps = [ ":pac_sign_feature" ]
   }
+  cflags_cc = [
+    "-Os",
+    "-fno-asynchronous-unwind-tables",
+    "-fno-unwind-tables",
+  ]
   branch_protector_ret = "pac_ret"
   sanitize = {
     cfi = true

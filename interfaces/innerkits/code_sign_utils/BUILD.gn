@@ -34,6 +34,12 @@ ohos_shared_library("libcode_sign_utils") {
     "src/code_sign_utils_in_c.cpp",
     "src/stat_utils.cpp",
   ]
+  version_script = "libcode_sign_utils.versionscript"
+  cflags_cc = [
+    "-Os",
+    "-fno-asynchronous-unwind-tables",
+    "-fno-unwind-tables",
+  ]
   public_configs = [
     "${code_signature_root_dir}:common_public_config",
     "${code_signature_root_dir}/services/key_enable:key_enable_rust_interface_config",

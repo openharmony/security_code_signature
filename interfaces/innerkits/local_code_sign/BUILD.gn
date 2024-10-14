@@ -34,6 +34,12 @@ ohos_shared_library("liblocal_code_sign_sdk") {
     "src/local_code_sign_load_callback.cpp",
     "src/local_code_sign_proxy.cpp",
   ]
+  version_script = "liblocal_code_sign_sdk.versionscript"
+  cflags_cc = [
+    "-Os",
+    "-fno-asynchronous-unwind-tables",
+    "-fno-unwind-tables",
+  ]
 
   public_configs = [
     "${code_signature_root_dir}:common_public_config",

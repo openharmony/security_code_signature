@@ -29,6 +29,11 @@ ohos_shared_library("liblocal_code_sign") {
     "src/local_sign_key.cpp",
     "src/permission_utils.cpp",
   ]
+  cflags_cc = [
+    "-Os",
+    "-fno-asynchronous-unwind-tables",
+    "-fno-unwind-tables",
+  ]
   include_dirs = [
     "include",
     "${code_signature_root_dir}/interfaces/innerkits/local_code_sign/include",
