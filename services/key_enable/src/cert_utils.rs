@@ -24,7 +24,7 @@ const TRUSTED_ROOT_CERT_TEST: &str = "/system/etc/security/trusted_root_ca_test.
 const ALLOWED_ROOT_CERT_MEMBER_NAMES_TEST: &[&str] =
     &["C=CN, O=Huawei, OU=Huawei CBG, CN=Huawei CBG Root CA G2 Test"];
 const TRUSTED_CERT_PATH: &str = "/system/etc/security/trusted_cert_path.json";
-const TRUSTED_CERT_PATH_TEST: &str = "/system/etc/security/trusted_cert_path_test.json";
+const TRUSTED_CERT_PATH_MIRROR: &str = "/system/etc/security/trusted_cert_path_mirror.json";
 
 extern "C" {
     fn IsRdDevice() -> bool;
@@ -54,7 +54,7 @@ pub fn get_cert_path() -> TrustCertPath {
     let mut cert_paths = TrustCertPath::new();
     cert_paths.load_cert_path_from_json_file(TRUSTED_CERT_PATH);
     if env!("code_signature_debuggable") == "on" || unsafe { IsRdDevice() } {
-        cert_paths.load_cert_path_from_json_file(TRUSTED_CERT_PATH_TEST);
+        cert_paths.load_cert_path_from_json_file(TRUSTED_CERT_PATH_MIRROR);
     }
     cert_paths
 }

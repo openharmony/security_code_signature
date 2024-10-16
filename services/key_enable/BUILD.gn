@@ -93,8 +93,8 @@ ohos_prebuilt_etc("trusted_cert_path") {
   relative_install_dir = "security"
 }
 
-ohos_prebuilt_etc("trusted_cert_path_test") {
-  source = "config/trusted_cert_path_test.json"
+ohos_prebuilt_etc("trusted_cert_path_mirror") {
+  source = "config/trusted_cert_path_mirror.json"
   part_name = "code_signature"
   subsystem_name = "security"
   relative_install_dir = "security"
@@ -125,7 +125,7 @@ group("key_enable_targets") {
     deps += [
       ":key_enable.cfg",
       ":trusted_cert_path",
-      ":trusted_cert_path_test",
+      ":trusted_cert_path_mirror",
     ]
     if (!use_clang_coverage) {
       deps += [
