@@ -143,8 +143,8 @@ int32_t CodeSignBlock::ParseNativeLibSignInfo(const EntryMap &entryMap)
 
 int32_t CodeSignBlock::ParseHapSignInfo(const std::string &path)
 {
-    std::lock_guard<std::mutex> guard(signMapMutex_);
     auto hapInfo = GetHapSignInfo();
+    std::lock_guard<std::mutex> guard(signMapMutex_);
     signMap_.emplace(path, reinterpret_cast<uintptr_t>(&hapInfo->signInfo));
     return CS_SUCCESS;
 }
