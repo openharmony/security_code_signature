@@ -27,6 +27,8 @@
 // the list will be removed before 930
 static const std::unordered_set<std::string> g_tempAllowList;
 
+static const std::unordered_set<std::string> g_secureShieldAllowList;
+
 static uint32_t IsSecureShieldModeOn()
 {
     char secureShieldModeValue[VALUE_MAX_LEN] = {0};
@@ -42,14 +44,19 @@ uint32_t ConvertIdType(int idType, const char *ownerId)
     if ((idType != PROCESS_OWNERID_APP) && (idType != PROCESS_OWNERID_APP_TEMP_ALLOW)) {
         return idType;
     }
+    idType = PROCESS_OWNERID_APP;
     std::string ownerIdStr(ownerId);
-    // discard PROCESS_OWNERID_APP_TEMP_ALLOW under Secure Shield Mode
+    // check different list on secure shield mode or normal mode
     if (IsSecureShieldModeOn()) {
-        idType = PROCESS_OWNERID_APP;
-    }
-    if (g_tempAllowList.count(ownerIdStr) != 0) {
-        LOG_INFO("Xpm: app in temporary allow list");
-        return PROCESS_OWNERID_APP_TEMP_ALLOW;
+        if (g_secureShieldAllowList.count(ownerIdStr) != 0) {
+            LOG_INFO("Xpm: app in secure shield allow list");
+            return PROCESS_OWNERID_APP_TEMP_ALLOW;
+        }
+    } else {
+        if (g_tempAllowList.count(ownerIdStr) != 0) {
+            LOG_INFO("Xpm: app in temporary allow list");
+            return PROCESS_OWNERID_APP_TEMP_ALLOW;
+        }
     }
     return idType;
 }
