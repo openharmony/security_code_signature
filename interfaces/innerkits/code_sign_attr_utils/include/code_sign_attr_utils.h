@@ -46,6 +46,7 @@ enum FileOwneridType {
     FILE_OWNERID_DEBUG_PLATFORM,  // 7
     FILE_OWNERID_PLATFORM,        // 8
     FILE_OWNERID_NWEB,            // 9
+    FILE_OWNERID_APP_TEMP_ALLOW,  // 10
     FILE_OWNERID_MAX
 };
 
@@ -61,6 +62,7 @@ enum ProcessOwneridType {
     PROCESS_OWNERID_DEBUG_PLATFORM,  // 7
     PROCESS_OWNERID_PLATFORM,        // 8
     PROCESS_OWNERID_NWEB,            // 9
+    PROCESS_OWNERID_APP_TEMP_ALLOW,  // 10
     PROCESS_OWNERID_MAX
 };
 
