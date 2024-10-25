@@ -101,7 +101,8 @@ static bool AddCAToStore(X509_STORE *store)
             LOG_ERROR("add cert to X509 store failed");
             GetOpensslErrorMessage();
         }
-        LOG_INFO("Add root CA successfully");
+        LOG_INFO("Add root CA subject name = %{public}s",
+            X509_NAME_oneline(X509_get_subject_name(caCert), nullptr, 0));
     } while (caCert != nullptr);
     (void) fclose(fp);
     return true;
