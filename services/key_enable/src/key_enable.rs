@@ -51,8 +51,8 @@ type KeySerial = i32;
 extern "C" {
     fn InitLocalCertificate(cert_data: *mut u8, cert_size: *mut usize) -> i32;
     fn AddKey(
-        type_name: *const u8,
-        description: *const u8,
+        type_name: *const c_char,
+        description: *const c_char,
         payload: *const u8,
         plen: usize,
         ring_id: KeySerial,
