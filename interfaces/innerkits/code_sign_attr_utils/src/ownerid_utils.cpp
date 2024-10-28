@@ -25,9 +25,15 @@
 #define VALUE_MAX_LEN 32
 
 // the list will be removed before 930
-static const std::unordered_set<std::string> g_tempAllowList;
+static const std::unordered_set<std::string> g_tempAllowList {
+#ifdef SUPPORT_APP_ALLOW_LIST
+#endif
+};
 
-static const std::unordered_set<std::string> g_secureShieldAllowList;
+static const std::unordered_set<std::string> g_secureShieldAllowList {
+#ifdef SUPPORT_APP_ALLOW_LIST
+#endif
+};
 
 static uint32_t IsSecureShieldModeOn()
 {

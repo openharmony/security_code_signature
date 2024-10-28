@@ -19,6 +19,11 @@ config("public_attr_utils_configs") {
 }
 
 ohos_static_library("libcode_sign_attr_utils") {
+  defines = []
+  if (code_signature_support_app_allow_list) {
+    defines += [ "SUPPORT_APP_ALLOW_LIST" ]
+  }
+
   sources = [
     "src/code_sign_attr_utils.c",
     "src/ownerid_utils.cpp",
