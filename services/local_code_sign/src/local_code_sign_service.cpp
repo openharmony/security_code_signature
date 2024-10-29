@@ -93,6 +93,10 @@ void LocalCodeSignService::DelayUnloadTask()
 void LocalCodeSignService::OnStop()
 {
     LOG_INFO("LocalCodeSignService OnStop");
+    if (unloadHandler_ != nullptr) {
+        unloadHandler_->RemoveTask(TASK_ID);
+        unloadHandler_ = nullptr;
+    }
     state_ = ServiceRunningState::STATE_NOT_START;
 }
 

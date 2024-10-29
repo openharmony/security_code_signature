@@ -44,6 +44,9 @@ ohos_shared_library("liblocal_code_sign_sdk") {
   if (build_variant == "root") {
     defines += [ "CODE_SIGNATURE_DEBUGGABLE" ]
   }
+  if (code_signature_support_oh_code_sign) {
+    defines += [ "VERIFY_KEY_ATTEST_CERTCHAIN" ]
+  }
 
   external_deps = [
     "c_utils:utils",

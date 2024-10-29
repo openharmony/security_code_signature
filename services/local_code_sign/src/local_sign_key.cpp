@@ -297,7 +297,7 @@ bool LocalSignKey::SignByHUKS(const struct HksBlob *inData, struct HksBlob *outD
     if (ret != HKS_SUCCESS) {
         LOG_ERROR("HksUpdate Failed.");
         free(tmpOutData.data);
-        return CS_ERR_PARAM_INVALID;
+        return false;
     }
 
     // third stage: finish, get signature from HUKS

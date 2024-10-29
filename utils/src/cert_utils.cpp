@@ -144,11 +144,11 @@ bool GetCertChainFormBuffer(const ByteBuffer &certChainBuffer,
 {
     uint8_t *rawPtr = certChainBuffer.GetBuffer();
     if (rawPtr == nullptr || certChainBuffer.GetSize() < sizeof(uint32_t)) {
+        LOG_ERROR("empty cert chain buffer.");
         return false;
     }
     uint32_t certsCount = *reinterpret_cast<uint32_t *>(rawPtr);
     rawPtr += sizeof(uint32_t);
-
     if (certsCount == 0) {
         return false;
     }
@@ -170,6 +170,7 @@ bool GetCertChainFormBuffer(const ByteBuffer &certChainBuffer,
             chain.emplace_back(cert);
         }
         if (!ret) {
+            LOG_ERROR("failed at index = %{public}u", i);
             break;
         }
     }

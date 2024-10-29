@@ -24,7 +24,7 @@ extern "C" {
 
 const LOG_LABEL: HiLogLabel = HiLogLabel {
     log_type: LogType::LogCore,
-    domain: 0xd005a06, // security domain
+    domain: 0xd005a06,
     tag: "CODE_SIGN",
 };
 const TRUST_PROFILE_PATH_KEY: &str = "trust-profile-path";
