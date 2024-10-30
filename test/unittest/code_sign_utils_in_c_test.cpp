@@ -77,6 +77,72 @@ HWTEST_F(CodeSignUtilsInCTest, CodeSignUtilsInCTest_0001, TestSize.Level0)
     entryMapEntry = nullptr;
     entryMapEntryData = nullptr;
 }
+
+/**
+ * @tc.name: CodeSignUtilsInCTest_0002
+ * @tc.desc: enable code signature for app with the c interface, nullptr
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsInCTest, CodeSignUtilsInCTest_0002, TestSize.Level0)
+{
+    std::string hapRealPath = APP_BASE_PATH + "/demo_with_multi_lib/demo_with_code_sign_block.hap";
+    int32_t ret = EnforceCodeSignForApp(nullptr, nullptr, FILE_ALL);
+    EXPECT_EQ(ret, CS_ERR_PARAM_INVALID);
+
+    ret = EnforceCodeSignForApp(hapRealPath.c_str(), nullptr, FILE_ALL);
+    EXPECT_EQ(ret, CS_ERR_PARAM_INVALID);
+}
+
+/**
+ * @tc.name: CodeSignUtilsInCTest_0003
+ * @tc.desc: enable code signature for app with the c interface, entryMapEntry is nullptr
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsInCTest, CodeSignUtilsInCTest_0003, TestSize.Level0)
+{
+    std::string hapRealPath = APP_BASE_PATH + "/demo_with_multi_lib/demo_with_code_sign_block.hap";
+    std::string filePath1("libs/arm64-v8a/libc++_shared.so");
+    std::string targetPath1 = APP_BASE_PATH + "/demo_with_multi_lib/libs/arm64-v8a/code_sign_block/libc++_shared.so";
+    std::string filePath2("libs/arm64-v8a/libentry.so");
+    std::string targetPath2 = APP_BASE_PATH + "/demo_with_multi_lib/libs/arm64-v8a/code_sign_block/libentry.so";
+
+    EntryMapEntryData *entryMapEntryData = static_cast<EntryMapEntryData *>(malloc(sizeof(EntryMapEntryData)));
+    (void)memset_s(entryMapEntryData, sizeof(EntryMapEntryData), 0, sizeof(EntryMapEntryData));
+
+    int32_t length = sizeof(EntryMapEntry) * ENTRYMAP_COUNT;
+    EntryMapEntry *entryMapEntry = static_cast<EntryMapEntry *>(malloc(length));
+    (void)memset_s(entryMapEntry, length, 0, length);
+
+    entryMapEntry[0].key = nullptr;
+    entryMapEntry[0].value = nullptr;
+    entryMapEntry[1].key = nullptr;
+    entryMapEntry[1].value = nullptr;
+
+    entryMapEntryData->count = ENTRYMAP_COUNT;
+    entryMapEntryData->entries = entryMapEntry;
+
+    int32_t ret = EnforceCodeSignForApp(hapRealPath.c_str(), entryMapEntryData, FILE_ALL);
+    EXPECT_EQ(ret, CS_ERR_PARAM_INVALID);
+
+    entryMapEntry[0].key = const_cast<char *>(filePath1.c_str());
+    entryMapEntryData->entries = entryMapEntry;
+
+    ret = EnforceCodeSignForApp(hapRealPath.c_str(), entryMapEntryData, FILE_ALL);
+    EXPECT_EQ(ret, CS_ERR_PARAM_INVALID);
+
+    entryMapEntry[0].value = const_cast<char *>(targetPath1.c_str());
+    entryMapEntryData->entries = entryMapEntry;
+
+    ret = EnforceCodeSignForApp(hapRealPath.c_str(), entryMapEntryData, FILE_ALL);
+    EXPECT_EQ(ret, CS_ERR_PARAM_INVALID);
+
+    free(entryMapEntry);
+    free(entryMapEntryData);
+    entryMapEntry = nullptr;
+    entryMapEntryData = nullptr;
+}
 }  // namespace CodeSign
 }  // namespace Security
 }  // namespace OHOS

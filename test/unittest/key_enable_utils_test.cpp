@@ -46,6 +46,36 @@ HWTEST_F(KeyEnableUtilsTest, KeyEnableUtilsTest_0001, TestSize.Level0)
 {
     EXPECT_EQ(IsRdDevice(), true);
 }
+
+/**
+ * @tc.name: KeyEnableUtilsTest_0002
+ * @tc.desc: check efuse status
+ * @tc.type: Func
+ * @tc.require: issueI8FCGF
+ */
+HWTEST_F(KeyEnableUtilsTest, KeyEnableUtilsTest_0002, TestSize.Level0)
+{
+    std::string str = "efuse_status=0";
+    char *buf = const_cast<char*>(str.c_str());
+    ssize_t bunLen = 0;
+    int32_t ret = CheckEfuseStatus(buf, bunLen);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.name: KeyEnableUtilsTest_0002
+ * @tc.desc: check efuse status
+ * @tc.type: Func
+ * @tc.require: issueI8FCGF
+ */
+HWTEST_F(KeyEnableUtilsTest, KeyEnableUtilsTest_0002, TestSize.Level0)
+{
+    std::string str = "efuse_status=1";
+    char *buf = const_cast<char*>(str.c_str());
+    ssize_t bunLen = 0;
+    int32_t ret = CheckEfuseStatus(buf, bunLen);
+    EXPECT_EQ(ret, true);
+}
 } // namespace CodeSign
 } // namespace Security
 } // namespace OHOS

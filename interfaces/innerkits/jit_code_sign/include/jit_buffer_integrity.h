@@ -20,7 +20,6 @@
 #include <cstring>
 
 #include "errcode.h"
-#include "jit_fort_helper.h"
 #include "jit_code_signer_base.h"
 #include "jit_code_signer_factory.h"
 #include "jit_fort_helper.h"
@@ -214,7 +213,7 @@ __attribute__((no_sanitize("cfi"))) static inline int32_t CopyToJitCode(
         return CS_ERR_JITFORT_IN;
     }
 #endif
-    if (IsSupportPACFeature()) {
+    if (IsSupportJitCodeSigner()) {
         ret = signer->ValidateCodeCopy(reinterpret_cast<Instr *>(jitMemory),
             reinterpret_cast<Byte *>(tmpBuffer), size);
     } else {

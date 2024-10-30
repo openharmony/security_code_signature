@@ -59,6 +59,7 @@ namespace OHOS {
         uint64_t selfTokenId = NativeTokenSet("compiler_service");
         DelayedSingleton<LocalCodeSignService>::GetInstance()->OnStart();
         DelayedSingleton<LocalCodeSignService>::GetInstance()->OnRemoteRequest(code, datas, reply, option);
+        DelayedSingleton<LocalCodeSignService>::GetInstance()->OnStop();
         NativeTokenReset(selfTokenId);
         return true;
     }
