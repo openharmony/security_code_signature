@@ -37,7 +37,21 @@ ohos_source_set("key_enable_src_set") {
 
 ohos_unittest("add_cert_path_unittest") {
   module_out_path = "security/code_signature"
-  sources = [ "add_cert_path_test.cpp" ]
+  sources = [
+    "${code_signature_root_dir}/services/key_enable/utils/src/cert_path.cpp",
+    "add_cert_path_test.cpp",
+  ]
+  include_dirs =
+      [ "${code_signature_root_dir}/services/key_enable/utils/include" ]
+  configs = [
+    "${code_signature_root_dir}:common_utils_config",
+    "${code_signature_root_dir}:common_public_config",
+  ]
+  deps = [ "${selinux_dir}:libselinux" ]
+  external_deps = [
+    "hilog:libhilog",
+    "init:libbegetutil",
+  ]
 }
 
 ohos_unittest("code_sign_utils_unittest") {

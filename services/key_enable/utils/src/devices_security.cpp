@@ -48,7 +48,7 @@ static bool CheckDeviceMode(char *buf, ssize_t bunLen)
     return false;
 }
 
-int32_t CheckEfuseStatus(char *buf, ssize_t bunLen)
+static int32_t CheckEfuseStatus(char *buf, ssize_t bunLen)
 {
     if (strstr(buf, "efuse_status=1")) {
         LOG_DEBUG(LABEL, "device is not efused");

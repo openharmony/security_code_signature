@@ -379,7 +379,7 @@ bool GetVerifiedCert(const ByteBuffer &buffer, const ByteBuffer &challenge, Byte
         ShowCertInfo(certChainBuffer, issuerBuffer, certBuffer);
     }
 #endif
-    LOG_INFO("verify finished.");
+    LOG_INFO("verify finished, ret = %{public}d.", ret);
     return ret;
 }
 }

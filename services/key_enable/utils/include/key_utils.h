@@ -41,7 +41,6 @@ KeySerial KeyctlRestrictKeyring(
     const char *restriction);
 
 bool IsRdDevice();
-int32_t CheckEfuseStatus(char *buf, ssize_t bunLen);
 #ifdef __cplusplus
 }
 #endif
