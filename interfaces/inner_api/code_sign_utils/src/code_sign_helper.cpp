@@ -17,6 +17,7 @@
 
 #include "code_sign_helper.h"
 #include "constants.h"
+#include "directory_ex.h"
 #include "file_helper.h"
 #include "log.h"
 
@@ -52,7 +53,9 @@ int32_t CodeSignHelper::ProcessOneFile()
         return ret;
     }
     ShowCodeSignInfo(targetFile, arg);
-    if (!CheckFilePathValid(targetFile, Constants::ENABLE_APP_BASE_PATH)) {
+    std::string realPath;
+    if (!OHOS::PathToRealPath(targetFile, realPath)) {
+        LOG_INFO("get real path failed, path = %{public}s", targetFile.c_str());
         return CS_ERR_FILE_PATH;
     }
     ret = CodeSignUtils::IsSupportFsVerity(targetFile);
