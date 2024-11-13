@@ -23,7 +23,6 @@
 #include <securec.h>
 
 #include "log.h"
-#include "parameter.h"
 
 using namespace OHOS::Security::CodeSign;
 
@@ -34,29 +33,46 @@ enum DeviceMode {
 };
 
 constexpr int32_t CMDLINE_MAX_BUF_LEN = 4096;
+#ifndef KEY_ENABLE_UTILS_TEST
 static const std::string PROC_CMDLINE_FILE_PATH = "/proc/cmdline";
 static int32_t g_isRdDevice = NOT_INITIALIZE;
+#else
+const std::string PROC_CMDLINE_FILE_PATH = "/data/test/tmp/cmdline";
+int32_t g_isRdDevice = NOT_INITIALIZE;
+#endif
 
-static bool CheckDeviceMode(char *buf, ssize_t bunLen)
+static bool CheckDeviceMode(char *buf, ssize_t bufLen)
 {
-    if (strstr(buf, "oemmode=rd")) {
+    bool status = false;
+    char *onStr = strstr(buf, "oemmode=rd");
+    char *offStr = strstr(buf, "oemmode=user");
+    char *statusStr = strstr(buf, "oemmode=");
+    if (onStr == nullptr && offStr == nullptr) {
+        LOG_INFO(LABEL, "Not rd mode, cmdline = %{private}s", buf);
+    } else if (offStr != nullptr && statusStr != nullptr && offStr != statusStr) {
+        LOG_ERROR(LABEL, "cmdline attacked, cmdline = %{private}s", buf);
+    } else if (onStr != nullptr && offStr == nullptr) {
+        status = true;
         LOG_DEBUG(LABEL, "Oemode is rd");
-        return true;
-    } else {
-        LOG_DEBUG(LABEL, "Not rd mode, cmdline = %{private}s", buf);
     }
-    return false;
+    return status;
 }
 
-static int32_t CheckEfuseStatus(char *buf, ssize_t bunLen)
+static bool CheckEfuseStatus(char *buf, ssize_t bufLen)
 {
-    if (strstr(buf, "efuse_status=1")) {
+    bool status = false;
+    char *onStr = strstr(buf, "efuse_status=1");
+    char *offStr = strstr(buf, "efuse_status=0");
+    char *statusStr = strstr(buf, "efuse_status=");
+    if (onStr == nullptr && offStr == nullptr) {
+        LOG_INFO(LABEL, "device is efused, cmdline = %{private}s", buf);
+    } else if (offStr != nullptr && statusStr != nullptr && offStr != statusStr) {
+        LOG_ERROR(LABEL, "cmdline attacked, cmdline = %{private}s", buf);
+    } else if (onStr != nullptr && offStr == nullptr) {
+        status = true;
         LOG_DEBUG(LABEL, "device is not efused");
-        return true;
-    } else {
-        LOG_DEBUG(LABEL, "Not efused, cmdline = %{private}s", buf);
     }
-    return false;
+    return status;
 }
 
 static void ParseCMDLine()

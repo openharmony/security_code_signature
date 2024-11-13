@@ -26,6 +26,13 @@ namespace OHOS {
 namespace Security {
 namespace CodeSign {
 
+static const std::string RD_DEVICE_1 = "oemmode=rd efuse_status=0";
+static const std::string RD_DEVICE_2 = "oemmode=user efuse_status=1";
+static const std::string NOT_RD_DEVICE = "oemmode=user efuse_status=0";
+static const std::string DEVICE_MODE_ATTACKED = "oemmode=rd oemmode=user";
+static const std::string EFUSED_ATTACKED = "efuse_status=1 efuse_status=0";
+constexpr int32_t NOT_INITIALIZE = 0;
+
 class KeyEnableUtilsTest : public testing::Test {
 public:
     KeyEnableUtilsTest() {};
@@ -36,6 +43,21 @@ public:
     void TearDown() {};
 };
 
+static bool OverWriteCMDLine(const std::string &content)
+{
+    FILE *file = fopen(PROC_CMDLINE_FILE_PATH.c_str(), "w+");
+    if (file == nullptr) {
+        return false;
+    }
+    size_t result = fwrite(content.c_str(), 1, content.size(), file);
+    if (result != content.size()) {
+        (void)fclose(file);
+        return false;
+    }
+    (void)fclose(file);
+    return true;
+}
+
 /**
  * @tc.name: KeyEnableUtilsTest_0001
  * @tc.desc: check status of device
@@ -44,7 +66,20 @@ public:
  */
 HWTEST_F(KeyEnableUtilsTest, KeyEnableUtilsTest_0001, TestSize.Level0)
 {
+    ASSERT_EQ(OverWriteCMDLine(RD_DEVICE_1), true);
     EXPECT_EQ(IsRdDevice(), true);
+    g_isRdDevice = NOT_INITIALIZE;
+    ASSERT_EQ(OverWriteCMDLine(RD_DEVICE_2), true);
+    EXPECT_EQ(IsRdDevice(), true);
+    g_isRdDevice = NOT_INITIALIZE;
+    ASSERT_EQ(OverWriteCMDLine(NOT_RD_DEVICE), true);
+    EXPECT_EQ(IsRdDevice(), false);
+    g_isRdDevice = NOT_INITIALIZE;
+    ASSERT_EQ(OverWriteCMDLine(DEVICE_MODE_ATTACKED), true);
+    EXPECT_EQ(IsRdDevice(), false);
+    g_isRdDevice = NOT_INITIALIZE;
+    ASSERT_EQ(OverWriteCMDLine(EFUSED_ATTACKED), true);
+    EXPECT_EQ(IsRdDevice(), false);
 }
 } // namespace CodeSign
 } // namespace Security

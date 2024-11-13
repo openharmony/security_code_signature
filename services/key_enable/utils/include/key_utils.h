@@ -22,6 +22,12 @@
 
 #include <sys/types.h>
 
+#ifdef KEY_ENABLE_UTILS_TEST
+#include <string>
+extern const std::string PROC_CMDLINE_FILE_PATH;
+extern int32_t g_isRdDevice;
+#endif
+
 typedef int32_t KeySerial;
 
 #ifdef __cplusplus
