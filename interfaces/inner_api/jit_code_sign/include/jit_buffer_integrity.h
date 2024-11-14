@@ -204,7 +204,12 @@ __attribute__((no_sanitize("cfi"))) static inline int32_t ResetJitCode(
 __attribute__((no_sanitize("cfi"))) static inline int32_t CopyToJitCode(
     JitCodeSignerBase *signer, void *jitMemory, void *tmpBuffer, int size)
 {
-    CHECK_NULL_AND_RETURN_CODE(signer);
+    if (jitMemory == nullptr) {
+        return CS_ERR_JIT_MEMORY;
+    }
+    if (tmpBuffer == nullptr) {
+        return CS_ERR_TMP_BUFFER;
+    }
     int32_t ret = CS_SUCCESS;
     // try not to depend on other dynamic library in JITFORT
 #ifndef JIT_FORT_DISABLE
@@ -214,6 +219,7 @@ __attribute__((no_sanitize("cfi"))) static inline int32_t CopyToJitCode(
     }
 #endif
     if (IsSupportJitCodeSigner()) {
+        CHECK_NULL_AND_RETURN_CODE(signer);
         ret = signer->ValidateCodeCopy(reinterpret_cast<Instr *>(jitMemory),
             reinterpret_cast<Byte *>(tmpBuffer), size);
     } else {

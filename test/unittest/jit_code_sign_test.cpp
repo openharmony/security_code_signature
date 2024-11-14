@@ -694,7 +694,7 @@ HWTEST_F(JitCodeSignTest, JitCodeSignTest_0018, TestSize.Level0)
     EXPECT_EQ(PatchInstruction(nullptr, nullptr, 1), CS_ERR_NO_SIGNER);
     EXPECT_EQ(PatchData(nullptr, 0, nullptr, 0), CS_ERR_NO_SIGNER);
     EXPECT_EQ(PatchData(nullptr, nullptr, nullptr, 0), CS_ERR_NO_SIGNER);
-    EXPECT_EQ(CopyToJitCode(nullptr, nullptr, nullptr, 0), CS_ERR_NO_SIGNER);
+    EXPECT_EQ(CopyToJitCode(nullptr, nullptr, nullptr, 0), CS_ERR_JIT_MEMORY);
 }
 
 /**
