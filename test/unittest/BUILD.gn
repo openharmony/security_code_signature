@@ -364,11 +364,20 @@ ohos_unittest("jit_code_sign_unittest") {
 
 ohos_unittest("key_enable_utils_unittest") {
   module_out_path = "security/code_signature"
-  sources = [ "key_enable_utils_test.cpp" ]
+  sources = [
+    "${code_signature_root_dir}/services/key_enable/utils/src/devices_security.cpp",
+    "key_enable_utils_test.cpp",
+  ]
+  defines = [ "KEY_ENABLE_UTILS_TEST" ]
+  configs = [ "${code_signature_root_dir}:common_utils_config" ]
   include_dirs =
       [ "${code_signature_root_dir}/services/key_enable/utils/include" ]
   deps = [
     "${code_signature_root_dir}/services/key_enable/utils:libkey_enable_utils",
+  ]
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
   ]
 }
 
