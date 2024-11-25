@@ -27,8 +27,6 @@
 namespace OHOS {
 namespace Security {
 namespace CodeSign {
-using namespace std;
-
 LocalCodeSignStub::LocalCodeSignStub()
 {
 }
