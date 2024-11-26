@@ -325,7 +325,7 @@ fn process_profile(
     for path in profiles_paths {
         let mut pkcs7_data = Vec::new();
         if load_bytes_from_file(&path, &mut pkcs7_data).is_err() {
-            info!(LOG_LABEL, "load profile failed {}!", @public(path));
+            error!(LOG_LABEL, "load profile failed {}!", @public(path));
             continue;
         }
         info!(LOG_LABEL, "load profile success {}!", @public(path));
