@@ -48,6 +48,12 @@ const SUCCESS: i32 = 0;
 
 type KeySerial = i32;
 
+/// key error report to hisysevent
+pub enum HisyseventKeyError {
+    /// local key empty
+    LocalKeyEmpty = 1,
+}
+
 extern "C" {
     fn InitLocalCertificate(cert_data: *mut u8, cert_size: *mut usize) -> i32;
     fn AddKey(
@@ -211,6 +217,9 @@ fn enable_local_key(key_id: KeySerial) {
             cs_hisysevent::report_add_key_err("local_key", ret);
             error!(LOG_LABEL, "Enable local key failed");
         }
+    } else {
+        cs_hisysevent::report_add_key_err("local_key", HisyseventKeyError::LocalKeyEmpty as i32);
+        info!(LOG_LABEL, "Get local key empty.");
     }
 }
 
