@@ -33,7 +33,7 @@ bool CheckFilePathValid(const std::string &path, const std::string &baseRealPath
         return false;
     }
     return (realPath.size() > baseRealPath.size()) &&
-        (baseRealPath.compare(realPath.substr(0, baseRealPath.size())) == 0);
+        (realPath.compare(0, baseRealPath.size(), baseRealPath) == 0);
 }
 }
 }
