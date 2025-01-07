@@ -30,11 +30,12 @@ int32_t CodeSignHelper::ParseCodeSignBlock(const std::string &realPath,
     return codeSignBlock_.ParseCodeSignBlock(realPath, entryMap, fileType);
 }
 
-int32_t CodeSignHelper::ProcessMultiTask(const std::string &ownerId, const std::string &path, CallbackFunc &func)
+int32_t CodeSignHelper::ProcessMultiTask(const std::string &ownerId, const std::string &path,
+    CallbackFunc &func, uint32_t flag)
 {
     int32_t ret;
     do {
-        ret = ProcessOneFile();
+        ret = ProcessOneFile(flag);
         if (ret == CS_SUCCESS_END) {
             break;
         } else if (ret != CS_SUCCESS) {
@@ -44,11 +45,11 @@ int32_t CodeSignHelper::ProcessMultiTask(const std::string &ownerId, const std::
     return ExecuteMultiTask(ownerId, path, func);
 }
 
-int32_t CodeSignHelper::ProcessOneFile()
+int32_t CodeSignHelper::ProcessOneFile(uint32_t flag)
 {
     std::string targetFile;
     struct code_sign_enable_arg arg = {0};
-    int32_t ret = codeSignBlock_.GetOneFileAndCodeSignInfo(targetFile, arg);
+    int32_t ret = codeSignBlock_.GetOneFileAndCodeSignInfo(targetFile, arg, flag);
     if (ret != CS_SUCCESS) {
         return ret;
     }

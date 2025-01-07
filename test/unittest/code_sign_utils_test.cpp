@@ -387,7 +387,7 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0014, TestSize.Level0)
     std::string targetFile;
     struct code_sign_enable_arg arg = {0};
 
-    ret = codeSignBlock.GetOneFileAndCodeSignInfo(targetFile, arg);
+    ret = codeSignBlock.GetOneFileAndCodeSignInfo(targetFile, arg, 0);
     EXPECT_EQ(ret, CS_SUCCESS);
     EXPECT_EQ(arg.version, 1);
     EXPECT_EQ(arg.cs_version, 1);
@@ -399,7 +399,7 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0014, TestSize.Level0)
     EXPECT_EQ(arg.flags, 1);
     EXPECT_EQ(arg.tree_offset, 0x10c000);
 
-    ret = codeSignBlock.GetOneFileAndCodeSignInfo(targetFile, arg);
+    ret = codeSignBlock.GetOneFileAndCodeSignInfo(targetFile, arg, 0);
     EXPECT_EQ(ret, CS_SUCCESS_END);
 }
 
@@ -428,7 +428,7 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0015, TestSize.Level0)
     do {
         std::string targetFile;
         struct code_sign_enable_arg arg = {0};
-        ret = codeSignBlock.GetOneFileAndCodeSignInfo(targetFile, arg);
+        ret = codeSignBlock.GetOneFileAndCodeSignInfo(targetFile, arg, 0);
         if (ret != CS_SUCCESS_END) {
             EXPECT_EQ(ret, CS_SUCCESS);
             EXPECT_EQ(arg.version, 1);

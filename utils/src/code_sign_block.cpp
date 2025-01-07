@@ -94,7 +94,8 @@ int32_t CodeSignBlock::ProcessExtension(uintptr_t &extensionAddr,
     return CS_SUCCESS;
 }
 
-int32_t CodeSignBlock::GetOneFileAndCodeSignInfo(std::string &targetFile, struct code_sign_enable_arg &arg)
+int32_t CodeSignBlock::GetOneFileAndCodeSignInfo(std::string &targetFile,
+    struct code_sign_enable_arg &arg, uint32_t flag)
 {
     int32_t ret;
     uintptr_t signInfoAddr;
@@ -122,8 +123,14 @@ int32_t CodeSignBlock::GetOneFileAndCodeSignInfo(std::string &targetFile, struct
     }
 
     uint32_t extensionCount = 0;
+    uint32_t extensionNum = signInfo->extensionNum;
+    if ((flag & IS_UNCOMPRESSED_NATIVE_LIBS) == 0) {
+        extensionNum = std::min(signInfo->extensionNum, 1u);
+    }
+    LOG_DEBUG("flag = %{public}u, extensionNum = %{public}u, signInfo->extensionNum = %{public}u",
+        flag, extensionNum, signInfo->extensionNum);
     auto extensionAddr = reinterpret_cast<uintptr_t>(signInfo) + signInfo->extensionOffset;
-    while (extensionCount < signInfo->extensionNum) {
+    while (extensionCount < extensionNum) {
         ret = ProcessExtension(extensionAddr, blockAddrEnd, arg);
         if (ret != CS_SUCCESS) {
             return ret;
