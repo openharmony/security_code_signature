@@ -88,8 +88,7 @@
           "header": {
             "header_files": [
               "jit_buffer_integrity.h",
-              "jit_code_signer_base.h",
-              "jit_code_signer_factory.h",
+              "jit_code_signer.h",
               "jit_fort_helper.h"
             ],
             "header_base": "//base/security/code_signature/interfaces/inner_api/jit_code_sign/include"
