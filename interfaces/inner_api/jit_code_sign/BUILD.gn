@@ -35,10 +35,10 @@ ohos_source_set("pac_sign_feature") {
     ":public_jit_code_sign_configs",
     "${code_signature_root_dir}:common_public_config",
   ]
-  configs = [
-    ":private_jit_code_sign_configs",
-    "${code_signature_root_dir}:common_utils_config",
-  ]
+  configs = [ "${code_signature_root_dir}:common_utils_config" ]
+  if (jit_code_sign_enable) {
+    configs += [ ":private_jit_code_sign_configs" ]
+  }
   external_deps = [
     "bounds_checking_function:libsec_shared",
     "hilog:libhilog",
@@ -48,16 +48,8 @@ ohos_source_set("pac_sign_feature") {
 }
 
 ohos_shared_library("libjit_code_sign") {
-  sources = [ "src/jit_code_signer_factory.cpp" ]
-  if (jit_code_sign_enable) {
-    defines = [ "JIT_CODE_SIGN_ENABLE" ]
-    sources += [
-      "src/jit_code_signer_base.cpp",
-      "src/jit_code_signer_hybrid.cpp",
-      "src/jit_code_signer_single.cpp",
-    ]
-    deps = [ ":pac_sign_feature" ]
-  }
+  sources = [ "src/jit_code_signer.cpp" ]
+  deps = [ ":pac_sign_feature" ]
   cflags_cc = [
     "-Os",
     "-fno-asynchronous-unwind-tables",

@@ -20,8 +20,7 @@
 #include <cstring>
 
 #include "errcode.h"
-#include "jit_code_signer_base.h"
-#include "jit_code_signer_factory.h"
+#include "jit_code_signer.h"
 #include "jit_fort_helper.h"
 #include "securec.h"
 
@@ -40,12 +39,11 @@ namespace CodeSign {
 
 /**
  * @brief Create Jit Code signer of specific level
- * @param level see jit_code_signer_factory.h
  * @return error code, see errcode.h
  */
-static inline JitCodeSignerBase *CreateJitCodeSigner(JitBufferIntegrityLevel level)
+static inline JitCodeSigner *CreateJitCodeSigner()
 {
-    return JitCodeSignerFactory::GetInstance().CreateJitCodeSigner(level);
+    return new JitCodeSigner();
 }
 
 /**
@@ -63,7 +61,7 @@ static bool IsSupportJitCodeSigner()
  * @param tmpBuffer tmp buffer storing jit code
  * @return error code, see errcode.h
  */
-static inline int32_t RegisterTmpBuffer(JitCodeSignerBase *signer, void *tmpBuffer)
+static inline int32_t RegisterTmpBuffer(JitCodeSigner *signer, void *tmpBuffer)
 {
     CHECK_NULL_AND_RETURN_CODE(signer);
     signer->RegisterTmpBuffer(CAST_TO_BYTES(tmpBuffer));
@@ -76,7 +74,7 @@ static inline int32_t RegisterTmpBuffer(JitCodeSignerBase *signer, void *tmpBuff
  * @param instr an instruction to be signed
  * @return error code, see errcode.h
  */
-static inline int32_t AppendInstruction(JitCodeSignerBase *signer, Instr instr)
+static inline int32_t AppendInstruction(JitCodeSigner *signer, Instr instr)
 {
     CHECK_NULL_AND_RETURN_CODE(signer);
     signer->SignInstruction(instr);
@@ -90,7 +88,7 @@ static inline int32_t AppendInstruction(JitCodeSignerBase *signer, Instr instr)
  * @param size data size
  * @return error code, see errcode.h
  */
-static inline int32_t AppendData(JitCodeSignerBase *signer, const void *const data, uint32_t size)
+static inline int32_t AppendData(JitCodeSigner *signer, const void *const data, uint32_t size)
 {
     CHECK_NULL_AND_RETURN_CODE(signer);
     return signer->SignData(CAST_TO_CONST_BYTES(data), size);
@@ -102,7 +100,7 @@ static inline int32_t AppendData(JitCodeSignerBase *signer, const void *const da
  * @param n the amount of intsructions
  * @return error code, see errcode.h
  */
-static inline int32_t WillFixUp(JitCodeSignerBase *signer, uint32_t n = 1)
+static inline int32_t WillFixUp(JitCodeSigner *signer, uint32_t n = 1)
 {
     CHECK_NULL_AND_RETURN_CODE(signer);
     signer->SkipNext(n);
@@ -115,7 +113,7 @@ static inline int32_t WillFixUp(JitCodeSignerBase *signer, uint32_t n = 1)
  * @param instr target intruction
  * @return error code, see errcode.h
  */
-static inline int32_t PatchInstruction(JitCodeSignerBase *signer, int offset, Instr instr)
+static inline int32_t PatchInstruction(JitCodeSigner *signer, int offset, Instr instr)
 {
     CHECK_NULL_AND_RETURN_CODE(signer);
     return signer->PatchInstruction(offset, instr);
@@ -128,7 +126,7 @@ static inline int32_t PatchInstruction(JitCodeSignerBase *signer, int offset, In
  * @param instr target intruction
  * @return error code, see errcode.h
  */
-static inline int32_t PatchInstruction(JitCodeSignerBase *signer,
+static inline int32_t PatchInstruction(JitCodeSigner *signer,
     void *address, Instr insn)
 {
     CHECK_NULL_AND_RETURN_CODE(signer);
@@ -142,7 +140,7 @@ static inline int32_t PatchInstruction(JitCodeSignerBase *signer,
  * @param size data size
  * @return error code, see errcode.h
  */
-static inline int32_t PatchData(JitCodeSignerBase *signer, int offset,
+static inline int32_t PatchData(JitCodeSigner *signer, int offset,
     const void *const data, uint32_t size)
 {
     CHECK_NULL_AND_RETURN_CODE(signer);
@@ -157,7 +155,7 @@ static inline int32_t PatchData(JitCodeSignerBase *signer, int offset,
  * @param size data size
  * @return error code, see errcode.h
  */
-static inline int32_t PatchData(JitCodeSignerBase *signer, void *address,
+static inline int32_t PatchData(JitCodeSigner *signer, void *address,
     const void *const data, uint32_t size)
 {
     CHECK_NULL_AND_RETURN_CODE(signer);
@@ -171,8 +169,7 @@ static inline int32_t PatchData(JitCodeSignerBase *signer, void *address,
  * @param size memory size
  * @return error code, see errcode.h
  */
-__attribute__((no_sanitize("cfi"))) static inline int32_t ResetJitCode(
-    void *jitMemory, int size)
+static inline int32_t ResetJitCode(void *jitMemory, int size)
 {
     if (jitMemory == nullptr) {
         return CS_ERR_JIT_MEMORY;
@@ -201,8 +198,8 @@ __attribute__((no_sanitize("cfi"))) static inline int32_t ResetJitCode(
  * @param size memory size
  * @return error code, see errcode.h
  */
-__attribute__((no_sanitize("cfi"))) static inline int32_t CopyToJitCode(
-    JitCodeSignerBase *signer, void *jitMemory, void *tmpBuffer, int size)
+static inline int32_t CopyToJitCode(
+    JitCodeSigner *signer, void *jitMemory, void *tmpBuffer, int size)
 {
     CHECK_NULL_AND_RETURN_CODE(signer);
     int32_t ret = CS_SUCCESS;
