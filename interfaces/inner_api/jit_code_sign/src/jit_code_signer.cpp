@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "jit_code_signer_base.h"
+#include "jit_code_signer.h"
 
 #include <sstream>
 #include "errcode.h"
@@ -25,6 +25,20 @@ namespace CodeSign {
 
 constexpr int32_t BYTE_BIT_SIZE = 8;
 constexpr uint32_t UNALIGNMENT_MASK = 0x3;
+
+JitCodeSigner::JitCodeSigner()
+{
+    Reset();
+}
+
+void JitCodeSigner::Reset()
+{
+    tmpBuffer_ = nullptr;
+    ctx_.InitSalt();
+    ctx_.Init(0);
+    signTable_.clear();
+    offset_ = 0;
+}
 
 inline static Instr GetOneInstrForQueue(std::queue<Byte> &queue)
 {
@@ -38,12 +52,12 @@ inline static Instr GetOneInstrForQueue(std::queue<Byte> &queue)
     return insn;
 }
 
-void JitCodeSignerBase::RegisterTmpBuffer(Byte *tmpBuffer)
+void JitCodeSigner::RegisterTmpBuffer(Byte *tmpBuffer)
 {
     tmpBuffer_ = tmpBuffer;
 }
 
-int32_t JitCodeSignerBase::SignData(const Byte *const data, uint32_t size)
+int32_t JitCodeSigner::SignData(const Byte *const data, uint32_t size)
 {
     if (data == nullptr) {
         return CS_ERR_INVALID_DATA;
@@ -76,7 +90,7 @@ int32_t JitCodeSignerBase::SignData(const Byte *const data, uint32_t size)
     return CS_SUCCESS;
 }
 
-int32_t JitCodeSignerBase::PatchInstruction(Byte *buffer, Instr insn)
+int32_t JitCodeSigner::PatchInstruction(Byte *buffer, Instr insn)
 {
     if ((buffer == nullptr) || (tmpBuffer_ == nullptr)) {
         return CS_ERR_PATCH_INVALID;
@@ -84,7 +98,7 @@ int32_t JitCodeSignerBase::PatchInstruction(Byte *buffer, Instr insn)
     return PatchInstruction(static_cast<int>(buffer - tmpBuffer_), insn);
 }
 
-int32_t JitCodeSignerBase::PatchData(int offset, const Byte *const data, uint32_t size)
+int32_t JitCodeSigner::PatchData(int offset, const Byte *const data, uint32_t size)
 {
     if (size & UNALIGNMENT_MASK) {
         return CS_ERR_JIT_SIGN_SIZE;
@@ -103,7 +117,7 @@ int32_t JitCodeSignerBase::PatchData(int offset, const Byte *const data, uint32_
     return CS_SUCCESS;
 }
 
-int32_t JitCodeSignerBase::PatchData(Byte *buffer, const Byte *const data, uint32_t size)
+int32_t JitCodeSigner::PatchData(Byte *buffer, const Byte *const data, uint32_t size)
 {
     if ((buffer == nullptr) || (tmpBuffer_ == nullptr)) {
         return CS_ERR_PATCH_INVALID;
@@ -111,7 +125,7 @@ int32_t JitCodeSignerBase::PatchData(Byte *buffer, const Byte *const data, uint3
     return PatchData(static_cast<int>(buffer - tmpBuffer_), data, size);
 }
 
-bool JitCodeSignerBase::ConvertPatchOffsetToIndex(const int offset, int &curIndex)
+bool JitCodeSigner::ConvertPatchOffsetToIndex(const int offset, int &curIndex)
 {
     if ((offset < 0) || ((static_cast<uint32_t>(offset) & UNALIGNMENT_MASK) != 0)) {
         return false;
@@ -125,7 +139,7 @@ bool JitCodeSignerBase::ConvertPatchOffsetToIndex(const int offset, int &curInde
     return true;
 }
 
-int32_t JitCodeSignerBase::CheckDataCopy(Instr *jitMemory, Byte *tmpBuffer, int size)
+int32_t JitCodeSigner::CheckDataCopy(Instr *jitMemory, Byte *tmpBuffer, int size)
 {
     if (jitMemory == nullptr) {
         return CS_ERR_JIT_MEMORY;
@@ -144,6 +158,67 @@ int32_t JitCodeSignerBase::CheckDataCopy(Instr *jitMemory, Byte *tmpBuffer, int 
             size, signTable_.size());
 #endif
         return CS_ERR_JIT_SIGN_SIZE;
+    }
+    return CS_SUCCESS;
+}
+
+void JitCodeSigner::SignInstruction(Instr insn)
+{
+    int index = GetIndexFromOffset(offset_);
+#ifdef JIT_CODE_SIGN_DEBUGGABLE
+    LOG_INFO("Offset = %{public}x, insn = %{public}x", offset_, insn);
+    if (static_cast<size_t>(index) != signTable_.size()) {
+        LOG_ERROR("Index = %{public}d not equal signtable size = %{public}zu.",
+            GetIndexFromOffset(offset_), signTable_.size());
+    }
+#endif
+    signTable_.push_back(ctx_.SignSingle(insn, index));
+    offset_ += INSTRUCTION_SIZE;
+}
+
+void JitCodeSigner::SkipNext(uint32_t n) {}
+
+int32_t JitCodeSigner::PatchInstruction(int offset, Instr insn)
+{
+#ifdef JIT_CODE_SIGN_DEBUGGABLE
+    LOG_INFO("offset = %{public}x, insn = %{public}x", offset, insn);
+#endif
+    int curIndex = 0;
+    if (!ConvertPatchOffsetToIndex(offset, curIndex)) {
+        LOG_ERROR("Offset invalid");
+        return CS_ERR_PATCH_INVALID;
+    }
+    uint32_t signature = ctx_.SignSingle(insn, curIndex);
+    signTable_[curIndex] = signature;
+    return CS_SUCCESS;
+}
+
+int32_t JitCodeSigner::ValidateCodeCopy(Instr *jitMemory,
+    Byte *tmpBuffer, int size)
+{
+    int32_t ret = CheckDataCopy(jitMemory, tmpBuffer, size);
+    if (ret != CS_SUCCESS) {
+        return ret;
+    }
+
+    PACSignCtx verifyCtx(CTXPurpose::VERIFY, ctx_.GetSalt());
+    int offset = 0;
+    while (offset < size) {
+        int index = GetIndexFromOffset(offset);
+        Instr insn = *reinterpret_cast<const Instr *>(tmpBuffer_ + offset);
+        uint32_t signature = verifyCtx.SignSingle(insn, index);
+        if (signature != signTable_[index]) {
+#ifdef JIT_FORT_DISABLE
+            LOG_ERROR("validate insn(%{public}x) without context failed at index = " \
+                "%{public}x, signature(%{public}x) != wanted(%{public}x)",
+                insn, index * INSTRUCTION_SIZE, signature, signTable_[index]);
+#endif
+#ifndef JIT_CODE_SIGN_PERMISSIVE
+            return CS_ERR_VALIDATE_CODE;
+#endif
+        }
+        *(jitMemory + index) = insn;
+        offset += INSTRUCTION_SIZE;
     }
     return CS_SUCCESS;
 }
