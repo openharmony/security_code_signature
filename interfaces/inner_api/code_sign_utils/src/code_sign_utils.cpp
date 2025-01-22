@@ -195,10 +195,10 @@ int32_t CodeSignUtils::EnforceCodeSignForFile(const std::string &path, const uin
 }
 
 int32_t CodeSignUtils::EnforceCodeSignForAppWithOwnerId(const std::string &ownerId, const std::string &path,
-    const EntryMap &entryPathMap, FileType type)
+    const EntryMap &entryPathMap, FileType type, uint32_t flag)
 {
-    LOG_INFO("Start to enforce codesign FileType:%{public}d, entryPathMap size:%{public}u, path = %{public}s",
-        type, static_cast<uint32_t>(entryPathMap.size()), path.c_str());
+    LOG_INFO("Start to enforce codesign FileType:%{public}u, entryPathMap size:%{public}zu, path = %{public}s, "
+        "flag = %{public}u", type, entryPathMap.size(), path.c_str(), flag);
     if (type == FILE_ENTRY_ADD || type == FILE_ENTRY_ONLY || type == FILE_ALL) {
         {
             std::lock_guard<std::mutex> lock(storedEntryMapLock_);
@@ -212,17 +212,18 @@ int32_t CodeSignUtils::EnforceCodeSignForAppWithOwnerId(const std::string &owner
         return CS_ERR_PARAM_INVALID;
     }
     std::lock_guard<std::mutex> lock(storedEntryMapLock_);
-    int ret = ProcessCodeSignBlock(ownerId, path, type);
+    int ret = ProcessCodeSignBlock(ownerId, path, type, flag);
     if (ret != CS_SUCCESS) {
         // retry once to make sure stability
-        ret = ProcessCodeSignBlock(ownerId, path, type);
+        ret = ProcessCodeSignBlock(ownerId, path, type, flag);
     }
     storedEntryMap_.clear();
     LOG_INFO("Enforcing done, ret = %{public}d", ret);
     return ret;
 }
 
-int32_t CodeSignUtils::ProcessCodeSignBlock(const std::string &ownerId, const std::string &path, FileType type)
+int32_t CodeSignUtils::ProcessCodeSignBlock(const std::string &ownerId, const std::string &path,
+    FileType type, uint32_t flag)
 {
     std::string realPath;
     if (!OHOS::PathToRealPath(path, realPath)) {
@@ -234,7 +235,7 @@ int32_t CodeSignUtils::ProcessCodeSignBlock(const std::string &ownerId, const st
     if (ret != CS_SUCCESS) {
         return HandleCodeSignBlockFailure(realPath, ret);
     }
-    ret = codeSignHelper.ProcessMultiTask(ownerId, path, EnableCodeSignForFile);
+    ret = codeSignHelper.ProcessMultiTask(ownerId, path, EnableCodeSignForFile, flag);
     return ret;
 }
 
@@ -248,9 +249,10 @@ int32_t CodeSignUtils::HandleCodeSignBlockFailure(const std::string &realPath, i
     return ret;
 }
 
-int32_t CodeSignUtils::EnforceCodeSignForApp(const std::string &path, const EntryMap &entryPathMap, FileType type)
+int32_t CodeSignUtils::EnforceCodeSignForApp(const std::string &path, const EntryMap &entryPathMap,
+    FileType type, uint32_t flag)
 {
-    return EnforceCodeSignForAppWithOwnerId("", path, entryPathMap, type);
+    return EnforceCodeSignForAppWithOwnerId("", path, entryPathMap, type, flag);
 }
 
 int32_t CodeSignUtils::EnableKeyInProfile(const std::string &bundleName, const ByteBuffer &profileBuffer)

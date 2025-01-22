@@ -133,7 +133,7 @@ public:
     static constexpr uint32_t CSB_EXTENSION_TYPE_PAGE_INFO_VERSION = 2;
 
     int32_t ParseCodeSignBlock(const std::string &realPath, const EntryMap &entryMap, FileType fileType);
-    int32_t GetOneFileAndCodeSignInfo(std::string &targetFile, struct code_sign_enable_arg &arg);
+    int32_t GetOneFileAndCodeSignInfo(std::string &targetFile, struct code_sign_enable_arg &arg, uint32_t flag);
     int32_t ProcessExtension(uintptr_t &extensionAddr, const uintptr_t blockAddrEnd, struct code_sign_enable_arg &arg);
 
 private:
