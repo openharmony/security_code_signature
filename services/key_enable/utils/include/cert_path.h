@@ -33,7 +33,9 @@ struct CertPathInfo {
     uint64_t issuer;
     uint32_t path_len;
     uint32_t path_type;
-    uint8_t __reserved[32];
+    uint64_t app_id;
+    uint32_t app_id_length;
+    uint8_t __reserved[20];
 };
 
 #define ADD_CERT_PATH_CMD _IOW(CERT_IOCTL_MAGIC_NUMBER, 1, CertPathInfo)

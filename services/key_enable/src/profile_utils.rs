@@ -56,6 +56,7 @@ const PROFILE_BUNDLE_INFO_KEY: &str = "bundle-info";
 const PROFILE_BUNDLE_INFO_RELEASE_KEY: &str = "distribution-certificate";
 const PROFILE_BUNDLE_INFO_DEBUG_KEY: &str = "development-certificate";
 const PROFILE_APP_DISTRIBUTION_TYPE_KEY: &str = "app-distribution-type";
+const PROFILE_APP_IDENTIFIER_KEY: &str = "app-identifier";
 const APP_DISTRIBUTION_TYPE_INTERNALTESTING: &str = "internaltesting";
 const APP_DISTRIBUTION_TYPE_ENTERPRISE: &str = "enterprise";
 const APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL: &str = "enterprise_normal";
@@ -63,6 +64,7 @@ const APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM: &str = "enterprise_mdm";
 const DEFAULT_MAX_CERT_PATH_LEN: u32 = 3;
 const PROFILE_RELEASE_TYPE: &str = "release";
 const PROFILE_DEBUG_TYPE: &str = "debug";
+const EMPTY_APP_ID: &str = "";
 
 /// profile error
 pub enum ProfileError {
@@ -113,7 +115,7 @@ fn parse_pkcs7_data(
     root_store: &X509Store,
     flags: Pkcs7Flags,
     check_udid: bool,
-) -> Result<(String, String, u32), Box<dyn Error>> {
+) -> Result<(String, String, u32, String), Box<dyn Error>> {
     let profile = verify_pkcs7_signature(pkcs7, root_store, flags)?;
     let profile_json = parse_and_validate_profile(profile, check_udid)?;
     get_cert_details(&profile_json)
@@ -175,12 +177,16 @@ fn parse_and_validate_profile(
     Ok(profile_json)
 }
 
-fn get_cert_details(profile_json: &JsonValue) -> Result<(String, String, u32), Box<dyn Error>> {
+fn get_cert_details(profile_json: &JsonValue) -> Result<(String, String, u32, String), Box<dyn Error>> {
     let bundle_type = profile_json[PROFILE_TYPE_KEY].try_as_string()?.as_str();
     let profile_type = match bundle_type {
         PROFILE_DEBUG_TYPE => DebugCertPathType::Developer as u32,
         PROFILE_RELEASE_TYPE => ReleaseCertPathType::Developer as u32,
         _ => return Err("Invalid bundle type.".into()),
+    };
+    let app_id = match profile_json[PROFILE_BUNDLE_INFO_KEY][PROFILE_APP_IDENTIFIER_KEY] {
+        JsonValue::Null => EMPTY_APP_ID.to_string(),
+        _ => profile_json[PROFILE_BUNDLE_INFO_KEY][PROFILE_APP_IDENTIFIER_KEY].try_as_string()?.to_string(),
     };
     let signed_cert = match bundle_type {
         PROFILE_DEBUG_TYPE => profile_json[PROFILE_BUNDLE_INFO_KEY][PROFILE_BUNDLE_INFO_DEBUG_KEY].try_as_string()?,
@@ -190,7 +196,7 @@ fn get_cert_details(profile_json: &JsonValue) -> Result<(String, String, u32), B
     let signed_pem = X509::from_pem(signed_cert.as_bytes())?;
     let subject = format_x509_fabricate_name(signed_pem.subject_name());
     let issuer = format_x509_fabricate_name(signed_pem.issuer_name());
-    Ok((subject, issuer, profile_type))
+    Ok((subject, issuer, profile_type, app_id))
 }
 
 lazy_static! {
@@ -342,7 +348,7 @@ fn process_profile(
             continue;
         }
         let check_udid = unsafe { !IsRdDevice() };
-        let (subject, issuer, profile_type) =
+        let (subject, issuer, profile_type, app_id) =
             match parse_pkcs7_data(&pkcs7, x509_store, Pkcs7Flags::empty(), check_udid) {
                 Ok(tuple) => tuple,
                 Err(e) => {
@@ -352,7 +358,7 @@ fn process_profile(
                     continue;
                 }
             };
-        if add_cert_path_info(subject, issuer, profile_type, DEFAULT_MAX_CERT_PATH_LEN).is_err() {
+        if add_cert_path_info(subject, issuer, profile_type, app_id, DEFAULT_MAX_CERT_PATH_LEN).is_err() {
             error!(
                 LOG_LABEL,
                 "Failed to add profile cert path info into ioctl for {}", @public(path)
@@ -405,7 +411,7 @@ fn validate_and_convert_inputs(
     Ok((_bundle_name, profile_data))
 }
 
-fn process_data(profile_data: &[u8]) -> Result<(String, String, u32), ()> {
+fn process_data(profile_data: &[u8]) -> Result<(String, String, u32, String), ()> {
     let store = match X509StoreBuilder::new() {
         Ok(store) => store.build(),
         Err(_) => {
@@ -453,7 +459,7 @@ fn enable_key_in_profile_internal(
     profile_size: u32,
 ) -> Result<(), ()> {
     let (_bundle_name, profile_data) = validate_and_convert_inputs(bundle_name, profile, profile_size)?;
-    let (subject, issuer, profile_type) = process_data(&profile_data)?;
+    let (subject, issuer, profile_type, app_id) = process_data(&profile_data)?;
     let bundle_path = create_bundle_path(&_bundle_name, profile_type)?;
     info!(LOG_LABEL, "create bundle_path path {}!", @public(bundle_path));
     if !file_exists(&bundle_path) && create_file_path(&bundle_path).is_err() {
@@ -473,7 +479,7 @@ fn enable_key_in_profile_internal(
         error!(LOG_LABEL, "change profile mode error!");
         return Err(());
     }
-    if add_cert_path_info(subject, issuer, profile_type, DEFAULT_MAX_CERT_PATH_LEN).is_err() {
+    if add_cert_path_info(subject, issuer, profile_type, app_id, DEFAULT_MAX_CERT_PATH_LEN).is_err() {
         error!(LOG_LABEL, "add profile data error!");
         return Err(());
     }
@@ -498,7 +504,7 @@ fn process_remove_bundle(
         return Err(());
     }
 
-    let (subject, issuer, profile_type) = process_data(&profile_data)?;
+    let (subject, issuer, profile_type, app_id) = process_data(&profile_data)?;
     if delete_file_path(&bundle_path).is_err() {
         error!(LOG_LABEL, "remove profile data error!");
         return Err(());
@@ -506,7 +512,7 @@ fn process_remove_bundle(
 
     info!(LOG_LABEL, "remove bundle_path path {}!", @public(bundle_path));
 
-    if remove_cert_path_info(subject, issuer, profile_type, DEFAULT_MAX_CERT_PATH_LEN).is_err() {
+    if remove_cert_path_info(subject, issuer, profile_type, app_id, DEFAULT_MAX_CERT_PATH_LEN).is_err() {
         error!(LOG_LABEL, "remove profile data error!");
         return Err(());
     }
