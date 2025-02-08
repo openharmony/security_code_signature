@@ -34,6 +34,7 @@ const TYPE_KEY: &str = "type";
 const SUBJECT_KEY: &str = "subject";
 const ISSUER_KEY: &str = "issuer";
 const MAX_CERT_PATH: &str = "max-certs-path";
+const EMPTY_APP_ID: &str = "";
 const COMMON_NAME_CHAR_LIMIT: usize = 7;
 /// profile cert path error
 pub enum CertPathError {
@@ -323,6 +324,7 @@ impl CertPath {
             subject,
             issuer,
             self.cert_path_type,
+            EMPTY_APP_ID.to_string(),
             self.max_certs_path,
         )?;
         Ok(())
@@ -344,7 +346,11 @@ pub struct CertPathInfo {
     pub path_len: u32,
     /// path type
     pub path_type: u32,
-    __reserved: [u8; 32],
+    /// app id
+    pub app_id: u64,
+    /// app id length
+    pub app_id_length: u32,
+    __reserved: [u8; 20],
 }
 
 fn fabricate_name(subject: &str) -> String {
@@ -419,6 +425,7 @@ fn cert_path_operation<F>(
     subject: String,
     issuer: String,
     cert_path_type: u32,
+    app_id: String,
     path_length: u32,
     operation: F,
     op_name: &str,
@@ -429,9 +436,13 @@ where
         return Err(CertPathError::CertPathOperationError);
     }
 
+    if !app_id.is_empty() {
+        info!(LOG_LABEL, "sending APP_ID '{}' through ioctl", @public(app_id));
+    }
     let subject_cstring = CString::new(subject).expect("convert to subject_cstring error!");
-    let issuer_cstring = CString::new(issuer).expect("convert to cstring error!");
+    let issuer_cstring = CString::new(issuer).expect("convert to issuer_cstring error!");
     let converted_cert_type = convert_cert_type(cert_path_type);
+    let app_id_cstring = CString::new(app_id).expect("convert to app_id_cstring error!");
 
     // invalid cert type, skip adding
     if converted_cert_type == 0u32 {
@@ -445,7 +456,9 @@ where
         issuer: issuer_cstring.as_ptr() as u64,
         path_len: path_length,
         path_type: converted_cert_type,
-        __reserved: [0; 32],
+        app_id: app_id_cstring.as_ptr() as u64,
+        app_id_length: app_id_cstring.as_bytes().len() as u32,
+        __reserved: [0; 20],
     };
     let ret = operation(&cert_path_info);
     info!(LOG_LABEL, "ioctl return:{}", @public(ret));
@@ -460,12 +473,14 @@ pub fn add_cert_path_info(
     subject: String,
     issuer: String,
     cert_path_type: u32,
+    app_id: String,
     path_length: u32,
 ) -> Result<(), CertPathError> {
     cert_path_operation(
         subject,
         issuer,
         cert_path_type,
+        app_id,
         path_length,
         |info| unsafe { AddCertPath(info) },
         "add cert_path",
@@ -477,12 +492,14 @@ pub fn remove_cert_path_info(
     subject: String,
     issuer: String,
     cert_path_type: u32,
+    app_id: String,
     path_length: u32,
 ) -> Result<(), CertPathError> {
     cert_path_operation(
         subject,
         issuer,
         cert_path_type,
+        app_id,
         path_length,
         |info| unsafe { RemoveCertPath(info) },
         "remove cert_path",

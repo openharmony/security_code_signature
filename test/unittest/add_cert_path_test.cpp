@@ -42,6 +42,8 @@ static const string TEST_ISSUER = "OpenHarmony Application CA";
 static const string KEY_ENABLE_CTX = "u:r:key_enable:s0";
 static const string FAKE_SUBJECT = "Fake subject";
 static const string FAKE_ISSUER = "Fake issuer";
+static const string TEST_APP_ID = "6918688064123613841";
+static const string EMPTY_APP_ID = "";
 static const string SUBJECT_AS_SYSTEM_TYPE = "System subject";
 static const string ISSUER_AS_SYSTEM_TYPE = "System issuer";
 
@@ -55,14 +57,16 @@ public:
     void TearDown() {};
 };
 
-static CertPathInfo MakeCertPathInfo(const char *signing, const char *issuer,
+static CertPathInfo MakeCertPathInfo(const char *signing, const char *issuer, const char *app_id,
     uint32_t max_cert_chain, uint32_t cert_path_type)
 {
     CertPathInfo arg = { 0 };
     arg.signing = reinterpret_cast<uint64_t>(signing);
     arg.issuer = reinterpret_cast<uint64_t>(issuer);
+    arg.app_id = reinterpret_cast<uint64_t>(app_id);
     arg.signing_length = strlen(signing);
     arg.issuer_length = strlen(issuer);
+    arg.app_id_length = strlen(app_id);
     arg.path_len = max_cert_chain;
     arg.path_type = cert_path_type;
     return arg;
@@ -76,7 +80,7 @@ static CertPathInfo MakeCertPathInfo(const char *signing, const char *issuer,
  */
 HWTEST_F(AddCertPathTest, AddCertPathTest_0001, TestSize.Level0)
 {
-    CertPathInfo certPathInfo = MakeCertPathInfo(TEST_SUBJECT.c_str(), TEST_ISSUER.c_str(),
+    CertPathInfo certPathInfo = MakeCertPathInfo(TEST_SUBJECT.c_str(), TEST_ISSUER.c_str(), EMPTY_APP_ID.c_str(),
         GREATER_THAN_MAX_CERT_CHAIN, CERT_PATH_TYPE);
     EXPECT_NE(AddCertPath(certPathInfo), 0);
 }
@@ -89,7 +93,7 @@ HWTEST_F(AddCertPathTest, AddCertPathTest_0001, TestSize.Level0)
  */
 HWTEST_F(AddCertPathTest, AddCertPathTest_0002, TestSize.Level0)
 {
-    CertPathInfo certPathInfo = MakeCertPathInfo(TEST_SUBJECT.c_str(), TEST_ISSUER.c_str(),
+    CertPathInfo certPathInfo = MakeCertPathInfo(TEST_SUBJECT.c_str(), TEST_ISSUER.c_str(), EMPTY_APP_ID.c_str(),
         LESS_THAN_MIN_CERT_CHAIN, CERT_PATH_TYPE);
     EXPECT_NE(AddCertPath(certPathInfo), 0);
 }
@@ -103,12 +107,14 @@ HWTEST_F(AddCertPathTest, AddCertPathTest_0002, TestSize.Level0)
 HWTEST_F(AddCertPathTest, AddCertPathTest_0003, TestSize.Level0)
 {
     // type = developer in release
-    CertPathInfo certPathInfo = MakeCertPathInfo(FAKE_SUBJECT.c_str(), FAKE_ISSUER.c_str(), MAX_CERT_CHAIN, 0x3);
+    CertPathInfo certPathInfo = MakeCertPathInfo(FAKE_SUBJECT.c_str(), FAKE_ISSUER.c_str(),
+        EMPTY_APP_ID.c_str(), MAX_CERT_CHAIN, 0x3);
     EXPECT_EQ(AddCertPath(certPathInfo), 0);
     EXPECT_EQ(RemoveCertPath(certPathInfo), 0);
 
     // type = developer in debug
-    certPathInfo = MakeCertPathInfo(FAKE_SUBJECT.c_str(), FAKE_ISSUER.c_str(), MAX_CERT_CHAIN, 0x103);
+    certPathInfo = MakeCertPathInfo(FAKE_SUBJECT.c_str(), FAKE_ISSUER.c_str(),
+        EMPTY_APP_ID.c_str(), MAX_CERT_CHAIN, 0x103);
     EXPECT_EQ(AddCertPath(certPathInfo), 0);
     EXPECT_EQ(RemoveCertPath(certPathInfo), 0);
 
@@ -126,9 +132,33 @@ HWTEST_F(AddCertPathTest, AddCertPathTest_0004, TestSize.Level0)
 {
     // release
     CertPathInfo certPathInfo = MakeCertPathInfo(SUBJECT_AS_SYSTEM_TYPE.c_str(),
-        ISSUER_AS_SYSTEM_TYPE.c_str(), MAX_CERT_CHAIN, 1);
+        ISSUER_AS_SYSTEM_TYPE.c_str(), EMPTY_APP_ID.c_str(), MAX_CERT_CHAIN, 1);
     // cannot add except key_enable
     EXPECT_NE(AddCertPath(certPathInfo), 0);
+}
+
+/**
+ * @tc.name: AddCertPathTest_0005
+ * @tc.desc: add enterprise cert path success
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(AddCertPathTest, AddCertPathTest_0005, TestSize.Level0)
+{
+    // type = developer in release
+    CertPathInfo certPathInfo = MakeCertPathInfo(FAKE_SUBJECT.c_str(), FAKE_ISSUER.c_str(),
+        TEST_APP_ID.c_str(), MAX_CERT_CHAIN, 0x3);
+    EXPECT_EQ(AddCertPath(certPathInfo), 0);
+    EXPECT_EQ(RemoveCertPath(certPathInfo), 0);
+
+    // type = developer in debug
+    certPathInfo = MakeCertPathInfo(FAKE_SUBJECT.c_str(), FAKE_ISSUER.c_str(),
+        TEST_APP_ID.c_str(), MAX_CERT_CHAIN, 0x103);
+    EXPECT_EQ(AddCertPath(certPathInfo), 0);
+    EXPECT_EQ(RemoveCertPath(certPathInfo), 0);
+
+    // remove unexists
+    EXPECT_NE(RemoveCertPath(certPathInfo), 0);
 }
 } // namespace CodeSign
 } // namespace Security
