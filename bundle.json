@@ -46,7 +46,8 @@
         "fsverity-utils",
         "screenlock_mgr",
         "common_event_service",
-        "bounds_checking_function"
+        "bounds_checking_function",
+        "rust_rust-openssl"
       ],
       "third_party": []
     },

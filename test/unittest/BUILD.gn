@@ -277,7 +277,6 @@ ohos_rust_static_library("rust_key_enable_lib") {
   sources = [ "${code_signature_root_dir}/services/key_enable/src/lib.rs" ]
   deps = [
     "${code_signature_root_dir}/services/key_enable/utils:libkey_enable_utils",
-    "${rust_openssl_dir}/openssl:lib",
     "//third_party/rust/crates/cxx:lib",
     "//third_party/rust/crates/lazy-static.rs:lib",
   ]
@@ -285,6 +284,7 @@ ohos_rust_static_library("rust_key_enable_lib") {
     "c_utils:utils_rust",
     "hilog:hilog_rust",
     "hisysevent:hisysevent_rust",
+    "rust_rust-openssl:lib",
     "ylong_json:lib",
   ]
   rustenv = []
