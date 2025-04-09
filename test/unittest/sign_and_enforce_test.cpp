@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,6 +22,7 @@
 #include <openssl/x509v3.h>
 #include "access_token_setter.h"
 #include "byte_buffer.h"
+#include "code_sign_test_common.h"
 #include "code_sign_utils.h"
 #include "local_code_sign_kit.h"
 #include "local_key_helper.h"
@@ -136,9 +137,10 @@ static bool ModifyPkcs7SignerwithTargetFunc(ByteBuffer &src, ByteBuffer &dst,
 
 static void InvokeLocalCodeSign(const std::string &filePath, ByteBuffer &sig)
 {
-    uint64_t selfTokenId = NativeTokenSet(VALID_CALLER);
+    uint64_t selfTokenId = GetSelfTokenID();
+    EXPECT_TRUE(MockTokenId(VALID_CALLER));
     int ret = LocalCodeSignKit::SignLocalCode(filePath, sig);
-    NativeTokenReset(selfTokenId);
+    EXPECT_EQ(0, SetSelfTokenID(selfTokenId));
     EXPECT_EQ(ret, CS_SUCCESS);
 }
 

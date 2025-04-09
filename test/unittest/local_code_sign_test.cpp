@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,6 +19,7 @@
 
 #include "access_token_setter.h"
 #include "byte_buffer.h"
+#include "code_sign_test_common.h"
 #include "code_sign_utils.h"
 #include "local_code_sign_client.h"
 #include "local_code_sign_kit.h"
@@ -57,9 +58,10 @@ public:
 HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0001, TestSize.Level0)
 {
     ByteBuffer cert;
-    uint64_t selfTokenId = NativeTokenSet("key_enable");
+    uint64_t selfTokenId = GetSelfTokenID();
+    EXPECT_TRUE(MockTokenId("key_enable"));
     int ret = LocalCodeSignKit::InitLocalCertificate(cert);
-    NativeTokenReset(selfTokenId);
+    EXPECT_EQ(0, SetSelfTokenID(selfTokenId));
     EXPECT_EQ(ret, CS_SUCCESS);
 }
 
@@ -85,9 +87,10 @@ HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0002, TestSize.Level0)
 HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0003, TestSize.Level0)
 {
     ByteBuffer sig;
-    uint64_t selfTokenId = NativeTokenSet("compiler_service");
+    uint64_t selfTokenId = GetSelfTokenID();
+    EXPECT_TRUE(MockTokenId("compiler_service"));
     int ret = LocalCodeSignKit::SignLocalCode(DEMO_AN_PATH, sig);
-    NativeTokenReset(selfTokenId);
+    EXPECT_EQ(0, SetSelfTokenID(selfTokenId));
     EXPECT_EQ(ret, CS_SUCCESS);
     std::string retOwnerID;
     ret = CodeSignUtils::ParseOwnerIdFromSignature(sig, retOwnerID);
@@ -119,9 +122,10 @@ HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0004, TestSize.Level0)
 HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0005, TestSize.Level0)
 {
     ByteBuffer sig;
-    uint64_t selfTokenId = NativeTokenSet("compiler_service");
+    uint64_t selfTokenId = GetSelfTokenID();
+    EXPECT_TRUE(MockTokenId("compiler_service"));
     int ret = LocalCodeSignKit::SignLocalCode(DEMO_AN_PATH + "invalid", sig);
-    NativeTokenReset(selfTokenId);
+    EXPECT_EQ(0, SetSelfTokenID(selfTokenId));
     EXPECT_EQ(ret, CS_ERR_FILE_PATH);
 }
 
@@ -152,10 +156,11 @@ HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0006, TestSize.Level0)
 HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0007, TestSize.Level0)
 {
     ByteBuffer sig;
-    uint64_t selfTokenId = NativeTokenSet("compiler_service");
+    uint64_t selfTokenId = GetSelfTokenID();
+    EXPECT_TRUE(MockTokenId("compiler_service"));
     std::string ownerID = "AppName123";
     int ret = LocalCodeSignKit::SignLocalCode(ownerID, DEMO_AN_PATH2, sig);
-    NativeTokenReset(selfTokenId);
+    EXPECT_EQ(0, SetSelfTokenID(selfTokenId));
     EXPECT_EQ(ret, CS_SUCCESS);
     
     std::string retOwnerID;
@@ -174,10 +179,11 @@ HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0007, TestSize.Level0)
 HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0008, TestSize.Level0)
 {
     ByteBuffer sig;
-    uint64_t selfTokenId = NativeTokenSet("compiler_service");
+    uint64_t selfTokenId = GetSelfTokenID();
+    EXPECT_TRUE(MockTokenId("compiler_service"));
     std::string ownerID = "";
     int ret = LocalCodeSignKit::SignLocalCode(ownerID, DEMO_AN_PATH2, sig);
-    NativeTokenReset(selfTokenId);
+    EXPECT_EQ(0, SetSelfTokenID(selfTokenId));
     EXPECT_EQ(ret, CS_SUCCESS);
     std::string retOwnerID;
     ret = CodeSignUtils::ParseOwnerIdFromSignature(sig, retOwnerID);
@@ -194,10 +200,11 @@ HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0008, TestSize.Level0)
 HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0009, TestSize.Level0)
 {
     ByteBuffer sig;
-    uint64_t selfTokenId = NativeTokenSet("compiler_service");
+    uint64_t selfTokenId = GetSelfTokenID();
+    EXPECT_TRUE(MockTokenId("compiler_service"));
     std::string ownerID = "AppName123";
     int ret = LocalCodeSignKit::SignLocalCode(ownerID, DEMO_AN_PATH2 + "invalid", sig);
-    NativeTokenReset(selfTokenId);
+    EXPECT_EQ(0, SetSelfTokenID(selfTokenId));
     EXPECT_EQ(ret, CS_ERR_FILE_PATH);
 }
 
@@ -224,10 +231,11 @@ HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0010, TestSize.Level0)
 HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0011, TestSize.Level0)
 {
     ByteBuffer sig;
-    uint64_t selfTokenId = NativeTokenSet("compiler_service");
+    uint64_t selfTokenId = GetSelfTokenID();
+    EXPECT_TRUE(MockTokenId("compiler_service"));
     std::string ownerID(33, 'a');
     int ret = LocalCodeSignKit::SignLocalCode(ownerID, DEMO_AN_PATH2, sig);
-    NativeTokenReset(selfTokenId);
+    EXPECT_EQ(0, SetSelfTokenID(selfTokenId));
     EXPECT_EQ(ret, CS_ERR_INVALID_OWNER_ID);
 }
 
@@ -240,20 +248,21 @@ HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0011, TestSize.Level0)
 HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0012, TestSize.Level0)
 {
     ByteBuffer sig;
-    uint64_t selfTokenId = NativeTokenSet("compiler_service");
+    uint64_t selfTokenId = GetSelfTokenID();
+    EXPECT_TRUE(MockTokenId("compiler_service"));
     std::string ownerID = "AppName123";
-    
+
     int ret = LocalCodeSignKit::SignLocalCode(ownerID, DEMO_AN_PATH2, sig);
-    
-    NativeTokenSet("local_code_sign");
+
+    EXPECT_TRUE(MockTokenId("local_code_sign"));
     sptr<ISystemAbilityManager> samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     EXPECT_NE(samgr, nullptr);
 
     ret = samgr->UnloadSystemAbility(LOCAL_CODE_SIGN_SA_ID);
     EXPECT_EQ(ret, ERR_OK);
-    NativeTokenSet("compiler_service");
+    EXPECT_TRUE(MockTokenId("compiler_service"));
     LocalCodeSignKit::SignLocalCode(ownerID, DEMO_AN_PATH2, sig);
-    NativeTokenReset(selfTokenId);
+    EXPECT_EQ(0, SetSelfTokenID(selfTokenId));
 }
 
 /**
