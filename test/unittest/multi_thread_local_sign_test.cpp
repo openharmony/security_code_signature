@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,6 +21,7 @@
 
 #include "access_token_setter.h"
 #include "byte_buffer.h"
+#include "code_sign_test_common.h"
 #include "code_sign_utils.h"
 #include "local_code_sign_kit.h"
 #include "local_key_helper.h"
@@ -84,7 +85,8 @@ static bool DupFile(const std::string &path)
 void LocalCodeSignAndEnforce()
 {
     ByteBuffer sig;
-    uint64_t selfTokenId = NativeTokenSet(VALID_CALLER);
+    uint64_t selfTokenId = GetSelfTokenID();
+    EXPECT_TRUE(MockTokenId(VALID_CALLER));
     int ret = LocalCodeSignKit::SignLocalCode(ORIGIN_AN_FILE, sig);
     std::thread::id thisId = std::this_thread::get_id();
     std::ostringstream oss;
@@ -92,7 +94,7 @@ void LocalCodeSignAndEnforce()
     std::string thisIdStr = oss.str();
     std::string tmpFileName = AN_BASE_PATH + thisIdStr + ".an";
     EXPECT_EQ(DupFile(tmpFileName), true);
-    NativeTokenReset(selfTokenId);
+    EXPECT_EQ(0, SetSelfTokenID(selfTokenId));
     EXPECT_EQ(ret, CS_SUCCESS);
     ret = CodeSignUtils::EnforceCodeSignForFile(tmpFileName, sig);
     EXPECT_EQ(ret, GetEnforceFileResult());
@@ -101,7 +103,8 @@ void LocalCodeSignAndEnforce()
 void LocalCodeSignAndEnforceWithOwnerID()
 {
     ByteBuffer sig;
-    uint64_t selfTokenId = NativeTokenSet(VALID_CALLER);
+    uint64_t selfTokenId = GetSelfTokenID();
+    EXPECT_TRUE(MockTokenId(VALID_CALLER));
     std::string ownerID = "AppName123";
     int ret = LocalCodeSignKit::SignLocalCode(ownerID, DEMO_WITHOWNER_ID, sig);
     std::thread::id thisId = std::this_thread::get_id();
@@ -110,7 +113,7 @@ void LocalCodeSignAndEnforceWithOwnerID()
     std::string thisIdStr = oss.str();
     std::string tmpFileName = AN_BASE_PATH + thisIdStr + "demoWithownerID.an";
     EXPECT_EQ(DupFile(tmpFileName), true);
-    NativeTokenReset(selfTokenId);
+    EXPECT_EQ(0, SetSelfTokenID(selfTokenId));
     EXPECT_EQ(ret, CS_SUCCESS);
     ret = CodeSignUtils::EnforceCodeSignForFile(tmpFileName, sig);
     EXPECT_EQ(ret, GetEnforceFileResult());
