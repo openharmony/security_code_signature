@@ -850,6 +850,24 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0036, TestSize.Level0)
     EXPECT_EQ(CodeSignUtils::IsSupportOHCodeSign(), false);
 #endif
 }
+
+/**
+ * @tc.name: CodeSignUtilsTest_0037
+ * @tc.desc: succ with signature in enforcing mode
+ * @tc.type: Func
+ * @tc.require: I8R8V7
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0037, TestSize.Level0)
+{
+    if (CodeSignUtils::InPermissiveMode()) {
+        return;
+    }
+    std::string hapRealPath = APP_BASE_PATH + "/demo_without_lib_signed/demo_without_lib_signed.hap";
+    EntryMap entryMap;
+    CodeSignUtils utils;
+    int32_t ret = utils.EnforceCodeSignForApp(hapRealPath, entryMap, FILE_SELF);
+    EXPECT_EQ(ret, CS_SUCCESS);
+}
 }  // namespace CodeSign
 }  // namespace Security
 }  // namespace OHOS
