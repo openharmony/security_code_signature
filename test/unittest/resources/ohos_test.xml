@@ -26,6 +26,7 @@
             <option name="shell" value="mkdir -p /data/service/el1/public/bms/bundle_manager_service/tmp/demo_with_multi_lib/libs/arm64-v8a"/>
             <option name="shell" value="mkdir -p /data/service/el0/profiles/tmp/demo_cert/pkcs7/"/>
             <option name="push" value="demo_without_lib/demo_without_lib.hap -> /data/app/el1/bundle/public/tmp/demo_without_lib" src="res"/>
+            <option name="push" value="demo_without_lib/demo_without_lib_signed.hap -> /data/app/el1/bundle/public/tmp/demo_without_lib_signed" src="res"/>
             <option name="push" value="demo_without_lib/demo_without_lib.sig -> /data/service/el1/public/bms/bundle_manager_service/tmp/demo_without_lib" src="res"/>
             <option name="push" value="demo_without_lib/pkcs7_error/demo_without_lib_001.sig -> /data/service/el1/public/bms/bundle_manager_service/tmp/demo_without_lib/pkcs7_error" src="res"/>
             <option name="push" value="demo_without_lib/pkcs7_error/demo_without_lib_002.sig -> /data/service/el1/public/bms/bundle_manager_service/tmp/demo_without_lib/pkcs7_error" src="res"/>
