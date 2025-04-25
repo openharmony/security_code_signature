@@ -210,7 +210,7 @@ int32_t CodeSignBlock::ParseCodeSignBlockBaseInfo(ReadBuffer codeSignBlock, uint
     if (segHeader->type != CSB_FSVERITY_INFO_SEG) {
         return CS_ERR_SEGMENT_FSVERITY_TYPE;
     }
-    if (segHeader->offset >= blockSize) {
+    if ((segHeader->offset >= blockSize) || (sizeof(FsVerityInfo) >= (blockSize - segHeader->offset))) {
         return CS_ERR_SEGMENT_FSVERITY_OFFSET;
     }
     ret = SetFsVerityInfo(CONST_STATIC_CAST(FsVerityInfo, codeSignBlock + segHeader->offset));
@@ -222,7 +222,7 @@ int32_t CodeSignBlock::ParseCodeSignBlockBaseInfo(ReadBuffer codeSignBlock, uint
     if (segHeader->type != CSB_HAP_META_SEG) {
         return CS_ERR_SEGMENT_HAP_TYPE;
     }
-    if (segHeader->offset >= blockSize) {
+    if ((segHeader->offset >= blockSize) || (sizeof(HapSignInfo) >= (blockSize - segHeader->offset))) {
         return CS_ERR_SEGMENT_HAP_OFFSET;
     }
     ret = SetHapSignInfo(CONST_STATIC_CAST(HapSignInfo, codeSignBlock + segHeader->offset));
@@ -234,7 +234,7 @@ int32_t CodeSignBlock::ParseCodeSignBlockBaseInfo(ReadBuffer codeSignBlock, uint
     if (segHeader->type != CSB_NATIVE_LIB_INFO_SEG) {
         return CS_ERR_SEGMENT_SO_TYPE;
     }
-    if (segHeader->offset >= blockSize) {
+    if ((segHeader->offset >= blockSize) || (sizeof(NativeLibSignInfo) > (blockSize - segHeader->offset))) {
         return CS_ERR_SEGMENT_SO_OFFSET;
     }
     return SetNativeLibSignInfo(CONST_STATIC_CAST(NativeLibSignInfo, codeSignBlock + segHeader->offset));
@@ -273,6 +273,9 @@ int32_t CodeSignBlock::GetCodeSignBlockBuffer(const std::string &path, ReadBuffe
         if (blobHeader->type == HAP_CODE_SIGN_BLOCK_ID) {
             signBlockBuffer = CONST_STATIC_CAST(char, blobHeader) + sizeof(PropertyBlobHeader);
             signBlockSize = blobHeader->size;
+            if ((signBlockSize > blobSize) || ((signBlockBuffer - blobBuffer) > (blobSize - signBlockSize))) {
+                return CS_ERR_BLOCK_SIZE;
+            }
             break;
         }
         length += blobHeader->size + sizeof(PropertyBlobHeader);
