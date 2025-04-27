@@ -19,6 +19,8 @@ group("fuzztest_group") {
     deps = [
       "local_code_sign_stub/initlocalcertificatestub_fuzzer:InitLocalCertificateStubFuzzTest",
       "local_code_sign_stub/signlocalcodestub_fuzzer:SignLocalCodeStubFuzzTest",
+      "local_code_sign_stub/initlocalcertificate_fuzzer:InitLocalCertificateFuzzTest",
+      "local_code_sign_stub/signlocalcode_fuzzer:SignLocalCodeFuzzTest",
     ]
   }
 }
