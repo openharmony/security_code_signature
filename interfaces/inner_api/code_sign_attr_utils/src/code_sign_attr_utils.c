@@ -17,6 +17,8 @@
 #include "ownerid_utils.h"
 
 #include <fcntl.h>
+#include <stdint.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 #include <securec.h>
@@ -42,7 +44,7 @@ static int XpmIoctl(int fd, uint32_t cmd, struct XpmConfig *config)
     return CS_SUCCESS;
 }
 
-static int DoSetXpmOwnerId(int fd, uint32_t idType, const char *ownerId)
+static int DoSetXpmOwnerId(int fd, uint32_t idType, const char *ownerId, uint32_t apiTargetVersion)
 {
     struct XpmConfig config = {0};
 
@@ -58,13 +60,15 @@ static int DoSetXpmOwnerId(int fd, uint32_t idType, const char *ownerId)
             return CS_ERR_MEMORY;
         }
     }
-
-    LOG_DEBUG("Set type = %{public}u, ownerId = %{public}s", idType, ownerId ? ownerId : "NULL");
+    config.apiTargetVersion = apiTargetVersion;
+    LOG_DEBUG("Set type = %{public}u, ownerId = %{public}s, apiTargetVersion is %{public}u",
+        idType, ownerId ? ownerId : "NULL", apiTargetVersion);
     (void)XpmIoctl(fd, XPM_SET_OWNERID, &config);
     return CS_SUCCESS;
 }
 
-int InitXpm(int enableJitFort, uint32_t idType, const char *ownerId)
+#define API_VERSION_DECIMAL 10
+int InitXpm(int enableJitFort, uint32_t idType, const char *ownerId, const char *apiTargetVersionStr)
 {
     // open /dev/xpm
     int fd = open(XPM_DEV_PATH, O_RDWR);
@@ -86,9 +90,15 @@ int InitXpm(int enableJitFort, uint32_t idType, const char *ownerId)
 
     // set owner id
     int ret = CS_SUCCESS;
+    uint32_t apiTargetVersion = 0;
     if (idType != PROCESS_OWNERID_UNINIT) {
         idType = ConvertIdType(idType, ownerId);
-        ret = DoSetXpmOwnerId(fd, idType, ownerId);
+        if (apiTargetVersionStr != NULL) {
+            char *endPtr = NULL;
+            // we use 0 as default, and strtoul returns 0 if failed
+            apiTargetVersion = strtoul(apiTargetVersionStr, &endPtr, API_VERSION_DECIMAL);
+        }
+        ret = DoSetXpmOwnerId(fd, idType, ownerId, apiTargetVersion);
     }
 
     // close /dev/xpm
@@ -103,7 +113,7 @@ int SetXpmOwnerId(uint32_t idType, const char *ownerId)
         LOG_INFO("Open device file failed: %{public}s (ignore)", strerror(errno));
         return CS_SUCCESS;
     }
-    int ret = DoSetXpmOwnerId(fd, idType, ownerId);
+    int ret = DoSetXpmOwnerId(fd, idType, ownerId, 0);
     close(fd);
     return ret;
 }

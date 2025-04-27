@@ -72,9 +72,10 @@ struct XpmConfig {
 
     uint32_t idType;
     char ownerId[MAX_OWNERID_LEN];
+    uint32_t apiTargetVersion;
 };
 
-int InitXpm(int enableJitFort, uint32_t idType, const char *ownerId);
+int InitXpm(int enableJitFort, uint32_t idType, const char *ownerId, const char *apiTargetVersionStr);
 
 int SetXpmOwnerId(uint32_t idType, const char *ownerId);
 
