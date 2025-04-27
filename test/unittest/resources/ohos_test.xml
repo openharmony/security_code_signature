@@ -20,6 +20,7 @@
             <option name="shell" value="mkdir -p /data/app/el1/bundle/public/tmp/demo_with_multi_lib/pkcs7_error/file"/>
             <option name="shell" value="mkdir -p /data/app/el1/bundle/public/tmp/demo_with_multi_lib_error/libs/arm64-v8a"/>
             <option name="shell" value="mkdir -p /data/app/el1/bundle/public/tmp/demo_with_multi_lib/libs/arm64-v8a/code_sign_block"/>
+            <option name="shell" value="mkdir -p /data/app/el1/bundle/public/tmp/demo_with_hnp/bins/"/>
             <option name="shell" value="mkdir -p /data/service/el1/public/bms/bundle_manager_service/tmp/demo_without_lib/pkcs7_error"/>
             <option name="shell" value="mkdir -p /data/service/el1/public/bms/bundle_manager_service/tmp/demo_with_multi_lib/pkcs7_error/file"/>
             <option name="shell" value="mkdir -p /data/service/el1/public/bms/bundle_manager_service/tmp/demo_with_multi_lib_error/libs/arm64-v8a"/>
@@ -27,6 +28,9 @@
             <option name="shell" value="mkdir -p /data/service/el0/profiles/tmp/demo_cert/pkcs7/"/>
             <option name="push" value="demo_without_lib/demo_without_lib.hap -> /data/app/el1/bundle/public/tmp/demo_without_lib" src="res"/>
             <option name="push" value="demo_without_lib/demo_without_lib_signed.hap -> /data/app/el1/bundle/public/tmp/demo_without_lib_signed" src="res"/>
+            <option name="push" value="demo_with_hnp/bins/hnpsample -> /data/app/el1/bundle/public/tmp/demo_with_hnp/bins" src="res"/>
+            <option name="push" value="demo_with_hnp/bins/libhnpsamplelib.z.so -> /data/app/el1/bundle/public/tmp/demo_with_hnp/bins" src="res"/>
+            <option name="push" value="demo_with_hnp/demo_with_hnp_signed.hap -> /data/app/el1/bundle/public/tmp/demo_with_hnp" src="res"/>
             <option name="push" value="demo_without_lib/demo_without_lib.sig -> /data/service/el1/public/bms/bundle_manager_service/tmp/demo_without_lib" src="res"/>
             <option name="push" value="demo_without_lib/pkcs7_error/demo_without_lib_001.sig -> /data/service/el1/public/bms/bundle_manager_service/tmp/demo_without_lib/pkcs7_error" src="res"/>
             <option name="push" value="demo_without_lib/pkcs7_error/demo_without_lib_002.sig -> /data/service/el1/public/bms/bundle_manager_service/tmp/demo_without_lib/pkcs7_error" src="res"/>

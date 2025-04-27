@@ -872,6 +872,30 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0037, TestSize.Level0)
     int32_t ret = utils.EnforceCodeSignForApp(hapRealPath, entryMap, FILE_SELF);
     EXPECT_EQ(ret, CS_SUCCESS);
 }
+
+/**
+ * @tc.name: CodeSignUtilsTest_0038
+ * @tc.desc: enable code signature for app with hnp
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0038, TestSize.Level0)
+{
+    EntryMap entryMap;
+    CodeSignUtils utils;
+    std::string hapRealPath = APP_BASE_PATH + "/demo_with_hnp/demo_with_hnp_signed.hap";
+
+    std::string filePath1("hnp/armeabi-v7a/hnpsample.hnp!///bin//hnpsample");
+    std::string targetPath1 = APP_BASE_PATH + "/demo_with_hnp/bins/hnpsample";
+    entryMap.emplace(filePath1, targetPath1);
+    std::string filePath2("hnp/armeabi-v7a/hnpsample.hnp!///lib//libhnpsamplelib.z.so");
+    std::string targetPath2 = APP_BASE_PATH + "/demo_with_hnp/bins/libhnpsamplelib.z.so";
+    entryMap.emplace(filePath2, targetPath2);
+
+    int32_t ret = utils.EnforceCodeSignForApp(hapRealPath, entryMap, FILE_ENTRY_ONLY);
+    EXPECT_EQ(ret, CS_SUCCESS);
+    entryMap.clear();
+}
 }  // namespace CodeSign
 }  // namespace Security
 }  // namespace OHOS
