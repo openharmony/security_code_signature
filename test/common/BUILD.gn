@@ -26,7 +26,10 @@ ohos_source_set("code_sign_test_common_source_set") {
     debug = false
   }
 
-  sources = [ "src/code_sign_test_common.cpp" ]
+  sources = [
+    "src/code_sign_test_common.cpp",
+    "src/fuzz_common.cpp",
+  ]
 
   public_configs = [ ":code_signature" ]
 
