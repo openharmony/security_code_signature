@@ -31,12 +31,12 @@ ohos_rust_executable("key_enable") {
   external_deps = common_external_deps
   if (!ohos_indep_compiler_enable) {
     deps += [
-      "//third_party/rust/crates/cxx:lib",
       "//third_party/rust/crates/lazy-static.rs:lib",
     ]
     external_deps += [
       "c_utils:utils_rust",
       "rust_rust-openssl:lib",
+      "rust_cxx:lib",
     ]
   }
   rustenv = []
@@ -62,12 +62,12 @@ ohos_rust_shared_ffi("key_enable_lib") {
   external_deps = common_external_deps
   if (!ohos_indep_compiler_enable) {
     deps += [
-      "//third_party/rust/crates/cxx:lib",
       "//third_party/rust/crates/lazy-static.rs:lib",
     ]
     external_deps += [
       "c_utils:utils_rust",
       "rust_rust-openssl:lib",
+      "rust_cxx:lib",
     ]
   }
   rustenv = []

@@ -39,6 +39,7 @@ ohos_static_library("libkey_enable_utils") {
     "hilog:libhilog",
     "init:libbegetutil",
     "samgr:samgr_proxy",
+    "eventhandler:libeventhandler",
   ]
 
   defines = []

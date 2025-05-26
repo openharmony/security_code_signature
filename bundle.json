@@ -47,7 +47,9 @@
         "screenlock_mgr",
         "common_event_service",
         "bounds_checking_function",
-        "rust_rust-openssl"
+        "rust_rust-openssl",
+        "selinux",
+        "rust_cxx"
       ],
       "third_party": []
     },

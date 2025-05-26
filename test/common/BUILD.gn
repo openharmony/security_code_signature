@@ -53,6 +53,7 @@ ohos_source_set("code_sign_test_common_source_set") {
     "access_token:libtokensetproc_shared",
     "c_utils:utils",
     "hilog:libhilog",
+    "ipc:ipc_core",
   ]
   subsystem_name = "security"
   part_name = "code_signature"
