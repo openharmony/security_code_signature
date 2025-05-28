@@ -113,6 +113,8 @@ enum JitCodeSignErrCode {
     CS_ERR_SIGN_OFFSET = -0x707,
     CS_ERR_INVALID_DATA = -0x708,
     CS_ERR_JIT_MEMORY = -0x709,
+    CS_ERR_OOM = -0x710,
+    CS_ERR_LOG_TOO_LONG = -0x711,
     CS_ERR_UNSUPPORT = -0x7ff,
 };
 #endif
