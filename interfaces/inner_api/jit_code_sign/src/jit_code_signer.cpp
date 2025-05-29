@@ -134,7 +134,7 @@ void JitCodeSigner::FlushLog() {
         LOG_LEVELED(log.level, "%{public}s", log.message);
     }
     deferredLogs.clear();
-    // There're at most 2 logs. No need to shrink.
+    // There's at most 1 log, for now. No need to shrink.
 }
 #endif
 
@@ -184,7 +184,7 @@ int32_t JitCodeSigner::CheckDataCopy(Instr *jitMemory, Byte *tmpBuffer, int size
             buffer = nullptr;
             return CS_ERR_LOG_TOO_LONG;
         }
-        
+
         deferredLogs.emplace_back(DeferredLog{buffer, LOG_ERROR});
 #endif
         return CS_ERR_JIT_SIGN_SIZE;
