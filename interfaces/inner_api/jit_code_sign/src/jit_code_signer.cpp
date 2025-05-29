@@ -129,7 +129,7 @@ int32_t JitCodeSigner::PatchData(Byte *buffer, const Byte *const data, uint32_t 
 }
 
 #ifndef JIT_FORT_DISABLE
-void JitCodeSigner::FlushLog(){
+void JitCodeSigner::FlushLog() {
     for (auto &log: deferredLogs) {
         LOG_LEVELED(log.level, "%{public}s", log.message);
     }
@@ -176,12 +176,15 @@ int32_t JitCodeSigner::CheckDataCopy(Instr *jitMemory, Byte *tmpBuffer, int size
         }
 
         int ret = sprintf_s(buffer, MAX_DEFERRED_LOG_LENGTH,
-            "[%s]: Range invalid, size = %d, table size = %zu", size, signTable_.size());
-        if (ret == -1){
+            "[%s]: Range invalid, size = %d, table size = %zu",
+            __func__, size, signTable_.size());
+
+        if (ret == -1) {
             free(buffer);
             buffer = nullptr;
             return CS_ERR_LOG_TOO_LONG;
         }
+        
         deferredLogs.emplace_back(DeferredLog{buffer, LOG_ERROR});
 #endif
         return CS_ERR_JIT_SIGN_SIZE;
@@ -247,9 +250,10 @@ int32_t JitCodeSigner::ValidateCodeCopy(Instr *jitMemory,
 
         int ret = sprintf_s(buffer, MAX_DEFERRED_LOG_LENGTH,
             "[%s]: validate insn(%x) without context failed at index = " \
-                "%x, signature(%x) != wanted(%x)",
-                insn, index * INSTRUCTION_SIZE, signature, signTable_[index]);
-        if (ret == -1){
+            "%x, signature(%x) != wanted(%x)",
+            __func__, insn, index * INSTRUCTION_SIZE, signature, signTable_[index]);
+
+        if (ret == -1) {
             free(buffer);
             buffer = nullptr;
             return CS_ERR_LOG_TOO_LONG;

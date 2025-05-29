@@ -44,13 +44,13 @@ static inline int GetIndexFromOffset(int offset)
 #ifndef JIT_FORT_DISABLE
 struct DeferredLog{
     DeferredLog() = delete;
-    DeferredLog(char* message, LogLevel level) noexcept :message(message),level(level){}
+    DeferredLog(char* message, LogLevel level) noexcept :message(message),level(level) {}
     DeferredLog(const DeferredLog& other) = delete;
     DeferredLog(DeferredLog&& other) noexcept: message(other.message), level(other.level) {
         other.message = nullptr;
     }
-    ~DeferredLog(){
-        delete message;
+    ~DeferredLog() {
+        free(message);
         message = nullptr;
     }
     char* message;
