@@ -280,7 +280,6 @@ ohos_rust_static_library("rust_key_enable_lib") {
   sources = [ "${code_signature_root_dir}/services/key_enable/src/lib.rs" ]
   deps = [
     "${code_signature_root_dir}/services/key_enable/utils:libkey_enable_utils",
-    "//third_party/rust/crates/cxx:lib",
     "//third_party/rust/crates/lazy-static.rs:lib",
   ]
   external_deps = [
@@ -289,6 +288,7 @@ ohos_rust_static_library("rust_key_enable_lib") {
     "hisysevent:hisysevent_rust",
     "rust_rust-openssl:lib",
     "ylong_json:lib",
+    "rust_cxx:lib"
   ]
   rustenv = []
   if (build_variant == "root") {
@@ -431,7 +431,7 @@ group("unittest_group") {
       ":multi_thread_local_sign_unittest",
       ":sign_and_enforce_unittest",
     ]
-    if (!use_clang_coverage) {
+    if (!use_clang_coverage && !ohos_indep_compiler_enable) {
       deps += [ ":rust_key_enable_unittest" ]
     }
     if (code_signature_support_oh_code_sign) {
