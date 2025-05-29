@@ -229,7 +229,9 @@ static inline int32_t CopyToJitCode(
 #ifndef JIT_FORT_DISABLE
     prctlRet = PrctlWrapper(JITFORT_PRCTL_OPTION, JITFORT_SWITCH_OUT, 0);
 
-    signer->FlushLog();
+    if (IsSupportJitCodeSigner()) {
+        signer->FlushLog();
+    }
 
     if (prctlRet < 0) {
         return CS_ERR_JITFORT_OUT;

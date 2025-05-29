@@ -129,7 +129,8 @@ int32_t JitCodeSigner::PatchData(Byte *buffer, const Byte *const data, uint32_t 
 }
 
 #ifndef JIT_FORT_DISABLE
-void JitCodeSigner::FlushLog() {
+void JitCodeSigner::FlushLog()
+{
     for (auto &log: deferredLogs) {
         LOG_LEVELED(log.level, "%{public}s", log.message);
     }
@@ -171,7 +172,7 @@ int32_t JitCodeSigner::CheckDataCopy(Instr *jitMemory, Byte *tmpBuffer, int size
             size, signTable_.size());
 #else
         char *buffer = reinterpret_cast<char *>(malloc(MAX_DEFERRED_LOG_LENGTH));
-        if (!buffer) {
+        if (buffer == nullptr) {
             return CS_ERR_OOM;
         }
 
@@ -244,7 +245,7 @@ int32_t JitCodeSigner::ValidateCodeCopy(Instr *jitMemory,
                 insn, index * INSTRUCTION_SIZE, signature, signTable_[index]);
 #else
         char *buffer = reinterpret_cast<char *>(malloc(MAX_DEFERRED_LOG_LENGTH));
-        if (!buffer) {
+        if (buffer == nullptr) {
             return CS_ERR_OOM;
         }
 
