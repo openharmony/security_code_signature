@@ -16,6 +16,9 @@
 #include "jit_code_signer.h"
 
 #include <sstream>
+#ifndef JIT_FORT_DISABLE
+#include "securec.h"
+#endif
 #include "errcode.h"
 #include "log.h"
 
@@ -125,6 +128,17 @@ int32_t JitCodeSigner::PatchData(Byte *buffer, const Byte *const data, uint32_t 
     return PatchData(static_cast<int>(buffer - tmpBuffer_), data, size);
 }
 
+#ifndef JIT_FORT_DISABLE
+void JitCodeSigner::FlushLog()
+{
+    for (auto &log: deferredLogs) {
+        LOG_LEVELED(log.level, "%{public}s", log.message);
+    }
+    deferredLogs.clear();
+    // There's at most 1 log, for now. No need to shrink.
+}
+#endif
+
 bool JitCodeSigner::ConvertPatchOffsetToIndex(const int offset, int &curIndex)
 {
     if ((offset < 0) || ((static_cast<uint32_t>(offset) & UNALIGNMENT_MASK) != 0)) {
@@ -156,6 +170,23 @@ int32_t JitCodeSigner::CheckDataCopy(Instr *jitMemory, Byte *tmpBuffer, int size
 #ifdef JIT_FORT_DISABLE
         LOG_ERROR("Range invalid, size = %{public}d, table size = %{public}zu",
             size, signTable_.size());
+#else
+        char *buffer = reinterpret_cast<char *>(malloc(MAX_DEFERRED_LOG_LENGTH));
+        if (buffer == nullptr) {
+            return CS_ERR_OOM;
+        }
+
+        int ret = sprintf_s(buffer, MAX_DEFERRED_LOG_LENGTH,
+            "[%s]: Range invalid, size = %d, table size = %zu",
+            __func__, size, signTable_.size());
+
+        if (ret == -1) {
+            free(buffer);
+            buffer = nullptr;
+            return CS_ERR_LOG_TOO_LONG;
+        }
+
+        deferredLogs.emplace_back(DeferredLog{buffer, LOG_ERROR});
 #endif
         return CS_ERR_JIT_SIGN_SIZE;
     }
@@ -212,6 +243,23 @@ int32_t JitCodeSigner::ValidateCodeCopy(Instr *jitMemory,
             LOG_ERROR("validate insn(%{public}x) without context failed at index = " \
                 "%{public}x, signature(%{public}x) != wanted(%{public}x)",
                 insn, index * INSTRUCTION_SIZE, signature, signTable_[index]);
+#else
+        char *buffer = reinterpret_cast<char *>(malloc(MAX_DEFERRED_LOG_LENGTH));
+        if (buffer == nullptr) {
+            return CS_ERR_OOM;
+        }
+
+        int ret = sprintf_s(buffer, MAX_DEFERRED_LOG_LENGTH,
+            "[%s]: validate insn(%x) without context failed at index = " \
+            "%x, signature(%x) != wanted(%x)",
+            __func__, insn, index * INSTRUCTION_SIZE, signature, signTable_[index]);
+
+        if (ret == -1) {
+            free(buffer);
+            buffer = nullptr;
+            return CS_ERR_LOG_TOO_LONG;
+        }
+        deferredLogs.emplace_back(DeferredLog{buffer, LOG_ERROR});
 #endif
 #ifndef JIT_CODE_SIGN_PERMISSIVE
             return CS_ERR_VALIDATE_CODE;
