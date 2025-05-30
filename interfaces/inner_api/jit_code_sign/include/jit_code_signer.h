@@ -18,9 +18,6 @@
 
 #include <queue>
 #include <vector>
-#ifndef JIT_FORT_DISABLE
-#include "hilog/log.h"
-#endif
 #include "pac_sign_ctx.h"
 
 namespace OHOS {
@@ -44,9 +41,9 @@ static inline int GetIndexFromOffset(int offset)
 #ifndef JIT_FORT_DISABLE
 struct DeferredLog {
     DeferredLog() = delete;
-    DeferredLog(char *message, LogLevel level) noexcept : message(message), level(level) {}
+    DeferredLog(char *message) noexcept : message(message) {}
     DeferredLog(const DeferredLog &other) = delete;
-    DeferredLog(DeferredLog &&other) noexcept : message(other.message), level(other.level)
+    DeferredLog(DeferredLog &&other) noexcept : message(other.message)
     {
         other.message = nullptr;
     }
@@ -56,7 +53,6 @@ struct DeferredLog {
         message = nullptr;
     }
     char *message;
-    LogLevel level;
 };
 #endif
 
