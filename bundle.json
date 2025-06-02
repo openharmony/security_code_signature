@@ -20,7 +20,8 @@
       "code_signature_support_oh_code_sign",
       "code_signature_enable_xpm_mode",
       "code_signature_support_oh_release_app",
-      "code_signature_support_app_allow_list"
+      "code_signature_support_app_allow_list",
+      "code_signature_support_local_debugger"
     ],
     "adapted_system_type": [ "standard" ],
     "rom": "1024KB",

@@ -301,6 +301,11 @@ ohos_rust_static_library("rust_key_enable_lib") {
   } else {
     rustenv += [ "support_openharmony_ca=off" ]
   }
+  if (code_signature_support_local_debugger) {
+    rustenv += [ "support_local_debugger=on" ]
+  } else {
+    rustenv += [ "support_local_debugger=off" ]
+  }
   crate_name = "key_enable"
   crate_type = "rlib"
   subsystem_name = "security"

@@ -50,6 +50,11 @@ ohos_rust_executable("key_enable") {
   } else {
     rustenv += [ "support_openharmony_ca=off" ]
   }
+  if (code_signature_support_local_debugger) {
+    rustenv += [ "support_local_debugger=on" ]
+  } else {
+    rustenv += [ "support_local_debugger=off" ]
+  }
   crate_name = "key_enable"
   crate_type = "bin"
   subsystem_name = "security"
@@ -80,6 +85,11 @@ ohos_rust_shared_ffi("key_enable_lib") {
     rustenv += [ "support_openharmony_ca=on" ]
   } else {
     rustenv += [ "support_openharmony_ca=off" ]
+  }
+  if (code_signature_support_local_debugger) {
+    rustenv += [ "support_local_debugger=on" ]
+  } else {
+    rustenv += [ "support_local_debugger=off" ]
   }
   crate_name = "key_enable"
   subsystem_name = "security"
