@@ -35,12 +35,6 @@
 #define LOG_ERROR(fmt, ...) HILOG_ERROR(LOG_CORE, "[%{public}s]:" fmt, __func__, ##__VA_ARGS__)
 #define LOG_FATAL(fmt, ...) HILOG_FATAL(LOG_CORE, "[%{public}s]:" fmt, __func__, ##__VA_ARGS__)
 
-/* Deferred logs have variable level, and their caller must be recorded 
-   when the log is generated, not when this macro is invoked.
- * LOG_LEVEL is used as the enum name.
-*/
-#define LOG_LEVELED(level, ...) HILOG_IMPL(LOG_CORE, level, LOG_DOMAIN, LOG_TAG, ##__VA_ARGS__)
-
 #else // LOG_RUST
 namespace OHOS {
 namespace Security {
