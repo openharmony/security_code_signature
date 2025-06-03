@@ -79,16 +79,16 @@ int InitXpm(int enableJitFort, uint32_t idType, const char *ownerId)
     config.regionLength = XPM_REGION_LEN;
     (void)XpmIoctl(fd, XPM_SET_REGION, &config);
 
-    // enable jitfort
-    if (enableJitFort != 0) {
-        (void)XpmIoctl(fd, XPM_SET_JITFORT_ENABLE, NULL);
-    }
-
     // set owner id
     int ret = CS_SUCCESS;
     if (idType != PROCESS_OWNERID_UNINIT) {
         idType = ConvertIdType(idType, ownerId);
         ret = DoSetXpmOwnerId(fd, idType, ownerId);
+    }
+
+    // enable jitfort
+    if (enableJitFort != 0) {
+        (void)XpmIoctl(fd, XPM_SET_JITFORT_ENABLE, NULL);
     }
 
     // close /dev/xpm
