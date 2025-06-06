@@ -40,6 +40,7 @@
 #include "stat_utils.h"
 #include "signer_info.h"
 #include "rust_interface.h"
+#include "data_size_report_adapter.h"
 
 namespace OHOS {
 namespace Security {
@@ -259,6 +260,7 @@ int32_t CodeSignUtils::EnableKeyInProfile(const std::string &bundleName, const B
 {
     int ret = EnableKeyInProfileByRust(bundleName.c_str(), profileBuffer.GetBuffer(), profileBuffer.GetSize());
     if (ret == CS_SUCCESS) {
+        ReportUserDataSize();
         return ret;
     }
     LOG_ERROR("Enable key in profile failed. ret = %{public}d", ret);

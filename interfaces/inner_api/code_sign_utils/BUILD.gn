@@ -27,6 +27,7 @@ ohos_shared_library("libcode_sign_utils") {
   branch_protector_ret = "pac_ret"
   sources = [
     "${code_signature_root_dir}/utils/src/code_sign_block.cpp",
+    "${code_signature_root_dir}/utils/src/data_size_report_adapter.cpp",
     "${code_signature_root_dir}/utils/src/file_helper.cpp",
     "src/code_sign_enable_multi_task.cpp",
     "src/code_sign_helper.cpp",
