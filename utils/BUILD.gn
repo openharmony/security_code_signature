@@ -36,6 +36,7 @@ ohos_source_set("fsverity_sign_src_set") {
     "fsverity-utils:libfsverity_utils",
     "hilog:libhilog",
     "openssl:libcrypto_shared",
+    "elfio:elfio",
   ]
   part_name = "code_signature"
   subsystem_name = "security"

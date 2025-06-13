@@ -17,6 +17,7 @@
       "//base/security/code_signature/hisysevent.yaml"
     ],
     "features": [
+      "code_signature_support_binary_enable",
       "code_signature_support_oh_code_sign",
       "code_signature_enable_xpm_mode",
       "code_signature_support_oh_release_app",
@@ -50,7 +51,8 @@
         "bounds_checking_function",
         "rust_rust-openssl",
         "selinux",
-        "rust_cxx"
+        "rust_cxx",
+        "elfio"
       ],
       "third_party": []
     },

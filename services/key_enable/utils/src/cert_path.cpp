@@ -23,7 +23,7 @@
 #include <sys/ioctl.h>
 #include <parameters.h>
 #include <parameter.h>
-#include "log.h"
+#include "log_rust.h"
 #include "errcode.h"
 
 using namespace OHOS::Security::CodeSign;

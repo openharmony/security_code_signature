@@ -41,6 +41,9 @@
 #include "signer_info.h"
 #include "rust_interface.h"
 #include "data_size_report_adapter.h"
+#ifdef SUPPORT_BINARY_ENABLE
+#include "elf_code_sign_block.h"
+#endif
 
 namespace OHOS {
 namespace Security {
@@ -276,6 +279,29 @@ int32_t CodeSignUtils::RemoveKeyInProfile(const std::string &bundleName)
     LOG_ERROR("Remove key in profile failed. ret = %{public}d", ret);
     return CS_ERR_PROFILE;
 }
+
+#ifdef SUPPORT_BINARY_ENABLE
+int32_t CodeSignUtils::EnableKey(const CertPathInfo &info)
+{
+    return static_cast<int32_t>(AddCertPath(info));
+}
+
+int32_t CodeSignUtils::RemoveKey(const CertPathInfo &info)
+{
+    return static_cast<int32_t>(RemoveCertPath(info));
+}
+
+int32_t CodeSignUtils::EnforceCodeSignForFile(const std::string &path)
+{
+    LOG_INFO("Start to enforce codesign elf file: path = %{public}s", path.c_str());
+    std::string realPath;
+    if (!OHOS::PathToRealPath(path, realPath)) {
+        return CS_ERR_FILE_PATH;
+    }
+    ElfCodeSignBlock elfCodeSignBlock;
+    return elfCodeSignBlock.EnforceCodeSign(realPath, EnableCodeSignForFile);
+}
+#endif
 
 bool CodeSignUtils::InPermissiveMode()
 {

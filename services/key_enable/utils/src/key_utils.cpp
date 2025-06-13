@@ -20,7 +20,7 @@
 #include <cstring>
 #include <unistd.h>
 
-#include "log.h"
+#include "log_rust.h"
 
 constexpr int KEYCTL_RESTRICT_KEYRING = 29;
 
