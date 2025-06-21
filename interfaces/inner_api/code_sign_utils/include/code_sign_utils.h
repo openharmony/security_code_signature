@@ -25,6 +25,9 @@
 #include <linux/fsverity.h>
 #include "byte_buffer.h"
 #include "errcode.h"
+#ifdef SUPPORT_BINARY_ENABLE
+#include "cert_path.h"
+#endif
 
 namespace OHOS {
 namespace Security {
@@ -113,6 +116,30 @@ public:
      * @return err code, see err_code.h
      */
     static int32_t RemoveKeyInProfile(const std::string &bundleName);
+
+#ifdef SUPPORT_BINARY_ENABLE
+    /**
+    * @brief Enable certificate path
+    * @param info CertPathInfo structure containing path information
+    * @return err code, see err_code.h
+    */
+    static int32_t EnableKey(const CertPathInfo &info);
+
+    /**
+    * @brief Remove certificate path
+    * @param info CertPathInfo structure containing path information
+    * @return err code, see err_code.h
+    */
+    static int32_t RemoveKey(const CertPathInfo &info);
+
+    /**
+     * @brief Enforce code signature for elf file
+     * @param path file path
+     * @return err code, see err_code.h
+     */
+    static int32_t EnforceCodeSignForFile(const std::string &path);
+#endif
+
     /**
      * @brief Whether enabling code signing for app compiled by oh-sdk
      * @return return ture if support oh-sdk code sign

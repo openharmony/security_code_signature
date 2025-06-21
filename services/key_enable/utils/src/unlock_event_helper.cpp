@@ -18,7 +18,7 @@
 #include <unistd.h>
 
 #include "datetime_ex.h"
-#include "log.h"
+#include "log_rust.h"
 
 #ifdef SCREENLOCK_MANAGER_ENABLED
 #include "screenlock_manager.h"

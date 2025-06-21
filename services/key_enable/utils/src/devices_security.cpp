@@ -22,7 +22,7 @@
 #include <unistd.h>
 #include <securec.h>
 
-#include "log.h"
+#include "log_rust.h"
 
 using namespace OHOS::Security::CodeSign;
 
