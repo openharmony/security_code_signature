@@ -40,7 +40,8 @@ enum SignErrCode {
     CS_ERR_COMPUTE_DIGEST = -0x204,
     CS_ERR_NO_OWNER_ID = -0x205,
     CS_ERR_INIT_LOCAL_CERT = -0x206,
-    CS_ERR_VERIFY_CERT = -0x207
+    CS_ERR_VERIFY_CERT = -0x207,
+    CS_ERR_NO_PLUGIN_ID = -0x208
 };
 
 enum OpenSSLErrCode {
@@ -60,6 +61,7 @@ enum VerifyErrCode {
     CS_ERR_PROFILE = -0x305,
     CS_ERR_ENABLE_TIMEOUT = -0x306,
     CS_ERR_FSVREITY_NOT_ENABLED = -0x307,
+    CS_ERR_INVALID_PLUGIN_ID = -0x308,
 };
 
 enum IPCErrCode {

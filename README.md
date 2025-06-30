@@ -43,6 +43,7 @@ The code signature component provides the following functions:
 | int32_t EnforceCodeSignForApp(const std::string &path, const EntryMap &entryPathMap, FileType type, uint32_t flag); | Enforces code signing for HAPs.|
 | int32_t EnforceCodeSignForFile(const std::string &path, const ByteBuffer &signature); | Enforces code signing for files.|
 | int32_t EnforceCodeSignForAppWithOwnerId(std::string ownerId, const std::string &path, const EntryMap &entryPathMap, FileType type, uint32_t flag); | Enforces code signing for HAPs with the owner ID.|
+| int32_t EnforceCodeSignForAppWithPluginId(std::string ownerId, std::string pluginId, const std::string &path, const EntryMap &entryPathMap, FileType type, uint32_t flag); | Enforces code signing for HAPs with the owner ID and plugin ID. |
 | int ParseOwnerIdFromSignature(const ByteBuffer &sigbuffer, std::string &ownerID); | Parses the owner ID from the signature.|
 | int32_t EnableKeyInProfile(const std::string &bundleName, const ByteBuffer &profileBuffer); | Trusts a developer certificate.|
 | int32_t RemoveKeyInProfile(const std::string &bundleName); | Revokes a trusted developer certificate.|

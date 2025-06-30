@@ -69,7 +69,7 @@ public:
         FileType type, uint32_t flag = 0);
 
     /**
-     * @brief Enforce code signature for a hap with ownerID
+     * @brief Enforce code signature for a hap with owner ID
      * @param ownerId app-identifier of the signature
      * @param path hap real path on disk
      * @param entryPath map from entryname in hap to real path on disk
@@ -79,6 +79,19 @@ public:
      */
     int32_t EnforceCodeSignForAppWithOwnerId(const std::string &ownerId, const std::string &path,
         const EntryMap &entryPathMap, FileType type, uint32_t flag = 0);
+
+    /**
+     * @brief Enforce code signature for a hap with plugin ID
+     * @param ownerId app-identifier of the signature
+     * @param pluginId plugin-identifier of the signature
+     * @param path hap real path on disk
+     * @param entryPath map from entryname in hap to real path on disk
+     * @param type signature file type
+     * @param flag attributes of libs
+     * @return err code, see err_code.h
+     */
+    int32_t EnforceCodeSignForAppWithPluginId(const std::string &ownerId, const std::string &pluginId,
+        const std::string &path, const EntryMap &entryPathMap, FileType type, uint32_t flag = 0);
 
     /**
      * @brief Enforce code signature for file with signature
@@ -158,7 +171,8 @@ public:
     static int32_t IsSupportFsVerity(const std::string &path);
 private:
     static int32_t EnableCodeSignForFile(const std::string &path, const struct code_sign_enable_arg &arg);
-    int32_t ProcessCodeSignBlock(const std::string &ownerId, const std::string &path, FileType type, uint32_t flag);
+    int32_t ProcessCodeSignBlock(const std::string &ownerId, const std::string &pluginId,
+        const std::string &path, FileType type, uint32_t flag);
     int32_t HandleCodeSignBlockFailure(const std::string &realPath, int32_t ret);
 private:
     EntryMap storedEntryMap_;

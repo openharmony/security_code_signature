@@ -30,8 +30,8 @@ int32_t CodeSignHelper::ParseCodeSignBlock(const std::string &realPath,
     return codeSignBlock_.ParseCodeSignBlock(realPath, entryMap, fileType);
 }
 
-int32_t CodeSignHelper::ProcessMultiTask(const std::string &ownerId, const std::string &path,
-    CallbackFunc &func, uint32_t flag)
+int32_t CodeSignHelper::ProcessMultiTask(const std::string &ownerId, const std::string &pluginId,
+    const std::string &path, CallbackFunc &func, uint32_t flag)
 {
     int32_t ret;
     do {
@@ -42,7 +42,7 @@ int32_t CodeSignHelper::ProcessMultiTask(const std::string &ownerId, const std::
             return ret;
         }
     } while (ret == CS_SUCCESS);
-    return ExecuteMultiTask(ownerId, path, func);
+    return ExecuteMultiTask(ownerId, pluginId, path, func);
 }
 
 int32_t CodeSignHelper::ProcessOneFile(uint32_t flag)
@@ -67,10 +67,10 @@ int32_t CodeSignHelper::ProcessOneFile(uint32_t flag)
     return ret;
 }
 
-int32_t CodeSignHelper::ExecuteMultiTask(const std::string &ownerId,
+int32_t CodeSignHelper::ExecuteMultiTask(const std::string &ownerId, const std::string &pluginId,
     const std::string &path, CallbackFunc &func)
 {
-    return multiTask_.ExecuteEnableCodeSignTask(ownerId, path, func);
+    return multiTask_.ExecuteEnableCodeSignTask(ownerId, pluginId, path, func);
 }
 
 void CodeSignHelper::ShowCodeSignInfo(const std::string &path, const struct code_sign_enable_arg &arg)

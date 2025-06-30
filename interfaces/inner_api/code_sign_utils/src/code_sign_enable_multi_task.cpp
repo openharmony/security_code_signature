@@ -84,7 +84,7 @@ int32_t CodeSignEnableMultiTask::IsFsVerityEnabled(const std::string &path)
 }
 
 int32_t CodeSignEnableMultiTask::ExecuteEnableCodeSignTask(const std::string &ownerId,
-    const std::string &path, CallbackFunc &func)
+    const std::string &pluginId, const std::string &path, CallbackFunc &func)
 {
     SortTaskData();
 
@@ -93,7 +93,7 @@ int32_t CodeSignEnableMultiTask::ExecuteEnableCodeSignTask(const std::string &ow
     for (uint32_t i = 0; i < enableData_.size(); i++) {
         LOG_DEBUG("index: %{public}d, name:%{public}s, %{public}lld",
             i, enableData_[i].first.c_str(), enableData_[i].second.data_size);
-        ExecuteEnableCodeSignTask(i, taskRet, ownerId, path, func);
+        ExecuteEnableCodeSignTask(i, taskRet, ownerId, pluginId, path, func);
     }
 
     std::unique_lock<std::mutex> lock(cvLock_);
@@ -127,9 +127,10 @@ void CodeSignEnableMultiTask::SortTaskData()
 }
 
 void CodeSignEnableMultiTask::ExecuteEnableCodeSignTask(uint32_t &index, int32_t &taskRet,
-    const std::string &ownerId, const std::string &path, CallbackFunc &func)
+    const std::string &ownerId, const std::string &pluginId,
+    const std::string &path, CallbackFunc &func)
 {
-    auto enableCodeSignTask = [this, index, &ownerId, &path, &func, &taskRet]() {
+    auto enableCodeSignTask = [this, index, &ownerId, &pluginId, &path, &func, &taskRet]() {
         LOG_DEBUG("ExecuteEnableCodeSignTask task called");
         {
             std::unique_lock<std::mutex> lock(cvLock_);
@@ -142,9 +143,13 @@ void CodeSignEnableMultiTask::ExecuteEnableCodeSignTask(uint32_t &index, int32_t
             }
         }
 
-        int32_t ret = CheckOwnerId(path, ownerId,
+        int32_t ownerRet = CheckOwnerId(path, ownerId,
             reinterpret_cast<const uint8_t *>(this->enableData_[index].second.sig_ptr),
             this->enableData_[index].second.sig_size);
+        int32_t pluginRet = CheckPluginId(path, pluginId,
+            reinterpret_cast<const uint8_t *>(this->enableData_[index].second.sig_ptr),
+            this->enableData_[index].second.sig_size);
+        int32_t ret = ownerRet != CS_SUCCESS ? ownerRet : pluginRet;
         if (ret == CS_SUCCESS) {
             ret = func(this->enableData_[index].first, this->enableData_[index].second);
         }
@@ -181,6 +186,29 @@ int32_t CodeSignEnableMultiTask::CheckOwnerId(const std::string &path, const std
         ret = CS_ERR_INVALID_OWNER_ID;
         ReportInvalidOwner(path, ownerId, retId);
         LOG_ERROR("invalid ownerId retId %{public}s ownerId %{public}s", retId.c_str(), ownerId.c_str());
+    }
+    return ret;
+}
+
+int32_t CodeSignEnableMultiTask::CheckPluginId(const std::string &path, const std::string &pluginId,
+    const uint8_t *sigPtr, uint32_t sigSize)
+{
+    if (pluginId.empty()) {
+        return CS_SUCCESS;
+    }
+
+    int32_t ret;
+    ByteBuffer sigBuffer;
+    sigBuffer.CopyFrom(sigPtr, sigSize);
+    std::string retId;
+    ret = SignerInfo::ParsePluginIdFromSignature(sigBuffer, retId);
+    if (ret != CS_SUCCESS) {
+        ReportInvalidPlugin(path, pluginId, "invalid");
+        LOG_ERROR("get pluginId from signature failed, ret %{public}d", ret);
+    } else if (retId != pluginId) {
+        ret = CS_ERR_INVALID_PLUGIN_ID;
+        ReportInvalidPlugin(path, pluginId, retId);
+        LOG_ERROR("invalid pluginId retId %{public}s pluginId %{public}s", retId.c_str(), pluginId.c_str());
     }
     return ret;
 }

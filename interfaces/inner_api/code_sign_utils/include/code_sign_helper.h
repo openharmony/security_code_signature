@@ -36,15 +36,18 @@ public:
     /**
      * @brief multithreading code signing enable task
      * @param ownerId string to abtain owner ID from the signature file
+     * @param pluginId string to abtain plugin ID from the signature file
      * @param path hap real path on disk
      * @param CallbackFunc enforce code sign callback function address
      * @param flag attributes of libs
      * @return err code, see err_code.h
      */
-    int32_t ProcessMultiTask(const std::string &ownerId, const std::string &path, CallbackFunc &func, uint32_t flag);
+    int32_t ProcessMultiTask(const std::string &ownerId, const std::string &pluginId,
+        const std::string &path, CallbackFunc &func, uint32_t flag);
 private:
     int32_t ProcessOneFile(uint32_t flag);
-    int32_t ExecuteMultiTask(const std::string &ownerId, const std::string &path, CallbackFunc &func);
+    int32_t ExecuteMultiTask(const std::string &ownerId, const std::string &pluginId,
+        const std::string &path, CallbackFunc &func);
     void ShowCodeSignInfo(const std::string &path, const struct code_sign_enable_arg &arg);
 private:
     CodeSignBlock codeSignBlock_;

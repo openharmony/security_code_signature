@@ -32,8 +32,12 @@ public:
     static const std::string OWNERID_OID;
     static const std::string OWNERID_OID_SHORT_NAME;
     static const std::string OWNERID_OID_LONG_NAME;
+    static const std::string PLUGINID_OID;
+    static const std::string PLUGINID_OID_SHORT_NAME;
+    static const std::string PLUGINID_OID_LONG_NAME;
     
     static int ParseOwnerIdFromSignature(const ByteBuffer &sigbuffer, std::string &ownerID);
+    static int ParsePluginIdFromSignature(const ByteBuffer &sigbuffer, std::string &pluginID);
     bool InitSignerInfo(const std::string &ownerID, X509 *cert, const EVP_MD *md, const ByteBuffer &contentData,
                         bool carrySigningTime = false);
     bool AddSignatureInSignerInfo(const ByteBuffer &signature);
@@ -45,6 +49,8 @@ private:
     bool AddAttrsToSignerInfo(const std::string &ownerID, const ByteBuffer &contentData);
     bool ComputeDigest(const ByteBuffer &data, ByteBuffer &digest);
     int GetSignAlgorithmID(const X509 *cert);
+    int AddID(const std::string &id, int nid);
+    static int ParseIdFromSignature(const ByteBuffer &sigbuffer, std::string &id, int nid);
 
     PKCS7_SIGNER_INFO *p7info_ = nullptr;
     const EVP_MD *md_ = nullptr;
