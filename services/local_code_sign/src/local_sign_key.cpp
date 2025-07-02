@@ -24,7 +24,9 @@
 #include "byte_buffer.h"
 #include "cert_utils.h"
 #include "errcode.h"
+#include "iservice_registry.h"
 #include "log.h"
+#include "system_ability_definition.h"
 
 namespace OHOS {
 namespace Security {
@@ -94,8 +96,23 @@ void LocalSignKey::SetChallenge(const ByteBuffer &challenge)
         LOG_ERROR("set challenge failed.");
     }
 }
+sptr<AppExecFwk::IBundleMgr> LocalSignKey::Connect()
+{
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (systemAbilityManager == nullptr) {
+        LOG_ERROR("failed to get system ability manager");
+        return nullptr;
+    }
+    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    if (remoteObject == nullptr) {
+        LOG_ERROR("get remoteObject failed");
+        return nullptr;
+    }
+    return iface_cast<AppExecFwk::IBundleMgr>(remoteObject);
+}
 
-bool LocalSignKey::InitKey()
+bool LocalSignKey::UpdateKey()
 {
     HUKSParamSet paramSet;
     bool bRet = paramSet.Init(ECC_EXIST_PRARAM, sizeof(ECC_EXIST_PRARAM) / sizeof(HksParam));
@@ -104,11 +121,29 @@ bool LocalSignKey::InitKey()
     }
     int32_t ret = HksKeyExist(&LOCAL_SIGN_KEY_ALIAS, paramSet.GetParamSet());
     if (ret == HKS_ERROR_NOT_EXIST) {
+        sptr<AppExecFwk::IBundleMgr> bundleMgr = Connect();
+        if (bundleMgr == nullptr) {
+            LOG_ERROR("get bundleMgr failed");
+            return false;
+        }
+        int32_t result = bundleMgr->ResetAllAOT();
+        if (result != ERR_OK) {
+            LOG_ERROR("bundleMgr reset aot fail.");
+            return false;
+        }
         if (!GenerateKey()) {
             return false;
         }
     } else if (ret != HKS_SUCCESS) {
         LOG_ERROR("HksKeyExist fail, ret is %{public}d!", ret);
+        return false;
+    }
+    return true;
+}
+
+bool LocalSignKey::InitKey()
+{
+    if (!UpdateKey()) {
         return false;
     }
     certChain_ = QueryCertChain();
@@ -269,11 +304,13 @@ bool LocalSignKey::Sign(const ByteBuffer &data, ByteBuffer &signature)
 
 bool LocalSignKey::SignByHUKS(const struct HksBlob *inData, struct HksBlob *outData)
 {
+    if (!UpdateKey()) {
+        return false;
+    }
     HUKSParamSet paramSet;
     if (!GetSignParamSet(paramSet)) {
         return false;
     }
-
     // first stage: init, set key alias
     uint8_t tmpHandle[sizeof(uint64_t)] = {0};
     struct HksBlob handle = { sizeof(uint64_t), tmpHandle };
@@ -282,7 +319,6 @@ bool LocalSignKey::SignByHUKS(const struct HksBlob *inData, struct HksBlob *outD
         LOG_ERROR("HksInit failed");
         return false;
     }
-
     // second stage: update, send input data to HUKS
     struct HksBlob tmpOutData = {
         .size = MAX_SIGN_SIZE,
@@ -299,7 +335,6 @@ bool LocalSignKey::SignByHUKS(const struct HksBlob *inData, struct HksBlob *outD
         free(tmpOutData.data);
         return false;
     }
-
     // third stage: finish, get signature from HUKS
     tmpOutData.size = 0;
     ret = HksFinish(&handle, paramSet.GetParamSet(), &tmpOutData, outData);
