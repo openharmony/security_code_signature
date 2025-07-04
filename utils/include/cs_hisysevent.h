@@ -54,6 +54,13 @@ inline void ReportInvalidOwner(const std::string &fileInfo, const std::string &o
         HiviewDFX::HiSysEvent::EventType::SECURITY,
         "FILE_INFO", fileInfo, "OWNER_ID", ownerID, "PARSED_OWNER_ID", parsedOwnerID);
 }
+inline void ReportInvalidPlugin(const std::string &fileInfo, const std::string &pluginID,
+    const std::string &parsedPluginID)
+{
+    HiSysEventWrite(HiviewDFX::HiSysEvent::Domain::CODE_SIGN, "CS_INVALID_PLUGIN",
+        HiviewDFX::HiSysEvent::EventType::SECURITY,
+        "FILE_INFO", fileInfo, "PLUGIN_ID", pluginID, "PARSED_PLUGIN_ID", parsedPluginID);
+}
 }
 }
 }

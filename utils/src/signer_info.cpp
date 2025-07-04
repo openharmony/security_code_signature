@@ -37,6 +37,9 @@ static constexpr int MAX_SIGNATURE_SIZE = 1024; // 1024: max signature length
 const std::string SignerInfo::OWNERID_OID = "1.3.6.1.4.1.2011.2.376.1.4.1";
 const std::string SignerInfo::OWNERID_OID_SHORT_NAME = "ownerID";
 const std::string SignerInfo::OWNERID_OID_LONG_NAME = "Code Signature Owner ID";
+const std::string SignerInfo::PLUGINID_OID = "1.3.6.1.4.1.2011.2.376.1.4.2";
+const std::string SignerInfo::PLUGINID_OID_SHORT_NAME = "pluginID";
+const std::string SignerInfo::PLUGINID_OID_LONG_NAME = "Code Signature Plugin ID";
 
 bool SignerInfo::InitSignerInfo(const std::string &ownerID, X509 *cert, const EVP_MD *md,
     const ByteBuffer &contentData, bool carrySigningTime)
@@ -225,14 +228,13 @@ PKCS7_SIGNER_INFO *SignerInfo::GetSignerInfo()
     return p7info_;
 }
 
-int SignerInfo::AddOwnerID(const std::string &ownerID)
+int SignerInfo::AddID(const std::string &id, int nid)
 {
-    int nid = CreateNIDFromOID(OWNERID_OID, OWNERID_OID_SHORT_NAME, OWNERID_OID_LONG_NAME);
-    ASN1_STRING *ownerIDAsn1 = ASN1_STRING_new();
-    ASN1_STRING_set(ownerIDAsn1, ownerID.c_str(), ownerID.length());
-    int ret = PKCS7_add_signed_attribute(p7info_, nid, V_ASN1_UTF8STRING, ownerIDAsn1);
+    ASN1_STRING *idAsn1 = ASN1_STRING_new();
+    ASN1_STRING_set(idAsn1, id.c_str(), id.length());
+    int ret = PKCS7_add_signed_attribute(p7info_, nid, V_ASN1_UTF8STRING, idAsn1);
     if (ret == 0) {
-        ASN1_STRING_free(ownerIDAsn1);
+        ASN1_STRING_free(idAsn1);
         ERR_LOG_WITH_OPEN_SSL_MSG("PKCS7_add_signed_attribute failed");
         return CS_ERR_OPENSSL_PKCS7;
     }
@@ -240,9 +242,8 @@ int SignerInfo::AddOwnerID(const std::string &ownerID)
     return CS_SUCCESS;
 }
 
-int SignerInfo::ParseOwnerIdFromSignature(const ByteBuffer &sigbuffer, std::string &ownerID)
+int SignerInfo::ParseIdFromSignature(const ByteBuffer &sigbuffer, std::string &id, int nid)
 {
-    int nid = CreateNIDFromOID(OWNERID_OID, OWNERID_OID_SHORT_NAME, OWNERID_OID_LONG_NAME);
     BIO *bio = BIO_new_mem_buf(sigbuffer.GetBuffer(), sigbuffer.GetSize());
     if (bio == nullptr) {
         ERR_LOG_WITH_OPEN_SSL_MSG("BIO_new_mem_buf failed");
@@ -267,17 +268,48 @@ int SignerInfo::ParseOwnerIdFromSignature(const ByteBuffer &sigbuffer, std::stri
         ASN1_TYPE *asn1Type = PKCS7_get_signed_attribute(signerInfo, nid);
         if (asn1Type != nullptr && asn1Type->type == V_ASN1_UTF8STRING) {
             ASN1_STRING *result = asn1Type->value.asn1_string;
-            ownerID.assign(reinterpret_cast<const char *>(ASN1_STRING_get0_data(result)), ASN1_STRING_length(result));
+            id.assign(reinterpret_cast<const char *>(ASN1_STRING_get0_data(result)), ASN1_STRING_length(result));
             break;
         }
     }
     BIO_free(bio);
     PKCS7_free(p7);
+    return CS_SUCCESS;
+}
+
+int SignerInfo::AddOwnerID(const std::string &ownerID)
+{
+    int nid = CreateNIDFromOID(OWNERID_OID, OWNERID_OID_SHORT_NAME, OWNERID_OID_LONG_NAME);
+
+    return AddID(ownerID, nid);
+}
+
+int SignerInfo::ParseOwnerIdFromSignature(const ByteBuffer &sigbuffer, std::string &ownerID)
+{
+    int nid = CreateNIDFromOID(OWNERID_OID, OWNERID_OID_SHORT_NAME, OWNERID_OID_LONG_NAME);
+    int err = ParseIdFromSignature(sigbuffer, ownerID, nid);
+    if (err != CS_SUCCESS) {
+        return err;
+    }
     if (ownerID.empty()) {
         return CS_ERR_NO_OWNER_ID;
     }
     return CS_SUCCESS;
 }
+
+int SignerInfo::ParsePluginIdFromSignature(const ByteBuffer &sigbuffer, std::string &pluginID)
+{
+    int nid = CreateNIDFromOID(PLUGINID_OID, PLUGINID_OID_SHORT_NAME, PLUGINID_OID_LONG_NAME);
+    int err = ParseIdFromSignature(sigbuffer, pluginID, nid);
+    if (err != CS_SUCCESS) {
+        return err;
+    }
+    if (pluginID.empty()) {
+        return CS_ERR_NO_PLUGIN_ID;
+    }
+    return CS_SUCCESS;
+}
+
 }
 }
 }

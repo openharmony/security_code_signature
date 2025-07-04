@@ -44,11 +44,12 @@ public:
     /**
      * @brief Execute code signature addition task
      * @param ownerId app-identifier of the signature
+     * @param pluginId plugin-identifier of the signature
      * @param path hap real path on disk
      * @param func Callback enable function
      * @return err code, see err_code.h
      */
-    int32_t ExecuteEnableCodeSignTask(const std::string &ownerId,
+    int32_t ExecuteEnableCodeSignTask(const std::string &ownerId, const std::string &pluginId,
         const std::string &path, CallbackFunc &func);
     /**
      * @brief Check whether file is verity enabled by fd
@@ -60,8 +61,10 @@ private:
     static int32_t IsFsVerityEnabled(const std::string &path);
     void SortTaskData();
     void ExecuteEnableCodeSignTask(uint32_t &index, int32_t &taskRet, const std::string &ownerId,
-        const std::string &path, CallbackFunc &func);
+        const std::string &pluginId, const std::string &path, CallbackFunc &func);
     int32_t CheckOwnerId(const std::string &path, const std::string &ownerId,
+        const uint8_t *sigPtr, uint32_t sigSize);
+    int32_t CheckPluginId(const std::string &path, const std::string &pluginId,
         const uint8_t *sigPtr, uint32_t sigSize);
 private:
     std::mutex cvLock_;
