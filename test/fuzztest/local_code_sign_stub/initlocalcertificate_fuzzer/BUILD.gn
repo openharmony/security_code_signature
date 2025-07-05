@@ -71,5 +71,7 @@ ohos_fuzztest("InitLocalCertificateFuzzTest") {
     "openssl:libcrypto_shared",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
   ]
 }

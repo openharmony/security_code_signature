@@ -52,7 +52,8 @@
         "rust_rust-openssl",
         "selinux",
         "rust_cxx",
-        "elfio"
+        "elfio",
+        "bundle_framework"
       ],
       "third_party": []
     },

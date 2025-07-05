@@ -24,6 +24,7 @@
 #include "errcode.h"
 #include "huks_param_set.h"
 #include "log.h"
+#include "bundle_mgr_proxy.h"
 #include "sign_key.h"
 
 namespace OHOS {
@@ -52,6 +53,8 @@ private:
     bool GetAttestParamSet(HUKSParamSet &paramSet);
     bool GetSignParamSet(HUKSParamSet &paramSet);
     bool SignByHUKS(const struct HksBlob *inData, struct HksBlob *outData);
+    sptr<AppExecFwk::IBundleMgr> Connect();
+    bool UpdateKey();
 
 private:
     ByteBuffer *cert_ = nullptr;
