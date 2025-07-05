@@ -17,7 +17,9 @@ import("../../../code_signature.gni")
 config("public_code_sign_utils_configs") {
   include_dirs = [ "include" ]
   if (code_signature_support_binary_enable) {
-    include_dirs += [ "${code_signature_root_dir}/services/key_enable/utils/include" ]
+    defines = [ "SUPPORT_BINARY_ENABLE" ]
+    include_dirs +=
+        [ "${code_signature_root_dir}/services/key_enable/utils/include" ]
   }
 }
 
@@ -75,7 +77,8 @@ ohos_shared_library("libcode_sign_utils") {
     "openssl:libcrypto_shared",
   ]
   if (code_signature_support_binary_enable) {
-    sources += [ "${code_signature_root_dir}/utils/src/elf_code_sign_block.cpp" ]
+    sources +=
+        [ "${code_signature_root_dir}/utils/src/elf_code_sign_block.cpp" ]
     deps += [ "${code_signature_root_dir}/services/key_enable/utils:libkey_enable_utils" ]
     defines += [ "SUPPORT_BINARY_ENABLE" ]
     external_deps += [ "elfio:elfio" ]
