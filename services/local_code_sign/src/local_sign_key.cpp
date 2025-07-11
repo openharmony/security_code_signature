@@ -121,6 +121,7 @@ bool LocalSignKey::UpdateKey()
     }
     int32_t ret = HksKeyExist(&LOCAL_SIGN_KEY_ALIAS, paramSet.GetParamSet());
     if (ret == HKS_ERROR_NOT_EXIST) {
+        LOG_DEBUG("if the key does not exist, update the key, ret is %{public}d!", ret);
         sptr<AppExecFwk::IBundleMgr> bundleMgr = Connect();
         if (bundleMgr == nullptr) {
             LOG_ERROR("get bundleMgr failed");
