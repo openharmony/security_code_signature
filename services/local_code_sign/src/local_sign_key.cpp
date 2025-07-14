@@ -121,9 +121,10 @@ bool LocalSignKey::UpdateKey()
     }
     int32_t ret = HksKeyExist(&LOCAL_SIGN_KEY_ALIAS, paramSet.GetParamSet());
     if (ret == HKS_ERROR_NOT_EXIST) {
+        LOG_INFO("The key does not exist, update the key, ret is %{public}d!", ret);
         sptr<AppExecFwk::IBundleMgr> bundleMgr = Connect();
         if (bundleMgr == nullptr) {
-            LOG_ERROR("get bundleMgr failed");
+            LOG_ERROR("Get bundleMgr failed");
             return false;
         }
         int32_t result = bundleMgr->ResetAllAOT();
@@ -132,6 +133,7 @@ bool LocalSignKey::UpdateKey()
             return false;
         }
         if (!GenerateKey()) {
+            LOG_ERROR("GenerateKey fail.");
             return false;
         }
     } else if (ret != HKS_SUCCESS) {
