@@ -38,6 +38,7 @@ ohos_static_library("libkey_enable_utils") {
     "common_event_service:cesfwk_innerkits",
     "hilog:libhilog",
     "init:libbegetutil",
+    "ipc:ipc_single",
     "samgr:samgr_proxy",
     "eventhandler:libeventhandler",
   ]
