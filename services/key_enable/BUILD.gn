@@ -135,7 +135,7 @@ ohos_prebuilt_etc("key_enable.cfg") {
 
 group("key_enable_targets") {
   deps = []
-  if (host_os == "linux" && !is_asan) {
+  if (host_os == "linux") {
     deps += [
       ":key_enable.cfg",
       ":trusted_cert_path",
