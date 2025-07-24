@@ -31,6 +31,7 @@
 │    ├── key_enable              # 证书初始化
 │    └── local_code_sign         # 本地签名服务
 ├── test                         # 测试用例
+│    ├── common                  # 测试通用能力
 │    ├── fuzztest                # fuzz测试用例
 │    └── unittest                # 单元测试用例
 └── utils                        # 公共基础能力
