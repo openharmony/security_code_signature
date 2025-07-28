@@ -46,8 +46,8 @@
 | int32_t EnforceCodeSignForApp(const std::string &path, const EntryMap &entryPathMap, FileType type, uint32_t flag); | 对hap使能代码签名 |
 | int32_t EnforceCodeSignForFile(const std::string &path, const ByteBuffer &signature); | 对文件使能代码签名 |
 | int32_t EnforceCodeSignForFile(const std::string &path); | 对二进制文件使能代码签名 |
-| int32_t EnforceCodeSignForAppWithOwnerId(std::string ownerId, const std::string &path, const EntryMap &entryPathMap, FileType type, uint32_t flag); | 对hap使能代码签名和OwnerId校验 |
-| int32_t EnforceCodeSignForAppWithPluginId(std::string ownerId, std::string pluginId, const std::string &path, const EntryMap &entryPathMap, FileType type, uint32_t flag); | 对hap使能代码签名、OwnerId和PluginId校验 |
+| int32_t EnforceCodeSignForAppWithOwnerId(const std::string ownerId, const std::string &path, const EntryMap &entryPathMap, FileType type, uint32_t flag); | 对hap使能代码签名和OwnerId校验 |
+| int32_t EnforceCodeSignForAppWithPluginId(const std::string ownerId, const std::string pluginId, const std::string &path, const EntryMap &entryPathMap, FileType type, uint32_t flag); | 对hap使能代码签名、OwnerId和PluginId校验 |
 | int ParseOwnerIdFromSignature(const ByteBuffer &sigbuffer, std::string &ownerID); | 从签名中解析OwnerId |
 | int32_t EnableKeyInProfile(const std::string &bundleName, const ByteBuffer &profileBuffer); | 信任开发者证书 |
 | int32_t RemoveKeyInProfile(const std::string &bundleName); | 撤销已信任的开发者证书 |
@@ -58,16 +58,16 @@
 | int32_t SignLocalCode(const std::string &ownerID, const std::string &filePath, ByteBuffer &signature); | 带OwnerId的本地代码签名 |
 | int InitXpm(int enableJitFort, uint32_t idType, const char *ownerId, const char *apiTargetVersionStr); | 初始化XPM相关资源（XPM地址范围、JitFort模式、OwnerId配置等）|
 | int SetXpmOwnerId(uint32_t idType, const char *ownerId); | 设置OwnerId |
-| int32_t RegisterTmpBuffer(JitCodeSignerBase *signer, void *tmpBuffer); | 注册临时Buffer起始地址 |
-| int32_t AppendInstruction(JitCodeSignerBase *signer, Instr instr); | 对添加到临时Buffer的指令签名 |
-| int32_t AppendData(JitCodeSignerBase *signer, const void *const data, uint32_t size); | 对添加到临时Buffer的数据签名 |
-| int32_t WillFixUp(JitCodeSignerBase *signer, uint32_t n = 1); | 声明下n条指令待更新 |
-| int32_t PatchInstruction(JitCodeSignerBase *signer, int offset, Instr instr); | 更新缓冲区的偏移处指令签名 |
-| int32_t PatchInstruction(JitCodeSignerBase *signer, void *address, Instr insn); | 更新对应地址指令签名 |
-| int32_t PatchData(JitCodeSignerBase *signer, int offset, const void *const data, uint32_t size); | 更新缓冲区偏移处数据签名 |
-| int32_t PatchData(JitCodeSignerBase *signer, void *address, const void *const data, uint32_t size); | 更新对应地址数据签名 |
+| int32_t RegisterTmpBuffer(JitCodeSigner *signer, void *tmpBuffer); | 注册临时Buffer起始地址 |
+| int32_t AppendInstruction(JitCodeSigner *signer, Instr instr); | 对添加到临时Buffer的指令签名 |
+| int32_t AppendData(JitCodeSigner *signer, const void *const data, uint32_t size); | 对添加到临时Buffer的数据签名 |
+| int32_t WillFixUp(JitCodeSigner *signer, uint32_t n = 1); | 声明下n条指令待更新 |
+| int32_t PatchInstruction(JitCodeSigner *signer, int offset, Instr instr); | 更新缓冲区的偏移处指令签名 |
+| int32_t PatchInstruction(JitCodeSigner *signer, void *address, Instr insn); | 更新对应地址指令签名 |
+| int32_t PatchData(JitCodeSigner *signer, int offset, const void *const data, uint32_t size); | 更新缓冲区偏移处数据签名 |
+| int32_t PatchData(JitCodeSigner *signer, void *address, const void *const data, uint32_t size); | 更新对应地址数据签名 |
 | int32_t ResetJitCode(void *jitMemory, int size); | 重置JIT内存 |
-| int32_t CopyToJitCode(JitCodeSignerBase *signer, void *jitMemory, void *tmpBuffer, int size); | 将JIT代码复制到JIT内存 |
+| int32_t CopyToJitCode(JitCodeSigner *signer, void *jitMemory, void *tmpBuffer, int size); | 将JIT代码复制到JIT内存 |
 
 ### 签名工具使用指南
 
