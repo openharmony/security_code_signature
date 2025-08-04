@@ -144,6 +144,7 @@ public:
     * @return err code, see err_code.h
     */
     static int32_t RemoveKey(const CertPathInfo &info);
+#endif
 
     /**
      * @brief Enforce code signature for elf file
@@ -151,7 +152,6 @@ public:
      * @return err code, see err_code.h
      */
     static int32_t EnforceCodeSignForFile(const std::string &path);
-#endif
 
     /**
      * @brief Whether enabling code signing for app compiled by oh-sdk

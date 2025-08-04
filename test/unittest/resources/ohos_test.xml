@@ -21,6 +21,7 @@
             <option name="shell" value="mkdir -p /data/app/el1/bundle/public/tmp/demo_with_multi_lib_error/libs/arm64-v8a"/>
             <option name="shell" value="mkdir -p /data/app/el1/bundle/public/tmp/demo_with_multi_lib/libs/arm64-v8a/code_sign_block"/>
             <option name="shell" value="mkdir -p /data/app/el1/bundle/public/tmp/demo_with_hnp/bins/"/>
+            <option name="shell" value="mkdir -p /data/app/el1/bundle/public/tmp/demo_elf_v1"/>
             <option name="shell" value="mkdir -p /data/service/el1/public/bms/bundle_manager_service/tmp/demo_without_lib/pkcs7_error"/>
             <option name="shell" value="mkdir -p /data/service/el1/public/bms/bundle_manager_service/tmp/demo_with_multi_lib/pkcs7_error/file"/>
             <option name="shell" value="mkdir -p /data/service/el1/public/bms/bundle_manager_service/tmp/demo_with_multi_lib_error/libs/arm64-v8a"/>
@@ -68,6 +69,19 @@
             <option name="push" value="demo_with_multi_lib/pkcs7_error/file/libentry_07.so.fsv-sig -> /data/service/el1/public/bms/bundle_manager_service/tmp/demo_with_multi_lib/pkcs7_error/file" src="res"/>
             <option name="push" value="demo_with_multi_lib/entry-default-signed-release.hap -> /data/app/el1/bundle/public/tmp/demo_with_multi_lib" src="res"/>
             <option name="push" value="demo_with_multi_lib/entry-default-signed-debug.hap -> /data/app/el1/bundle/public/tmp/demo_with_multi_lib" src="res"/>
+            <option name="push" value="demo_elf_v1/elf-signed-release -> /data/app/el1/bundle/public/tmp/demo_elf_v1" src="res"/>
+            <option name="push" value="demo_elf_v1/elf-signed-magic-error -> /data/app/el1/bundle/public/tmp/demo_elf_v1" src="res"/>
+            <option name="push" value="demo_elf_v1/elf-signed-version-error -> /data/app/el1/bundle/public/tmp/demo_elf_v1" src="res"/>
+            <option name="push" value="demo_elf_v1/elf-signed-block-num-error -> /data/app/el1/bundle/public/tmp/demo_elf_v1" src="res"/>
+            <option name="push" value="demo_elf_v1/elf-signed-block-num-zero -> /data/app/el1/bundle/public/tmp/demo_elf_v1" src="res"/>
+            <option name="push" value="demo_elf_v1/elf-signed-block-size-error -> /data/app/el1/bundle/public/tmp/demo_elf_v1" src="res"/>
+            <option name="push" value="demo_elf_v1/elf-signed-file-error -> /data/app/el1/bundle/public/tmp/demo_elf_v1" src="res"/>
+            <option name="push" value="demo_elf_v1/elf-signed-file-small -> /data/app/el1/bundle/public/tmp/demo_elf_v1" src="res"/>
+            <option name="push" value="demo_elf_v1/elf-signed-block-header-off-error -> /data/app/el1/bundle/public/tmp/demo_elf_v1" src="res"/>
+            <option name="push" value="demo_elf_v1/elf-signed-block-header-off-zero -> /data/app/el1/bundle/public/tmp/demo_elf_v1" src="res"/>
+            <option name="push" value="demo_elf_v1/elf-signed-mt-type-error -> /data/app/el1/bundle/public/tmp/demo_elf_v1" src="res"/>
+            <option name="push" value="demo_elf_v1/elf-signed-mt-length-error -> /data/app/el1/bundle/public/tmp/demo_elf_v1" src="res"/>
+            <option name="push" value="demo_elf_v1/elf-signed-with-profile -> /data/app/el1/bundle/public/tmp/demo_elf_v1" src="res"/>
         </preparer>
         <cleaner>
             <option name="shell" value="rm -rf /data/service/el1/public/bms/bundle_manager_service/tmp"/>
