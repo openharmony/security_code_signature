@@ -41,6 +41,7 @@
 #include "signer_info.h"
 #include "rust_interface.h"
 #include "data_size_report_adapter.h"
+#include "elf_code_sign_block_v1.h"
 #ifdef SUPPORT_BINARY_ENABLE
 #include "elf_code_sign_block.h"
 #endif
@@ -296,18 +297,29 @@ int32_t CodeSignUtils::RemoveKey(const CertPathInfo &info)
 {
     return static_cast<int32_t>(RemoveCertPath(info));
 }
+#endif
 
 int32_t CodeSignUtils::EnforceCodeSignForFile(const std::string &path)
 {
-    LOG_INFO("Start to enforce codesign elf file: path = %{public}s", path.c_str());
+    LOG_DEBUG("Start to enforce elf file, path = %{public}s", path.c_str());
     std::string realPath;
     if (!OHOS::PathToRealPath(path, realPath)) {
         return CS_ERR_FILE_PATH;
     }
+    ElfCodeSignBlockV1 elfCodeSignBlockV1;
+    int32_t ret = elfCodeSignBlockV1.EnforceCodeSign(realPath, EnableCodeSignForFile);
+    if (ret != CS_ERR_BLOCK_MAGIC) {
+        LOG_INFO("Enforcing elf file complete. ret = %{public}d", ret);
+        return ret;
+    }
+    ret = CS_CODE_SIGN_NOT_EXISTS;
+#ifdef SUPPORT_BINARY_ENABLE
     ElfCodeSignBlock elfCodeSignBlock;
-    return elfCodeSignBlock.EnforceCodeSign(realPath, EnableCodeSignForFile);
-}
+    ret = elfCodeSignBlock.EnforceCodeSign(realPath, EnableCodeSignForFile);
 #endif
+    LOG_INFO("Enforcing elf file complete. ret = %{public}d", ret);
+    return ret;
+}
 
 bool CodeSignUtils::InPermissiveMode()
 {

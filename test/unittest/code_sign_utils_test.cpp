@@ -896,6 +896,155 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0038, TestSize.Level0)
     EXPECT_EQ(ret, CS_SUCCESS);
     entryMap.clear();
 }
+
+/**
+* @tc.name: CodeSignUtilsTest_0057
+* @tc.desc: enabling code signing for elf
+* @tc.type: Func
+* @tc.require:
+*/
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0057, TestSize.Level0)
+{
+    std::string elfPath = APP_BASE_PATH + "/demo_elf_v1/elf-signed-release";
+    int32_t ret = CodeSignUtils::EnforceCodeSignForFile(elfPath);
+    EXPECT_EQ(ret, CS_SUCCESS);
+}
+
+/**
+* @tc.name: CodeSignUtilsTest_0058
+* @tc.desc: enabling code signing for elf
+* @tc.type: Func
+* @tc.require:
+*/
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0058, TestSize.Level0)
+{
+    std::string elfPath = APP_BASE_PATH + "/demo_elf_v1/elf-signed-magic-error";
+    int32_t ret = CodeSignUtils::EnforceCodeSignForFile(elfPath);
+    EXPECT_EQ(ret, CS_CODE_SIGN_NOT_EXISTS);
+}
+
+/**
+* @tc.name: CodeSignUtilsTest_0059
+* @tc.desc: enabling code signing for elf
+* @tc.type: Func
+* @tc.require:
+*/
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0059, TestSize.Level0)
+{
+    std::string elfPath = APP_BASE_PATH + "/demo_elf_v1/elf-signed-version-error";
+    int32_t ret = CodeSignUtils::EnforceCodeSignForFile(elfPath);
+    EXPECT_EQ(ret, CS_ERR_BLOCK_VERSION);
+}
+
+/**
+* @tc.name: CodeSignUtilsTest_0060
+* @tc.desc: enabling code signing for elf
+* @tc.type: Func
+* @tc.require:
+*/
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0060, TestSize.Level0)
+{
+    std::string elfPath = APP_BASE_PATH + "/demo_elf_v1/elf-signed-block-num-error";
+    int32_t ret = CodeSignUtils::EnforceCodeSignForFile(elfPath);
+    EXPECT_EQ(ret, CS_ERR_BLOCK_SEG_NUM);
+    elfPath = APP_BASE_PATH + "/demo_elf_v1/elf-signed-block-num-zero";
+    ret = CodeSignUtils::EnforceCodeSignForFile(elfPath);
+    EXPECT_EQ(ret, CS_ERR_BLOCK_SEG_NUM);
+}
+
+/**
+* @tc.name: CodeSignUtilsTest_0061
+* @tc.desc: enabling code signing for elf
+* @tc.type: Func
+* @tc.require:
+*/
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0061, TestSize.Level0)
+{
+    std::string elfPath = APP_BASE_PATH + "/demo_elf_v1/elf-signed-block-size-error";
+    int32_t ret = CodeSignUtils::EnforceCodeSignForFile(elfPath);
+    EXPECT_EQ(ret, CS_ERR_BLOCK_SIZE);
+}
+
+/**
+* @tc.name: CodeSignUtilsTest_0062
+* @tc.desc: enabling code signing for elf
+* @tc.type: Func
+* @tc.require:
+*/
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0062, TestSize.Level0)
+{
+    std::string elfPath = APP_BASE_PATH + "/demo_elf_v1/elf-signed-file-small";
+    int32_t ret = CodeSignUtils::EnforceCodeSignForFile(elfPath);
+    EXPECT_EQ(ret, CS_CODE_SIGN_NOT_EXISTS);
+}
+
+/**
+* @tc.name: CodeSignUtilsTest_0063
+* @tc.desc: enabling code signing for elf
+* @tc.type: Func
+* @tc.require:
+*/
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0063, TestSize.Level0)
+{
+    std::string elfPath = APP_BASE_PATH + "/demo_elf_v1/elf-signed-block-header-off-error";
+    int32_t ret = CodeSignUtils::EnforceCodeSignForFile(elfPath);
+    EXPECT_EQ(ret, CS_ERR_SIGN_INFO_OFFSET);
+    elfPath = APP_BASE_PATH + "/demo_elf_v1/elf-signed-block-header-off-zero";
+    ret = CodeSignUtils::EnforceCodeSignForFile(elfPath);
+    EXPECT_EQ(ret, CS_ERR_SIGN_INFO_OFFSET);
+}
+
+/**
+* @tc.name: CodeSignUtilsTest_0064
+* @tc.desc: enabling code signing for elf
+* @tc.type: Func
+* @tc.require:
+*/
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0064, TestSize.Level0)
+{
+    std::string elfPath = APP_BASE_PATH + "/demo_elf_v1/elf-signed-mt-type-error";
+    int32_t ret = CodeSignUtils::EnforceCodeSignForFile(elfPath);
+    EXPECT_EQ(ret, CS_ERR_MERKLE_TREE_TYPE);
+}
+
+/**
+* @tc.name: CodeSignUtilsTest_0065
+* @tc.desc: enabling code signing for elf
+* @tc.type: Func
+* @tc.require:
+*/
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0065, TestSize.Level0)
+{
+    std::string elfPath = APP_BASE_PATH + "/demo_elf_v1/elf-signed-mt-length-error";
+    int32_t ret = CodeSignUtils::EnforceCodeSignForFile(elfPath);
+    EXPECT_EQ(ret, CS_ERR_MERKLE_TREE_SIZE);
+}
+
+/**
+* @tc.name: CodeSignUtilsTest_0066
+* @tc.desc: enabling code signing for elf
+* @tc.type: Func
+* @tc.require:
+*/
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0066, TestSize.Level0)
+{
+    std::string elfPath = APP_BASE_PATH + "/demo_elf_v1/elf-signed-with-profile";
+    int32_t ret = CodeSignUtils::EnforceCodeSignForFile(elfPath);
+    EXPECT_EQ(ret, CS_SUCCESS);
+}
+
+/**
+* @tc.name: CodeSignUtilsTest_0067
+* @tc.desc: enabling code signing for not elf
+* @tc.type: Func
+* @tc.require:
+*/
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0067, TestSize.Level0)
+{
+    std::string notElfPath = APP_BASE_PATH + "/demo_without_lib_signed/demo_without_lib_signed.hap";
+    int32_t ret = CodeSignUtils::EnforceCodeSignForFile(notElfPath);
+    EXPECT_EQ(ret, CS_ERR_FILE_INVALID);
+}
 }  // namespace CodeSign
 }  // namespace Security
 }  // namespace OHOS

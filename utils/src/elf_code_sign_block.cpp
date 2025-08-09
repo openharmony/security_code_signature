@@ -61,6 +61,7 @@ int32_t ElfCodeSignBlock::EnforceCodeSign(const std::string &realPath, CallbackF
 
 int32_t ElfCodeSignBlock::ParseSignBlock(const std::string &realPath)
 {
+    LOG_INFO("Start to parse sign block v3");
     auto fileSize = std::filesystem::file_size(realPath);
     if (fileSize < PAGE_SIZE) {
         LOG_ERROR("file size is too small");
