@@ -47,6 +47,8 @@ int32_t HksUpdate(const struct HksBlob *handle, const struct HksParamSet *paramS
 
 int32_t HksFinish(const struct HksBlob *handle, const struct HksParamSet *paramSet,
     const struct HksBlob *inData, struct HksBlob *outData);
+
+int32_t HksAbort(const struct HksBlob *handle, const struct HksParamSet *paramSet);
 }
 }
 }

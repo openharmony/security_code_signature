@@ -89,6 +89,12 @@ int32_t HksFinish(const struct HksBlob *handle, const struct HksParamSet *paramS
     }
     return HKS_SUCCESS;
 }
+
+int32_t HksAbort(const struct HksBlob *handle, const struct HksParamSet *paramSet)
+{
+    LOG_INFO("Mock HksAbort");
+    return HKS_SUCCESS;
+}
 }
 }
 }
