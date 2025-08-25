@@ -329,12 +329,14 @@ bool LocalSignKey::SignByHUKS(const struct HksBlob *inData, struct HksBlob *outD
     tmpOutData.data = static_cast<uint8_t *>(malloc(tmpOutData.size));
     if (tmpOutData.data == nullptr) {
         LOG_ERROR("Alloc memory for blob failed.");
+        HksAbort(&handle, paramSet.GetParamSet());
         return false;
     }
     ret = HksUpdate(&handle, paramSet.GetParamSet(), inData, &tmpOutData);
     if (ret != HKS_SUCCESS) {
         LOG_ERROR("HksUpdate Failed.");
         free(tmpOutData.data);
+        HksAbort(&handle, paramSet.GetParamSet());
         return false;
     }
     // third stage: finish, get signature from HUKS
