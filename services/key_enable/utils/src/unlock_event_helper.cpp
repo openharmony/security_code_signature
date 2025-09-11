@@ -38,7 +38,7 @@ void UnlockEventHelper::UnlockEventSubscriber::OnReceiveEvent(const EventFwk::Co
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_UNLOCKED) {
         LOG_INFO(LABEL, "receive unlocked event");
         // exchange return old value
-        if (UnlockEventHelper::GetInstance().hasUnLocked_.exchange(true)) {
+        if (UnlockEventHelper::GetInstance().recvEvent_.exchange(true)) {
             return;
         }
         UnlockEventHelper::GetInstance().FinishWaiting();
@@ -153,7 +153,7 @@ bool UnlockEventHelper::StartWaitingUnlock()
     if (!RegisterEvent()) {
         return false;
     }
-    unlockConVar_.wait(lock, [this]() { return this->hasUnLocked_.load(); });
+    unlockConVar_.wait(lock, [this]() { return this->hasUnLocked_; });
     LOG_INFO(LABEL, "thread is wake up");
     // only listening the first unlock event
     UnregisterEvent();
@@ -163,6 +163,7 @@ bool UnlockEventHelper::StartWaitingUnlock()
 void UnlockEventHelper::FinishWaiting()
 {
     std::lock_guard<std::mutex> lock(unlockMutex_);
+    hasUnLocked_ = true;
     unlockConVar_.notify_one();
 }
 }
