@@ -57,6 +57,7 @@ private:
     bool hasRegistered_ = false;
     bool hasInited_ = false;
     bool hasUnLocked_ = false;
+    std::atomic<bool> recvEvent_ {false};
     std::mutex unlockMutex_;
     std::condition_variable unlockConVar_;
     std::shared_ptr<UnlockEventSubscriber> unlockEventSubscriber_;

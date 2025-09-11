@@ -37,6 +37,10 @@ void UnlockEventHelper::UnlockEventSubscriber::OnReceiveEvent(const EventFwk::Co
     const auto action = want.GetAction();
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_UNLOCKED) {
         LOG_INFO(LABEL, "receive unlocked event");
+        // exchange return old value
+        if (UnlockEventHelper::GetInstance().recvEvent_.exchange(true)) {
+            return;
+        }
         UnlockEventHelper::GetInstance().FinishWaiting();
         return;
     }
@@ -108,6 +112,7 @@ void UnlockEventHelper::UnregisterEvent()
         return;
     }
     hasRegistered_ = false;
+    LOG_INFO(LABEL, "UnregisterEvent end");
 }
 
 bool UnlockEventHelper::WaitForCommonEventManager()
