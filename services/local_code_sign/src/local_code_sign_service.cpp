@@ -46,27 +46,30 @@ LocalCodeSignService::~LocalCodeSignService()
 void LocalCodeSignService::OnStart()
 {
     LOG_INFO("LocalCodeSignService OnStart");
-    if (state_ == ServiceRunningState::STATE_RUNNING) {
-        LOG_INFO("LocalCodeSignService has already started.");
-        return;
+    {
+        std::lock_guard<std::mutex> lock(unloadMutex_);
+        if (state_ == ServiceRunningState::STATE_RUNNING) {
+            LOG_INFO("LocalCodeSignService has already started.");
+            return;
+        }
+        if (!Init()) {
+            LOG_ERROR("Init LocalCodeSignService failed.");
+            return;
+        }
+        bool ret = Publish(DelayedSingleton<LocalCodeSignService>::GetInstance().get());
+        if (!ret) {
+            LOG_ERROR("Publish service failed.");
+            return;
+        }
+        state_ = ServiceRunningState::STATE_RUNNING;
     }
-    if (!Init()) {
-        LOG_ERROR("Init LocalCodeSignService failed.");
-        return;
-    }
-    bool ret = Publish(DelayedSingleton<LocalCodeSignService>::GetInstance().get());
-    if (!ret) {
-        LOG_ERROR("Publish service failed.");
-        return;
-    }
-    state_ = ServiceRunningState::STATE_RUNNING;
     DelayUnloadTask();
 }
 
 bool LocalCodeSignService::Init()
 {
-    auto runner = AppExecFwk::EventRunner::Create(TASK_ID, AppExecFwk::ThreadMode::FFRT);
     if (unloadHandler_ == nullptr) {
+        auto runner = AppExecFwk::EventRunner::Create(TASK_ID, AppExecFwk::ThreadMode::FFRT);
         unloadHandler_ = std::make_shared<AppExecFwk::EventHandler>(runner);
     }
     return true;
@@ -74,6 +77,7 @@ bool LocalCodeSignService::Init()
 
 void LocalCodeSignService::DelayUnloadTask()
 {
+    std::lock_guard<std::mutex> lock(unloadMutex_);
     auto task = [this]() {
         sptr<ISystemAbilityManager> samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
         if (samgr == nullptr) {
@@ -86,12 +90,15 @@ void LocalCodeSignService::DelayUnloadTask()
             return;
         }
     };
-    unloadHandler_->RemoveTask(TASK_ID);
-    unloadHandler_->PostTask(task, TASK_ID, DELAY_TIME);
+    if (unloadHandler_ != nullptr) {
+        unloadHandler_->RemoveTask(TASK_ID);
+        unloadHandler_->PostTask(task, TASK_ID, DELAY_TIME);
+    }
 }
 
 void LocalCodeSignService::OnStop()
 {
+    std::lock_guard<std::mutex> lock(unloadMutex_);
     LOG_INFO("LocalCodeSignService OnStop");
     if (unloadHandler_ != nullptr) {
         unloadHandler_->RemoveTask(TASK_ID);
