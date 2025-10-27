@@ -5,7 +5,8 @@
             "name": 3507,
             "libpath": "liblocal_code_sign.z.so",
             "run-on-create": true,
-            "distributed": false
+            "distributed": false,
+            "min_hdi_proxy_version": []
         }
     ]
 }
