@@ -28,6 +28,7 @@
 #include "jit_buffer_integrity.h"
 #include "code_sign_attr_utils.h"
 #include "pac_sign_ctx.h"
+#include "xpm_common.h"
 
 namespace OHOS {
 namespace Security {
@@ -80,7 +81,6 @@ static void *g_jitMemory = nullptr;
 
 void *g_mapJitBase = CAST_VOID_PTR(0x800000000);
 void *g_mapJitBase2 = CAST_VOID_PTR(0x800001000);
-constexpr size_t PAGE_SIZE = 4096;
 constexpr int BUFFER_SIZE = 4096;
 
 #define JITFORT_PRCTL_OPTION 0x6a6974
@@ -128,6 +128,7 @@ public:
 
     static void SetUpTestCase()
     {
+        SaveStringToFile(SELINUX_MODE_PATH, PERMISSIVE_MODE);
         EXPECT_EQ(IsSupportJitCodeSigner(), true);
         JitFortPrepare();
         AllocJitMemory();
@@ -135,6 +136,7 @@ public:
 
     static void TearDownTestCase()
     {
+        SaveStringToFile(SELINUX_MODE_PATH, ENFORCE_MODE);
         FreeJitMemory();
     };
 
