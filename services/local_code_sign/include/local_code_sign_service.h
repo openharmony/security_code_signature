@@ -40,6 +40,7 @@ private:
     bool Init();
     std::shared_ptr<AppExecFwk::EventHandler> unloadHandler_;
     ServiceRunningState state_;
+    std::mutex unloadMutex_;
 };
 }
 }
