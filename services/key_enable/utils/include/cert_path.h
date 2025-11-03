@@ -38,13 +38,22 @@ struct CertPathInfo {
     uint8_t __reserved[20];
 };
 
+struct CertActivationInfo {
+    uint64_t cert;
+    uint32_t cert_length;
+    uint8_t status;
+    uint8_t cert_type;
+};
+
 #define ADD_CERT_PATH_CMD _IOW(CERT_IOCTL_MAGIC_NUMBER, 1, CertPathInfo)
 #define REMOVE_CERT_PATH_CMD _IOW(CERT_IOCTL_MAGIC_NUMBER, 2, CertPathInfo)
+#define ACTIVATE_CERT_PATH_CMD _IOW(CERT_IOCTL_MAGIC_NUMBER, 0x10, CertActivationInfo)
 #ifdef __cplusplus
 extern "C" {
 #endif
     int AddCertPath(const CertPathInfo &info);
     int RemoveCertPath(const CertPathInfo &info);
+    int ActivateCert(const CertActivationInfo &info);
     bool IsDeveloperModeOn();
     int CodeSignGetUdid(char *udid);
 #ifdef __cplusplus

@@ -28,7 +28,7 @@
 
 using namespace OHOS::Security::CodeSign;
 
-static int IoctlCertPathOperation(const CertPathInfo &info, int cmd, const char *operation)
+static int IoctlCertOperation(const void *arg, int cmd, const char *operation)
 {
     int fd = open(CERT_DEVICE_PATH, O_WRONLY);
     if (fd == -1) {
@@ -36,10 +36,10 @@ static int IoctlCertPathOperation(const CertPathInfo &info, int cmd, const char 
         return CS_ERR_FILE_OPEN;
     }
 
-    int ret = ioctl(fd, cmd, &info);
+    int ret = ioctl(fd, cmd, arg);
     if (ret < 0) {
         LOG_ERROR(
-            LABEL, "%s cert path ioctl error, errno = <%{public}d, %{public}s>", operation, errno, strerror(errno));
+            LABEL, "%s cert ioctl error, errno = <%{public}d, %{public}s>", operation, errno, strerror(errno));
         close(fd);
         return ret;
     }
@@ -50,12 +50,12 @@ static int IoctlCertPathOperation(const CertPathInfo &info, int cmd, const char 
 
 int AddCertPath(const CertPathInfo &info)
 {
-    return IoctlCertPathOperation(info, ADD_CERT_PATH_CMD, "add");
+    return IoctlCertOperation(&info, ADD_CERT_PATH_CMD, "add");
 }
 
 int RemoveCertPath(const CertPathInfo &info)
 {
-    return IoctlCertPathOperation(info, REMOVE_CERT_PATH_CMD, "remove");
+    return IoctlCertOperation(&info, REMOVE_CERT_PATH_CMD, "remove");
 }
 
 bool IsDeveloperModeOn()
@@ -70,4 +70,9 @@ bool IsDeveloperModeOn()
 int CodeSignGetUdid(char *udid)
 {
     return GetDevUdid(udid, UDID_SIZE);
+}
+
+int ActivateCert(const CertActivationInfo &info)
+{
+    return IoctlCertOperation(&info, ACTIVATE_CERT_PATH_CMD, "activate");
 }

@@ -22,10 +22,18 @@
 
 using namespace OHOS::Security::CodeSign;
 
+constexpr int32_t SLEEP_TIME_FOR_LOCAL_KEY = 100 * 1000; // 100 ms
+constexpr int32_t MAX_RETRY_FOR_LOCAL_KEY = 120; // about 1 min
+
 int32_t InitLocalCertificate(uint8_t *certData, uint32_t *certSize)
 {
     ByteBuffer cert;
     int32_t ret = LocalCodeSignKit::InitLocalCertificate(cert);
+    int32_t retryCount = MAX_RETRY_FOR_LOCAL_KEY;
+    while ((ret == CS_ERR_SA_GET_PROXY || ret == CS_ERR_HUKS_INIT_KEY) && retryCount--) {
+        ret = LocalCodeSignKit::InitLocalCertificate(cert);
+        usleep(SLEEP_TIME_FOR_LOCAL_KEY);
+    }
     if (ret != CS_SUCCESS) {
         return ret;
     }

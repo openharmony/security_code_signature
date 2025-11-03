@@ -325,7 +325,10 @@ ohos_rust_unittest("rust_key_enable_unittest") {
   resource_config_file = "resources/ohos_test.xml"
   crate_root = "./rust_key_enable_test.rs"
   sources = [ "./rust_key_enable_test.rs" ]
-  external_deps = [ "ylong_json:lib" ]
+  external_deps = [
+    "ylong_json:lib",
+    "rust_rust-openssl:lib"
+  ]
   deps = [ ":rust_key_enable_lib" ]
   subsystem_name = "security"
   part_name = "code_signature"
@@ -381,14 +384,17 @@ ohos_unittest("jit_code_sign_unittest") {
 
 ohos_unittest("key_enable_utils_unittest") {
   module_out_path = "code_signature/code_signature"
+  resource_config_file = "resources/ohos_test.xml"
   sources = [
     "${code_signature_root_dir}/services/key_enable/utils/src/devices_security.cpp",
     "key_enable_utils_test.cpp",
   ]
   defines = [ "KEY_ENABLE_UTILS_TEST" ]
   configs = [ "${code_signature_root_dir}:common_utils_config" ]
-  include_dirs =
-      [ "${code_signature_root_dir}/services/key_enable/utils/include" ]
+  include_dirs = [
+    "${code_signature_root_dir}/services/key_enable/utils/include",
+    "${code_signature_root_dir}/interfaces/inner_api/common/include",
+  ]
   deps = [
     "${code_signature_root_dir}/services/key_enable/utils:libkey_enable_utils",
   ]
