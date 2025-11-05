@@ -136,7 +136,6 @@ public:
 
     static void TearDownTestCase()
     {
-        SaveStringToFile(SELINUX_MODE_PATH, ENFORCE_MODE);
         FreeJitMemory();
     };
 
