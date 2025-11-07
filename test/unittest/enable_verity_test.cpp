@@ -91,7 +91,6 @@ public:
     };
     static void TearDownTestCase()
     {
-        SaveStringToFile(SELINUX_MODE_PATH, ENFORCE_MODE);
         SaveStringToFile(XPM_DEBUG_FS_MODE_PATH, PERMISSIVE_MODE);
     };
     void SetUp() {};
