@@ -21,7 +21,9 @@
 #include "accesstoken_kit.h"
 #include "access_token.h"
 #include "local_code_sign_interface.h"
+#define private public
 #include "local_code_sign_service.h"
+#undef private
 #include "nativetoken_kit.h"
 #include "token_setproc.h"
 #include "fuzz_common.h"
@@ -67,7 +69,7 @@ namespace OHOS {
         MessageParcel reply;
         MessageOption option;
         uint64_t selfTokenId = NativeTokenSet("compiler_service");
-        DelayedSingleton<LocalCodeSignService>::GetInstance()->OnStart();
+        DelayedSingleton<LocalCodeSignService>::GetInstance()->Init();
         DelayedSingleton<LocalCodeSignService>::GetInstance()->OnRemoteRequest(code, datas, reply, option);
         DelayedSingleton<LocalCodeSignService>::GetInstance()->OnStop();
         NativeTokenReset(selfTokenId);
