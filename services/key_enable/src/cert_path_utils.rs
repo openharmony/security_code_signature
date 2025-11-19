@@ -85,6 +85,23 @@ pub enum DebugCertPathType {
     Restricted = 0x1ff,
 }
 
+/// enterprise cert type
+#[allow(dead_code)]
+pub enum EnterpriseCertPathType {
+    /// enterprise platform code
+    Platform = 0x201,
+    /// enterprise authed code
+    Authed = 0x202,
+    /// enterprise developer code
+    Developer = 0x203,
+    /// enterprise block code
+    Block = 0x204,
+    /// enterprise debug code
+    Debug = 0x205,
+    /// restrict code
+    Restricted = 0x2ff,
+}
+
 impl DebugCertPathType {
     fn from_str(s: &str) -> Result<u32, ()> {
         match s {
@@ -563,4 +580,109 @@ pub fn activate_cert(cert_data: &Vec<u8>, cert_status: CertStatus, cert_type: Ce
         return Err(CertPathError::ActivateCertError);
     }
     Ok(())
+}
+
+#[repr(C)]
+/// cert path info reflect to C
+pub struct EnterpriseResignCertInfo {
+    /// signing_length
+    pub signing_length: u32,
+    /// issuer_length
+    pub issuer_length: u32,
+    /// signing
+    pub signing: u64,
+    /// issuer
+    pub issuer: u64,
+    /// path length
+    pub path_len: u32,
+    /// path type
+    pub path_type: u32,
+    /// app id
+    pub app_id: u64,
+    /// app id length
+    pub app_id_length: u32,
+    /// cert length
+    pub cert_length: u32,
+    /// cert
+    pub cert: u64,
+    _reserved: [u8; 8],
+}
+
+extern "C" {
+    fn AddEnterpriseResignCert(info: *const EnterpriseResignCertInfo) -> i32;
+    fn RemoveEnterpriseResignCert(info: *const EnterpriseResignCertInfo) -> i32;
+}
+
+/// Params for adding enterprise resign cert
+#[derive(Debug)]
+pub struct EnterpriseResignCertParam<'a> {
+    /// subject (signing)
+    pub subject: String,
+    /// issuer
+    pub issuer: String,
+    /// path_type
+    pub cert_path_type: u32,
+    /// app_id
+    pub app_id: String,
+    /// max_path_length
+    pub path_length: u32,
+    /// pem encoded cert data
+    pub cert_data: &'a Vec<u8>,
+}
+
+fn handle_enterprise_resign_cert<F>(
+    cert: EnterpriseResignCertParam,
+    operation: F,
+    op_name: &str
+) -> Result<(), CertPathError>
+where
+    F: Fn(&EnterpriseResignCertInfo) -> i32 {
+    info!(LOG_LABEL, "start {}", @public(op_name));
+    if cert.subject.is_empty() || cert.issuer.is_empty() {
+        error!(LOG_LABEL, "Empty subject or issuer");
+        return Err(CertPathError::CertPathOperationError);
+    }
+
+    let subject_cstring = CString::new(cert.subject).expect("convert to subject_cstring error!");
+    let issuer_cstring = CString::new(cert.issuer).expect("convert to issuer_cstring error!");
+    let app_id_cstring = CString::new(cert.app_id).expect("convert to app_id_cstring error!");
+
+    let info = EnterpriseResignCertInfo {
+        signing_length: subject_cstring.as_bytes().len() as u32,
+        issuer_length: issuer_cstring.as_bytes().len() as u32,
+        signing: subject_cstring.as_ptr() as u64,
+        issuer: issuer_cstring.as_ptr() as u64,
+        path_len: cert.path_length,
+        path_type: cert.cert_path_type,
+        app_id: app_id_cstring.as_ptr() as u64,
+        app_id_length: app_id_cstring.as_bytes().len() as u32,
+        cert_length: cert.cert_data.len() as u32,
+        cert: cert.cert_data.as_ptr() as u64,
+        _reserved: [0; 8],
+    };
+    let ret = operation(&info);
+    if ret < 0 {
+        error!(LOG_LABEL, "{} failed, ret = {}", @public(op_name), @public(ret));
+        cs_hisysevent::report_add_key_err(op_name, ret);
+        return Err(CertPathError::CertPathOperationError);
+    }
+    Ok(())
+}
+
+/// add enterprise resign cert
+pub fn add_enterprise_resign_cert(cert: EnterpriseResignCertParam) -> Result<(), CertPathError> {
+    handle_enterprise_resign_cert(
+        cert,
+        |info| unsafe { AddEnterpriseResignCert(info) },
+        "add enterprise resign cert"
+    )
+}
+
+/// remove enterprise resign cert
+pub fn remove_enterprise_resign_cert(cert: EnterpriseResignCertParam) -> Result<(), CertPathError> {
+    handle_enterprise_resign_cert(
+        cert,
+        |info| unsafe { RemoveEnterpriseResignCert(info) },
+        "remove enterprise resign cert"
+    )
 }

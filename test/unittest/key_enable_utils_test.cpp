@@ -15,12 +15,14 @@
 
 #include <cstdlib>
 #include <gtest/gtest.h>
+#include <parameters.h>
 #include <string>
 #include <vector>
 
 #include "log.h"
 #include "errcode.h"
 #include "byte_buffer.h"
+#include "cert_path.h"
 #include "key_utils.h"
 #include "cert_path.h"
 #include "key_enable_adapter.h"
@@ -296,6 +298,20 @@ HWTEST_F(KeyEnableUtilsTest, KeyEnableUtilsTest_0010, TestSize.Level0)
     buffer.resize(8192);
     uint32_t size;
     ASSERT_EQ(InitLocalCertificate(buffer.data(), &size), CS_ERR_NO_PERMISSION);
+}
+
+/**
+ * @tc.name: KeyEnableUtilsTest_0011
+ * @tc.desc: check device enterprise type
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(KeyEnableUtilsTest, KeyEnableUtilsTest_0011, TestSize.Level0)
+{
+    std::string key = "const.edm.is_enterprise_device";
+    bool param = OHOS::system::GetBoolParameter(key, false);
+    bool deviceCheck = IsEnterpriseDevice();
+    ASSERT_EQ(param, deviceCheck);
 }
 } // namespace CodeSign
 } // namespace Security

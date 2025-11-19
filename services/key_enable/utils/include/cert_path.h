@@ -45,17 +45,36 @@ struct CertActivationInfo {
     uint8_t cert_type;
 };
 
+struct EnterpriseResignCertInfo {
+    uint32_t signing_length;
+    uint32_t issuer_length;
+    uint64_t signing;
+    uint64_t issuer;
+    uint32_t path_len;
+    uint32_t path_type;
+    uint64_t app_id;
+    uint32_t app_id_length;
+    uint32_t cert_length;
+    uint64_t cert;
+    uint8_t _reserved[8];
+};
+
 #define ADD_CERT_PATH_CMD _IOW(CERT_IOCTL_MAGIC_NUMBER, 1, CertPathInfo)
 #define REMOVE_CERT_PATH_CMD _IOW(CERT_IOCTL_MAGIC_NUMBER, 2, CertPathInfo)
 #define ACTIVATE_CERT_PATH_CMD _IOW(CERT_IOCTL_MAGIC_NUMBER, 0x10, CertActivationInfo)
+#define ADD_ENTERPRISE_RESIGN_CERT_CMD _IOW(CERT_IOCTL_MAGIC_NUMBER, 4, EnterpriseResignCertInfo)
+#define REMOVE_ENTERPRISE_RESIGN_CERT_CMD _IOW(CERT_IOCTL_MAGIC_NUMBER, 5, EnterpriseResignCertInfo)
 #ifdef __cplusplus
 extern "C" {
 #endif
     int AddCertPath(const CertPathInfo &info);
     int RemoveCertPath(const CertPathInfo &info);
     int ActivateCert(const CertActivationInfo &info);
+    int AddEnterpriseResignCert(const EnterpriseResignCertInfo &info);
+    int RemoveEnterpriseResignCert(const EnterpriseResignCertInfo &info);
     bool IsDeveloperModeOn();
     int CodeSignGetUdid(char *udid);
+    bool IsEnterpriseDevice();
 #ifdef __cplusplus
 }
 #endif

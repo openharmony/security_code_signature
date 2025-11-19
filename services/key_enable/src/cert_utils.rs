@@ -28,6 +28,7 @@ const TRUSTED_CERT_PATH_MIRROR: &str = "/system/etc/security/trusted_cert_path_m
 
 extern "C" {
     fn IsRdDevice() -> bool;
+    fn IsEnterpriseDevice() -> bool;
 }
 
 /// get trusted certs form json file
@@ -57,4 +58,11 @@ pub fn get_cert_path() -> TrustCertPath {
         cert_paths.load_cert_path_from_json_file(TRUSTED_CERT_PATH_MIRROR);
     }
     cert_paths
+}
+
+/// check if the device is enterprise device
+pub fn is_enterprise_device() -> bool {
+    unsafe {
+        IsEnterpriseDevice()
+    }
 }

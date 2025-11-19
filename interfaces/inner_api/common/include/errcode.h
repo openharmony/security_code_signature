@@ -62,6 +62,7 @@ enum VerifyErrCode {
     CS_ERR_ENABLE_TIMEOUT = -0x306,
     CS_ERR_FSVREITY_NOT_ENABLED = -0x307,
     CS_ERR_INVALID_PLUGIN_ID = -0x308,
+    CS_ERR_ENTERPRISE_RESIGN = -0x309,
 };
 
 enum IPCErrCode {
