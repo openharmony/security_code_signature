@@ -183,6 +183,7 @@
     <target name="key_enable_utils_unittest">
         <preparer>
             <option name="shell" value="mkdir -p /data/test/tmp"/>
+            <option name="push" value="demo_cert/cert/testcacert.der -> /data/test/tmp" src="res"/>
         </preparer>
         <cleaner>
             <option name="shell" value="rm -rf /data/test/tmp"/>

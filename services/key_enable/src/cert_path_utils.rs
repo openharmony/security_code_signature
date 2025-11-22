@@ -40,6 +40,8 @@ const COMMON_NAME_CHAR_LIMIT: usize = 7;
 pub enum CertPathError {
     /// cert path add remove error
     CertPathOperationError,
+    /// activate cert error
+    ActivateCertError,
 }
 /// release cert path type
 pub enum ReleaseCertPathType {
@@ -505,5 +507,60 @@ pub fn remove_cert_path_info(
         |info| unsafe { RemoveCertPath(info) },
         "remove cert_path",
     )?;
+    Ok(())
+}
+
+extern "C" {
+    fn ActivateCert(info: *const CertActivationInfo) -> i32;
+}
+
+/// cert type
+#[derive(Clone, Copy)]
+pub enum CertType {
+    /// other cert (root, enterprise, etc.)
+    Other = 0,
+    
+    /// local cert
+    Local = 1,
+}
+
+/// cert status
+#[derive(Clone, Copy)]
+pub enum CertStatus {
+    /// activated before first unlock
+    BeforeUnlock = 0,
+
+    /// activated after first unlock
+    AfterUnlock = 1,
+}
+
+#[repr(C)]
+/// cert activation info reflect to C
+struct CertActivationInfo {
+    /// cert
+    pub cert: u64,
+    /// cert length
+    pub cert_length: u32,
+    /// status,     before unlock: 0 after unlock: 1
+    pub status: u8,
+    /// cert_type   other: 0 local:1 
+    pub cert_type: u8,
+}
+
+/// activate the given cert in kernel
+pub fn activate_cert(cert_data: &Vec<u8>, cert_status: CertStatus, cert_type: CertType) -> Result<(), CertPathError> {
+    let cert_activation_info = CertActivationInfo {
+        cert: cert_data.as_ptr() as u64,
+        cert_length: cert_data.len() as u32,
+        status: cert_status as u8,
+        cert_type: cert_type as u8,
+    };
+    info!(LOG_LABEL, "Activating cert");
+    let ret = unsafe { ActivateCert(&cert_activation_info) };
+    info!(LOG_LABEL, "ioctl return:{}", @public(ret));
+    if ret < 0 {
+        cs_hisysevent::report_add_key_err("activate_cert", ret);
+        return Err(CertPathError::ActivateCertError);
+    }
     Ok(())
 }

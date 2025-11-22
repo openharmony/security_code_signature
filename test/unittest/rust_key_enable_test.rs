@@ -17,8 +17,9 @@ extern crate ylong_json;
 
 use std::thread;
 use ylong_json::JsonValue;
+use openssl::x509::X509;
 use key_enable::cert_chain_utils::PemCollection;
-use key_enable::cert_path_utils::TrustCertPath;
+use key_enable::cert_path_utils::{TrustCertPath, activate_cert, CertType, CertStatus};
 use key_enable::profile_utils::{UDID, get_udid, validate_bundle_and_distribution_type};
 
 
@@ -457,4 +458,49 @@ fn test_get_udid_concurrent() {
     for handle in handles {
         handle.join().expect("Thread panicked");
     }
+}
+
+#[test]
+fn test_activate_cert() {
+    let cert_data = r#"
+-----BEGIN CERTIFICATE-----
+MIICGjCCAaGgAwIBAgIIShhpn519jNAwCgYIKoZIzj0EAwMwUzELMAkGA1UEBhMC
+Q04xDzANBgNVBAoMBkh1YXdlaTETMBEGA1UECwwKSHVhd2VpIENCRzEeMBwGA1UE
+AwwVSHVhd2VpIENCRyBSb290IENBIEcyMB4XDTIwMDMxNjAzMDQzOVoXDTQ5MDMx
+NjAzMDQzOVowUzELMAkGA1UEBhMCQ04xDzANBgNVBAoMBkh1YXdlaTETMBEGA1UE
+CwwKSHVhd2VpIENCRzEeMBwGA1UEAwwVSHVhd2VpIENCRyBSb290IENBIEcyMHYw
+EAYHKoZIzj0CAQYFK4EEACIDYgAEWidkGnDSOw3/HE2y2GHl+fpWBIa5S+IlnNrs
+GUvwC1I2QWvtqCHWmwFlFK95zKXiM8s9yV3VVXh7ivN8ZJO3SC5N1TCrvB2lpHMB
+wcz4DA0kgHCMm/wDec6kOHx1xvCRo0IwQDAOBgNVHQ8BAf8EBAMCAQYwDwYDVR0T
+AQH/BAUwAwEB/zAdBgNVHQ4EFgQUo45a9Vq8cYwqaiVyfkiS4pLcIAAwCgYIKoZI
+zj0EAwMDZwAwZAIwMypeB7P0IbY7c6gpWcClhRznOJFj8uavrNu2PIoz9KIqr3jn
+BlBHJs0myI7ntYpEAjBbm8eDMZY5zq5iMZUC6H7UzYSix4Uy1YlsLVV738PtKP9h
+FTjgDHctXJlC5L7+ZDY=
+-----END CERTIFICATE-----
+"#;
+    let cert = X509::from_pem(cert_data.as_bytes()).expect("Parse pem cert error");
+    assert!(activate_cert(&cert.to_der().unwrap(), CertStatus::BeforeUnlock, CertType::Other).is_err());
+}
+
+#[test]
+fn test_activate_cert_nonexist() {
+    // This should not pass because the cert is not added
+    let cert_data = r#"
+-----BEGIN CERTIFICATE-----
+MIICEjCCAXsCAg36MA0GCSqGSIb3DQEBBQUAMIGbMQswCQYDVQQGEwJKUDEOMAwG
+A1UECBMFVG9reW8xEDAOBgNVBAcTB0NodW8ta3UxETAPBgNVBAoTCEZyYW5rNERE
+MRgwFgYDVQQLEw9XZWJDZXJ0IFN1cHBvcnQxGDAWBgNVBAMTD0ZyYW5rNEREIFdl
+YiBDQTEjMCEGCSqGSIb3DQEJARYUc3VwcG9ydEBmcmFuazRkZC5jb20wHhcNMTIw
+ODIyMDUyNjU0WhcNMTcwODIxMDUyNjU0WjBKMQswCQYDVQQGEwJKUDEOMAwGA1UE
+CAwFVG9reW8xETAPBgNVBAoMCEZyYW5rNEREMRgwFgYDVQQDDA93d3cuZXhhbXBs
+ZS5jb20wXDANBgkqhkiG9w0BAQEFAANLADBIAkEAm/xmkHmEQrurE/0re/jeFRLl
+8ZPjBop7uLHhnia7lQG/5zDtZIUC3RVpqDSwBuw/NTweGyuP+o8AG98HxqxTBwID
+AQABMA0GCSqGSIb3DQEBBQUAA4GBABS2TLuBeTPmcaTaUW/LCB2NYOy8GMdzR1mx
+8iBIu2H6/E2tiY3RIevV2OW61qY2/XRQg7YPxx3ffeUugX9F4J/iPnnu1zAxxyBy
+2VguKv4SWjRFoRkIfIlHX0qVviMhSlNy2ioFLy7JcPZb+v3ftDGywUqcBiVDoea0
+Hn+GmxZA
+-----END CERTIFICATE-----
+    "#;
+    let cert = X509::from_pem(cert_data.as_bytes()).expect("Parse pem cert error");
+    assert!(activate_cert(&cert.to_der().unwrap(), CertStatus::BeforeUnlock, CertType::Other).is_err());
 }

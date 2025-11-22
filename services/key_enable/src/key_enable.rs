@@ -14,7 +14,7 @@
  */
 
 use super::cert_chain_utils::PemCollection;
-use super::cert_path_utils::TrustCertPath;
+use super::cert_path_utils::{TrustCertPath, CertType, CertStatus, activate_cert};
 use super::cert_utils::{get_cert_path, get_trusted_certs};
 use super::cs_hisysevent;
 use super::profile_utils::add_profile_cert_path;
@@ -88,6 +88,7 @@ fn get_local_key() -> Option<Vec<u8>> {
             cert_data.set_len(cert_size);
             Some(cert_data)
         } else {
+            error!(LOG_LABEL, "InitLocalCertificate failed {}", @public(ret));
             None
         }
     }
@@ -115,7 +116,7 @@ fn parse_key_info(line: String) -> Option<KeySerial> {
     }
 }
 
-fn enable_key(key_id: KeySerial, key_name: &str, cert_data: &Vec<u8>) -> i32 {
+fn add_key(key_id: KeySerial, key_name: &str, cert_data: &Vec<u8>) -> i32 {
     let type_name = CString::new("asymmetric").expect("type name is invalid");
     let keyname = CString::new(key_name).expect("keyname is invalid");
     unsafe {
@@ -130,11 +131,11 @@ fn enable_key(key_id: KeySerial, key_name: &str, cert_data: &Vec<u8>) -> i32 {
     }
 }
 
-fn enable_key_list(key_id: KeySerial, certs: Vec<Vec<u8>>, key_name_prefix: &str) -> i32 {
+fn add_key_list(key_id: KeySerial, certs: Vec<Vec<u8>>, key_name_prefix: &str) -> i32 {
     let prefix = String::from(key_name_prefix);
     for (i, cert_data) in certs.iter().enumerate() {
         let key_name = prefix.clone() + &i.to_string();
-        let ret = enable_key(key_id, key_name.as_str(), cert_data);
+        let ret = add_key(key_id, key_name.as_str(), cert_data);
         if ret < 0 {
             return ret;
         }
@@ -157,8 +158,9 @@ fn get_keyring_id() -> Result<KeySerial, ()> {
     Err(())
 }
 
-// enable all trusted keys
-fn enable_trusted_keys(key_id: KeySerial, root_cert: &PemCollection) {
+// add all trusted keys
+fn add_trusted_keys(key_id: KeySerial, root_cert: &PemCollection) {
+    info!(LOG_LABEL, "Add trusted keys");
     let certs = match root_cert.to_der() {
         Ok(der) => der,
         Err(e) => {
@@ -169,10 +171,33 @@ fn enable_trusted_keys(key_id: KeySerial, root_cert: &PemCollection) {
     if certs.is_empty() {
         error!(LOG_LABEL, "empty trusted certs!");
     }
-    let ret = enable_key_list(key_id, certs, CODE_SIGN_KEY_NAME_PREFIX);
+    let ret = add_key_list(key_id, certs, CODE_SIGN_KEY_NAME_PREFIX);
     if ret < 0 {
         cs_hisysevent::report_add_key_err("code_sign_keys", ret);
     }
+}
+
+fn activate_cert_list(certs: Vec<Vec<u8>>, cert_status: CertStatus, cert_type: CertType) {
+    for cert in certs.iter() {
+        if activate_cert(cert, cert_status, cert_type).is_err() {
+            error!(LOG_LABEL, "Activate cert error");
+        }
+    }
+}
+
+// activate all trusted keys
+fn activate_trusted_certs(root_cert: &PemCollection) {
+    let certs = match root_cert.to_der() {
+        Ok(der) => der,
+        Err(e) => {
+            print_openssl_error_stack(e);
+            Vec::new()
+        }
+    };
+    if certs.is_empty() {
+        error!(LOG_LABEL, "empty trusted certs!");
+    }
+    activate_cert_list(certs, CertStatus::BeforeUnlock, CertType::Other);
 }
 
 fn check_and_add_cert_path(root_cert: &PemCollection, cert_paths: &TrustCertPath) -> bool {
@@ -209,10 +234,12 @@ fn add_profile_cert_path_thread(
     })
 }
 
-// enable local key from local code sign SA
-fn enable_local_key(key_id: KeySerial) {
-    if let Some(cert_data) = get_local_key() {
-        let ret = enable_key(key_id, LOCAL_KEY_NAME, &cert_data);
+// add local key from local code sign SA
+fn add_local_key(key_id: KeySerial) -> Option<Vec<u8>> {
+    let local_key = get_local_key();
+    if let Some(cert_data) = &local_key {
+        info!(LOG_LABEL, "Add local keys");
+        let ret = add_key(key_id, LOCAL_KEY_NAME, cert_data);
         if ret < 0 {
             cs_hisysevent::report_add_key_err("local_key", ret);
             error!(LOG_LABEL, "Enable local key failed");
@@ -221,10 +248,12 @@ fn enable_local_key(key_id: KeySerial) {
         cs_hisysevent::report_add_key_err("local_key", HisyseventKeyError::LocalKeyEmpty as i32);
         info!(LOG_LABEL, "Get local key empty.");
     }
+    local_key
 }
 
 // restrict fs-verity keyring, don't allow to add more keys
 fn restrict_keys(key_id: KeySerial) {
+    info!(LOG_LABEL, "Restricting keys");
     unsafe {
         if KeyctlRestrictKeyring(key_id, ptr::null(), ptr::null()) < 0 {
             error!(LOG_LABEL, "Restrict keyring err");
@@ -232,15 +261,25 @@ fn restrict_keys(key_id: KeySerial) {
     }
 }
 
-fn enable_keys_after_user_unlock(key_id: KeySerial) {
+// activate local cert
+fn activate_local_cert(cert_data: Vec<u8>) {
+    info!(LOG_LABEL, "Activating local cert");
+    if activate_cert(&cert_data, CertStatus::AfterUnlock, CertType::Local).is_err() {
+        error!(LOG_LABEL, "Activate local cert error");
+    }
+}
+
+fn enable_local_keys_after_user_unlock(key_id: KeySerial) {
+    // add local key before user unlock, but do not activate it
+    let local_key = add_local_key(key_id);
+    restrict_keys(key_id);
     if !unsafe { CheckUserUnlock() } {
-        restrict_keys(key_id);
         return;
     }
-
-    // enable local code sign key
-    enable_local_key(key_id);
-    restrict_keys(key_id);
+    // activate local code sign key
+    if let Some(cert_data) = local_key {
+        activate_local_cert(cert_data);
+    }
 }
 
 /// enable trusted and local keys, and then restrict keyring
@@ -254,7 +293,8 @@ pub fn enable_all_keys() {
     };
     let root_cert = get_trusted_certs();
     // enable device keys and authed source
-    enable_trusted_keys(key_id, &root_cert);
+    add_trusted_keys(key_id, &root_cert);
+    activate_trusted_certs(&root_cert);
 
     let cert_paths = get_cert_path();
     // enable trusted cert in prebuilt config
@@ -263,7 +303,7 @@ pub fn enable_all_keys() {
     }
     
     let cert_thread = add_profile_cert_path_thread(root_cert, cert_paths);
-    enable_keys_after_user_unlock(key_id);
+    enable_local_keys_after_user_unlock(key_id);
 
     if let Err(e) = cert_thread.join() {
         error!(LOG_LABEL, "add cert path thread panicked: {:?}", e);
