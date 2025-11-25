@@ -162,8 +162,7 @@ impl TrustCertPath {
     /// add signing cert paths to kernel
     pub fn add_cert_paths(&self) -> Result<(), CertPathError> {
         for cert_path in &self.app_sources {
-            if env!("support_local_debugger") != "on" 
-                && !unsafe { IsDeveloperModeOn() } && &cert_path.mode == "Dev" {
+            if !unsafe { IsDeveloperModeOn() } && &cert_path.mode == "Dev" {
                 continue;
             }
             if !cert_path.subject.is_empty()
