@@ -26,7 +26,6 @@ declare_args() {
   code_signature_support_oh_release_app = false
   code_signature_support_app_allow_list = false
   code_signature_screenlock_mgr_enable = false
-  code_signature_support_local_debugger = false
   code_signature_support_binary_enable = false
   if (defined(global_parts_info) &&
       defined(global_parts_info.theme_screenlock_mgr)) {
