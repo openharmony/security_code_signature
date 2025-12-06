@@ -50,7 +50,7 @@ The code signature component provides the following functions:
 | int32_t InitLocalCertificate(ByteBuffer &cert); | Initializes a local code signing certificate.|
 | int32_t SignLocalCode(const std::string &filePath, ByteBuffer &signature); | Signs the local code.|
 | int32_t SignLocalCode(const std::string &ownerID, const std::string &filePath, ByteBuffer &signature); | Signs the local code with the owner ID.|
-| int InitXpm(int enableJitFort, uint32_t idType, const char *ownerId, const char *apiTargetVersionStr); | Initializes XPM related resources(XPM region, JitFort, OwnerId, etc.).|
+| int InitXpm(int enableJitFort, uint32_t idType, const char *ownerId, const char *apiTargetVersionStr, const char *appSignType); | Initializes XPM related resources(XPM region, JitFort, OwnerId, appSignType etc.).|
 | int SetXpmOwnerId(uint32_t idType, const char *ownerId); | Sets an owner ID.|
 
 ### Usage Guidelines
