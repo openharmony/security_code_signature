@@ -47,6 +47,8 @@ The code signature component provides the following functions:
 | int ParseOwnerIdFromSignature(const ByteBuffer &sigbuffer, std::string &ownerID); | Parses the owner ID from the signature.|
 | int32_t EnableKeyInProfile(const std::string &bundleName, const ByteBuffer &profileBuffer); | Trusts a developer certificate.|
 | int32_t RemoveKeyInProfile(const std::string &bundleName); | Revokes a trusted developer certificate.|
+| int32_t EnableKeyForEnterpriseResign(const ByteBuffer &certBuffer); | Add an enterprise resigning cert. |
+| int32_t RemoveKeyForEnterpriseResign(const ByteBuffer &certBuffer); | Remove an enterprise resigning cert. |
 | int32_t InitLocalCertificate(ByteBuffer &cert); | Initializes a local code signing certificate.|
 | int32_t SignLocalCode(const std::string &filePath, ByteBuffer &signature); | Signs the local code.|
 | int32_t SignLocalCode(const std::string &ownerID, const std::string &filePath, ByteBuffer &signature); | Signs the local code with the owner ID.|

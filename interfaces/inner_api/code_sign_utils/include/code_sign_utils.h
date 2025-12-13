@@ -129,6 +129,18 @@ public:
      * @return err code, see err_code.h
      */
     static int32_t RemoveKeyInProfile(const std::string &bundleName);
+    /**
+     * @brief Add cert for enterprise resigning
+     * @param certBuffer cert bytebuffer carrying signed cert info
+     * @return err code, see err_code.h
+     */
+    static int32_t EnableKeyForEnterpriseResign(const ByteBuffer &certBuffer);
+    /**
+     * @brief Remove cert from enterprise resigning
+     * @param certBuffer cert bytebuffer carrying signed cert info
+     * @return err code, see err_code.h
+     */
+    static int32_t RemoveKeyForEnterpriseResign(const ByteBuffer &certBuffer);
 
 #ifdef SUPPORT_BINARY_ENABLE
     /**

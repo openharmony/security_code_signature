@@ -17,7 +17,7 @@ use super::cert_chain_utils::PemCollection;
 use super::cert_path_utils::{TrustCertPath, CertType, CertStatus, activate_cert};
 use super::cert_utils::{get_cert_path, get_trusted_certs};
 use super::cs_hisysevent;
-use super::profile_utils::add_profile_cert_path;
+use super::profile_utils::{add_profile_cert_path, add_enterprise_certs};
 use hilog_rust::{error, hilog, info, HiLogLabel, LogType};
 use openssl::error::ErrorStack;
 use std::ffi::{c_char, CString};
@@ -204,6 +204,9 @@ fn check_and_add_cert_path(root_cert: &PemCollection, cert_paths: &TrustCertPath
     if Path::new(PROFILE_STORE_EL1).exists() {
         if add_profile_cert_path(root_cert, cert_paths).is_err() {
             error!(LOG_LABEL, "Add cert path from local profile err.");
+        }
+        if add_enterprise_certs().is_err() {
+            error!(LOG_LABEL, "Add enterprise cert err.");
         }
         info!(LOG_LABEL, "Finished cert path adding.");
         true

@@ -16,15 +16,17 @@
 use lazy_static::lazy_static;
 use super::cert_chain_utils::PemCollection;
 use super::cert_path_utils::{
-    add_cert_path_info, remove_cert_path_info, common_format_fabricate_name,
-    DebugCertPathType, ReleaseCertPathType, TrustCertPath,
+    add_cert_path_info, remove_cert_path_info, common_format_fabricate_name, 
+    DebugCertPathType, ReleaseCertPathType, EnterpriseCertPathType, TrustCertPath, EnterpriseResignCertParam,
+    add_enterprise_resign_cert, remove_enterprise_resign_cert
 };
+use super::cert_utils::is_enterprise_device;
 use super::cs_hisysevent::report_parse_profile_err;
 use super::file_utils::{
     create_file_path, delete_file_path, file_exists, fmt_store_path,
     load_bytes_from_file, write_bytes_to_file, change_default_mode_file, change_default_mode_directory
 };
-use hilog_rust::{error, info, hilog, HiLogLabel, LogType};
+use hilog_rust::{warn, error, info, hilog, HiLogLabel, LogType};
 use openssl::pkcs7::{Pkcs7, Pkcs7Flags};
 use openssl::stack::Stack;
 use openssl::x509::store::{X509Store, X509StoreBuilder};
@@ -47,6 +49,7 @@ const PROFILE_STORE_EL1_PUBLIC_PREFIX: &str = "/data/service/el1/public/profiles
 const DEBUG_PROFILE_STORE_EL0_PREFIX: &str = "/data/service/el0/profiles/debug";
 const DEBUG_PROFILE_STORE_EL1_PREFIX: &str = "/data/service/el1/profiles/debug";
 const DEBUG_PROFILE_STORE_EL1_PUBLIC_PREFIX: &str = "/data/service/el1/public/profiles/debug";
+const ENTERPRISE_CERT_STORE_EL1_PREFIX: &str = "/data/service/el1/public/bms/bundle_manager_service/certificates/enterprise";
 const PROFILE_STORE_TAIL: &str = "profile.p7b";
 const PROFILE_TYPE_KEY: &str = "type";
 const PROFILE_DEVICE_ID_TYPE_KEY: &str = "device-id-type";
@@ -79,6 +82,10 @@ pub enum HisyseventProfileError {
     ParsePkcs7 = 2,
     /// release developer code
     AddCertPath = 3,
+    /// add enterprise code
+    AddEnterpriseCert = 4,
+    /// remove enterprise code
+    RemoveEnterpriseCert = 5,
 }
 
 extern "C" {
@@ -105,6 +112,30 @@ pub extern "C" fn EnableKeyInProfileByRust(
 /// the interface remove key in profile
 pub extern "C" fn RemoveKeyInProfileByRust(bundle_name: *const c_char) -> i32 {
     match remove_key_in_profile_internal(bundle_name) {
+        Ok(_) => SUCCESS_CODE,
+        Err(_) => ERROR_CODE,
+    }
+}
+
+#[no_mangle]
+/// the interface to enable key in profile
+pub extern "C" fn EnableKeyForEnterpriseResignByRust(
+    cert: *const u8,
+    cert_size: u32,
+) -> i32 {
+    match enable_key_for_enterprise_resign_internal(cert, cert_size) {
+        Ok(_) => SUCCESS_CODE,
+        Err(_) => ERROR_CODE,
+    }
+}
+
+#[no_mangle]
+/// the interface remove key in profile
+pub extern "C" fn RemoveKeyForEnterpriseResignByRust(
+    cert: *const u8,
+    cert_size: u32,
+) -> i32 {
+    match remove_key_for_enterprise_resign_internal(cert, cert_size) {
         Ok(_) => SUCCESS_CODE,
         Err(_) => ERROR_CODE,
     }
@@ -293,6 +324,50 @@ fn get_profile_paths(is_debug: bool) -> Vec<String> {
     paths
 }
 
+fn get_enterprise_cert_paths() -> Vec<String> {
+    get_subpaths_two_levels(ENTERPRISE_CERT_STORE_EL1_PREFIX)
+}
+
+fn get_subpaths_two_levels(prefix: &str) -> Vec<String> {
+    let mut paths = Vec::new();
+
+    let entries = match read_dir(prefix) {
+        Ok(entries) => entries,
+        Err(e) => {
+            warn!(LOG_LABEL, "Failed to read directory {}: {}", @public(prefix), @public(e));
+            return paths;
+        }
+    };
+    for entry in entries.filter_map(Result::ok) {
+        let path = entry.path();
+        if path.is_file() {
+            warn!(LOG_LABEL, "File {} belongs to no user", @public(path.to_string_lossy()));
+            continue;
+        }
+        
+        if path.is_dir() {
+            let sub_entries = match read_dir(&path) {
+                Ok(entries) => entries,
+                Err(e) => {
+                    warn!(LOG_LABEL, "Failed to read subdirectory {}: {}", @public(path.to_string_lossy()), e);
+                    continue;
+                }
+            };
+
+            for sub_entry in sub_entries.filter_map(Result::ok) {
+                let sub_path = sub_entry.path();
+                
+                if sub_path.is_file() {
+                    paths.push(sub_path.to_string_lossy().to_string());
+                } else if sub_path.is_dir() {
+                    warn!(LOG_LABEL, "Extra folder {}", @public(sub_path.to_string_lossy()));
+                }
+            }
+        }
+    }
+    paths
+}
+
 fn get_paths_from_prefix(prefix: &str) -> Vec<String> {
     let mut paths = Vec::new();
     if let Ok(entries) = read_dir(prefix) {
@@ -318,6 +393,16 @@ pub fn add_profile_cert_path(
     }
     if process_profile(true, &x509_store, cert_paths.get_debug_profile_info().as_slice()).is_err() {
         return Err(ProfileError::AddCertPathError);
+    }
+    Ok(())
+}
+
+/// add enterprise certs
+pub fn add_enterprise_certs() -> Result<(), ProfileError> {
+    if !is_enterprise_device() {
+        info!(LOG_LABEL, "Not enterprise device, skipping adding enterprise cert");
+    } else {
+        process_enterprise_certs()?;
     }
     Ok(())
 }
@@ -364,6 +449,25 @@ fn process_profile(
                 "Failed to add profile cert path info into ioctl for {}", @public(path)
             );
             report_parse_profile_err(&path, HisyseventProfileError::AddCertPath as i32);
+            continue;
+        }
+    }
+    Ok(())
+}
+
+fn process_enterprise_certs() -> Result<(), ProfileError> {
+    let cert_paths = get_enterprise_cert_paths();
+    for path in cert_paths {
+        let mut cert_data = Vec::new();
+        if load_bytes_from_file(&path, &mut cert_data).is_err() {
+            error!(LOG_LABEL, "load cert failed {}", @public(path));
+            report_parse_profile_err(&path, HisyseventProfileError::AddEnterpriseCert as i32);
+            continue;
+        }
+        info!(LOG_LABEL, "load cert success {}", @public(path));
+        if add_enterprise_resign_data(&cert_data).is_err() {
+            error!(LOG_LABEL, "Failed to add enterprise cert for {}", @public(path));
+            report_parse_profile_err(&path, HisyseventProfileError::AddEnterpriseCert as i32);
             continue;
         }
     }
@@ -571,4 +675,109 @@ fn cbyte_buffer_to_vec(data: *const u8, size: u32) -> Vec<u8> {
         result.extend_from_slice(data_slice);
         result
     }
+}
+
+fn enable_key_for_enterprise_resign_internal(cert: *const u8, cert_size: u32) -> Result<(), ()> {
+    let res = handle_key_for_enterprise_resign_internal(
+        cert,
+        cert_size,
+        add_enterprise_resign_data
+    );
+    if res.is_err() {
+        report_parse_profile_err("API call", HisyseventProfileError::AddEnterpriseCert as i32);
+    }
+    res
+}
+
+fn remove_key_for_enterprise_resign_internal(cert: *const u8, cert_size: u32) -> Result<(), ()> {
+    let res = handle_key_for_enterprise_resign_internal(
+        cert,
+        cert_size,
+        remove_enterprise_resign_data
+    );
+    if res.is_err() {
+        report_parse_profile_err("API call", HisyseventProfileError::RemoveEnterpriseCert as i32);
+    }
+    res
+}
+
+fn handle_key_for_enterprise_resign_internal<F>(
+    cert: *const u8,
+    cert_size: u32,
+    operation: F,
+) -> Result<(), ()> 
+where
+    F: Fn(&Vec<u8>) -> Result<(), ()> {
+    let cert_data = cbyte_buffer_to_vec(cert, cert_size);
+    operation(&cert_data)
+}
+
+fn process_cert_data(cert_data: &[u8]) -> Result<(String, String, u32, String), ()> {
+    let certs = match X509::stack_from_pem(cert_data) {
+        Ok(certs) => certs,
+        Err(_) => {
+            error!(LOG_LABEL, "load data to cert stack failed");
+            return Err(());
+        }
+    };
+
+    let leaf_cert = match certs.last() {
+        Some(cert) => cert,
+        None => {
+            error!(LOG_LABEL, "empty cert chain");
+            return Err(());
+        }
+    };
+
+    let subject = format_x509_fabricate_name(leaf_cert.subject_name());
+    let issuer = format_x509_fabricate_name(leaf_cert.issuer_name());
+    let profile_type = EnterpriseCertPathType::Authed as u32;
+    let app_id = EMPTY_APP_ID.to_string();
+    info!(LOG_LABEL, "Enterprise cert info: subject: {}, issuer:{}, profile_type:{}, app_id:{}",
+        @public(subject), @public(issuer), @public(profile_type), @public(app_id));
+    Ok((subject, issuer, profile_type, app_id))
+}
+
+fn handle_enterprise_resign_data<F, E>(
+    cert_data: &Vec<u8>,
+    operation: F,
+    op_name: &str
+) -> Result<(), ()> 
+where
+    F: Fn(EnterpriseResignCertParam) -> Result<(), E> {
+    info!(LOG_LABEL, "start {}", @public(op_name));
+    if !is_enterprise_device() {
+        error!(LOG_LABEL, "Not enterprise device, enterprise resign cert not allowed");
+        return Err(());
+    }
+    let (subject, issuer, profile_type, app_id) = process_cert_data(cert_data)?;
+    let cert = EnterpriseResignCertParam {
+        subject,
+        issuer,
+        cert_path_type: profile_type,
+        app_id,
+        path_length: DEFAULT_MAX_CERT_PATH_LEN,
+        cert_data,
+    };
+    if operation(cert).is_err() {
+        error!(LOG_LABEL, "{} failed", @public(op_name));
+        return Err(());
+    }
+    Ok(())
+}
+
+fn add_enterprise_resign_data(cert_data: &Vec<u8>) -> Result<(), ()> {
+    handle_enterprise_resign_data(
+        cert_data,
+        add_enterprise_resign_cert,
+        "add enterprise resign cert data"
+    )
+}
+
+fn remove_enterprise_resign_data(cert_data: &Vec<u8>) -> Result<(), ()> {
+    handle_enterprise_resign_data(
+        cert_data,
+        remove_enterprise_resign_cert,
+        "remove enterprise resign cert data"
+    )
 }

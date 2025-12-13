@@ -20,6 +20,7 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <parameters.h>
 
 #include "code_sign_utils.h"
 #include "code_sign_block.h"
@@ -1044,6 +1045,128 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0067, TestSize.Level0)
     std::string notElfPath = APP_BASE_PATH + "/demo_without_lib_signed/demo_without_lib_signed.hap";
     int32_t ret = CodeSignUtils::EnforceCodeSignForFile(notElfPath);
     EXPECT_EQ(ret, CS_ERR_FILE_INVALID);
+}
+
+static bool GetEnterpriseDevice()
+{
+    return OHOS::system::GetBoolParameter("const.edm.is_enterprise_device", false);
+}
+
+/**
+* @tc.name: CodeSignUtilsTest_0068
+* @tc.desc: Adding invalid enterprise resign cert on non-enterprise device
+* @tc.type: Func
+* @tc.require:
+*/
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0068, TestSize.Level0)
+{
+    // The test won't work on enterprise device
+    if (GetEnterpriseDevice()) {
+        return;
+    }
+    std::string enterpriseResignCertPath = APP_BASE_PATH + "/demo_cert/enterprise_cert/enterprise.cer";
+    ByteBuffer cert_data;
+    std::ifstream file(enterpriseResignCertPath, std::ios::binary);
+    ASSERT_TRUE(file.is_open());
+
+    file.seekg(0, std::ios::end);
+    std::streamsize size = file.tellg();
+    file.seekg(0, std::ios::beg);
+    std::vector<char> buffer(size);
+    ASSERT_TRUE(file.read(buffer.data(), size));
+
+    cert_data.CopyFrom(reinterpret_cast<uint8_t*>(buffer.data()), size);
+    int32_t ret = CodeSignUtils::EnableKeyForEnterpriseResign(cert_data);
+#ifdef NO_USE_CLANG_COVERAGE
+    EXPECT_EQ(ret, CS_ERR_ENTERPRISE_RESIGN);
+#else
+    EXPECT_EQ(ret, CS_SUCCESS);
+#endif
+}
+
+/**
+* @tc.name: CodeSignUtilsTest_0069
+* @tc.desc: Adding and removing enterprise resign cert
+* @tc.type: Func
+* @tc.require:
+*/
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0069, TestSize.Level0)
+{
+    // The test won't work on non-enterprise device
+    if (!GetEnterpriseDevice()) {
+        return;
+    }
+    std::string enterpriseResignCertPath = APP_BASE_PATH + "/demo_cert/enterprise_cert/enterprise.cer";
+    ByteBuffer cert_data;
+    std::ifstream file(enterpriseResignCertPath, std::ios::binary);
+    ASSERT_TRUE(file.is_open());
+
+    file.seekg(0, std::ios::end);
+    std::streamsize size = file.tellg();
+    file.seekg(0, std::ios::beg);
+    std::vector<char> buffer(size);
+    ASSERT_TRUE(file.read(buffer.data(), size));
+
+    cert_data.CopyFrom(reinterpret_cast<uint8_t*>(buffer.data()), size);
+    int32_t ret = CodeSignUtils::EnableKeyForEnterpriseResign(cert_data);
+    EXPECT_EQ(ret, CS_SUCCESS);
+    ret = CodeSignUtils::RemoveKeyForEnterpriseResign(cert_data);
+    EXPECT_EQ(ret, CS_SUCCESS);
+}
+
+
+/**
+* @tc.name: CodeSignUtilsTest_0070
+* @tc.desc: Removing non-exsiting enterprise resign cert
+* @tc.type: Func
+* @tc.require:
+*/
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0070, TestSize.Level0)
+{
+    // The test won't work on non-enterprise device
+    if (!GetEnterpriseDevice()) {
+        return;
+    }
+    std::string enterpriseResignCertPath = APP_BASE_PATH + "/demo_cert/enterprise_cert/enterprise.cer";
+    ByteBuffer cert_data;
+    std::ifstream file(enterpriseResignCertPath, std::ios::binary);
+    ASSERT_TRUE(file.is_open());
+
+    file.seekg(0, std::ios::end);
+    std::streamsize size = file.tellg();
+    file.seekg(0, std::ios::beg);
+    std::vector<char> buffer(size);
+    ASSERT_TRUE(file.read(buffer.data(), size));
+
+    cert_data.CopyFrom(reinterpret_cast<uint8_t*>(buffer.data()), size);
+    int32_t ret = CodeSignUtils::RemoveKeyForEnterpriseResign(cert_data);
+#ifdef NO_USE_CLANG_COVERAGE
+    EXPECT_EQ(ret, CS_ERR_ENTERPRISE_RESIGN);
+#else
+    EXPECT_EQ(ret, CS_SUCCESS);
+#endif
+}
+
+/**
+* @tc.name: CodeSignUtilsTest_0071
+* @tc.desc: Adding invalid enterprise resign cert
+* @tc.type: Func
+* @tc.require:
+*/
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0071, TestSize.Level0)
+{
+    // The test won't work on non-enterprise device
+    if (!GetEnterpriseDevice()) {
+        return;
+    }
+    ByteBuffer cert_data;
+
+    int32_t ret = CodeSignUtils::EnableKeyForEnterpriseResign(cert_data);
+#ifdef NO_USE_CLANG_COVERAGE
+    EXPECT_EQ(ret, CS_ERR_ENTERPRISE_RESIGN);
+#else
+    EXPECT_EQ(ret, CS_SUCCESS);
+#endif
 }
 }  // namespace CodeSign
 }  // namespace Security

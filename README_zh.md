@@ -51,6 +51,8 @@
 | int ParseOwnerIdFromSignature(const ByteBuffer &sigbuffer, std::string &ownerID); | 从签名中解析OwnerId |
 | int32_t EnableKeyInProfile(const std::string &bundleName, const ByteBuffer &profileBuffer); | 信任开发者证书 |
 | int32_t RemoveKeyInProfile(const std::string &bundleName); | 撤销已信任的开发者证书 |
+| int32_t EnableKeyForEnterpriseResign(const ByteBuffer &certBuffer); | 添加企业重签名证书 |
+| int32_t RemoveKeyForEnterpriseResign(const ByteBuffer &certBuffer); | 删除企业重签名证书 |
 | int32_t EnableKey(const CertPathInfo &info); | 信任开发者证书 |
 | int32_t RemoveKey(const CertPathInfo &info); | 撤销已信任的开发者证书 |
 | int32_t InitLocalCertificate(ByteBuffer &cert); | 初始化本地签名证书 |

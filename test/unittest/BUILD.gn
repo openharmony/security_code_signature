@@ -82,6 +82,7 @@ ohos_unittest("code_sign_utils_unittest") {
     "appverify:libhapverify",
     "c_utils:utils",
     "hilog:libhilog",
+    "init:libbegetutil",
   ]
 }
 
@@ -396,6 +397,7 @@ ohos_unittest("key_enable_utils_unittest") {
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
+    "init:libbegetutil",
   ]
 }
 

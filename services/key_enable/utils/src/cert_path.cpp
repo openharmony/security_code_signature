@@ -26,6 +26,8 @@
 #include "log_rust.h"
 #include "errcode.h"
 
+#define BMS_ENTERPRISE_PARAM "const.edm.is_enterprise_device"
+
 using namespace OHOS::Security::CodeSign;
 
 static int IoctlCertOperation(const void *arg, int cmd, const char *operation)
@@ -75,4 +77,19 @@ int CodeSignGetUdid(char *udid)
 int ActivateCert(const CertActivationInfo &info)
 {
     return IoctlCertOperation(&info, ACTIVATE_CERT_PATH_CMD, "activate");
+}
+
+int AddEnterpriseResignCert(const EnterpriseResignCertInfo &info)
+{
+    return IoctlCertOperation(&info, ADD_ENTERPRISE_RESIGN_CERT_CMD, "add_enterprise_cert");
+}
+
+int RemoveEnterpriseResignCert(const EnterpriseResignCertInfo &info)
+{
+    return IoctlCertOperation(&info, REMOVE_ENTERPRISE_RESIGN_CERT_CMD, "remove_enterprise_cert");
+}
+
+bool IsEnterpriseDevice()
+{
+    return OHOS::system::GetBoolParameter(BMS_ENTERPRISE_PARAM, false);
 }

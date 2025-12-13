@@ -23,6 +23,8 @@ extern "C" {
 #endif
     int32_t EnableKeyInProfileByRust(const char* bundleName, const uint8_t* profile, uint32_t profileSize);
     int32_t RemoveKeyInProfileByRust(const char* bundleName);
+    int32_t EnableKeyForEnterpriseResignByRust(const uint8_t *cert, uint32_t certSize);
+    int32_t RemoveKeyForEnterpriseResignByRust(const uint8_t *cert, uint32_t certSize);
 #ifdef __cplusplus
 }
 #endif
