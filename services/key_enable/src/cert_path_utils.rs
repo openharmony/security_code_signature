@@ -43,6 +43,15 @@ pub enum CertPathError {
     /// activate cert error
     ActivateCertError,
 }
+/// Enterprise cert error
+pub enum EnterpriseCertError {
+    /// not enterprise device error
+    NotEnterpriseDevice = -0x309,
+    /// invalid cert error
+    InvalidCert = -0x310,
+    /// ioctl error
+    IoctlFailed = -0x311,
+}
 /// release cert path type
 pub enum ReleaseCertPathType {
     /// release platform code
@@ -633,13 +642,13 @@ fn handle_enterprise_resign_cert<F>(
     cert: EnterpriseResignCertParam,
     operation: F,
     op_name: &str
-) -> Result<(), CertPathError>
+) -> Result<(), EnterpriseCertError>
 where
     F: Fn(&EnterpriseResignCertInfo) -> i32 {
     info!(LOG_LABEL, "start {}", @public(op_name));
     if cert.subject.is_empty() || cert.issuer.is_empty() {
         error!(LOG_LABEL, "Empty subject or issuer");
-        return Err(CertPathError::CertPathOperationError);
+        return Err(EnterpriseCertError::InvalidCert);
     }
 
     let subject_cstring = CString::new(cert.subject).expect("convert to subject_cstring error!");
@@ -663,13 +672,13 @@ where
     if ret < 0 {
         error!(LOG_LABEL, "{} failed, ret = {}", @public(op_name), @public(ret));
         cs_hisysevent::report_add_key_err(op_name, ret);
-        return Err(CertPathError::CertPathOperationError);
+        return Err(EnterpriseCertError::IoctlFailed);
     }
     Ok(())
 }
 
 /// add enterprise resign cert
-pub fn add_enterprise_resign_cert(cert: EnterpriseResignCertParam) -> Result<(), CertPathError> {
+pub fn add_enterprise_resign_cert(cert: EnterpriseResignCertParam) -> Result<(), EnterpriseCertError> {
     handle_enterprise_resign_cert(
         cert,
         |info| unsafe { AddEnterpriseResignCert(info) },
@@ -678,7 +687,7 @@ pub fn add_enterprise_resign_cert(cert: EnterpriseResignCertParam) -> Result<(),
 }
 
 /// remove enterprise resign cert
-pub fn remove_enterprise_resign_cert(cert: EnterpriseResignCertParam) -> Result<(), CertPathError> {
+pub fn remove_enterprise_resign_cert(cert: EnterpriseResignCertParam) -> Result<(), EnterpriseCertError> {
     handle_enterprise_resign_cert(
         cert,
         |info| unsafe { RemoveEnterpriseResignCert(info) },

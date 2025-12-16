@@ -1078,7 +1078,7 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0068, TestSize.Level0)
     cert_data.CopyFrom(reinterpret_cast<uint8_t*>(buffer.data()), size);
     int32_t ret = CodeSignUtils::EnableKeyForEnterpriseResign(cert_data);
 #ifdef NO_USE_CLANG_COVERAGE
-    EXPECT_EQ(ret, CS_ERR_ENTERPRISE_RESIGN);
+    EXPECT_EQ(ret, CS_ERR_NOT_ENTERPRISE_DEVICE);
 #else
     EXPECT_EQ(ret, CS_SUCCESS);
 #endif
@@ -1141,7 +1141,7 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0070, TestSize.Level0)
     cert_data.CopyFrom(reinterpret_cast<uint8_t*>(buffer.data()), size);
     int32_t ret = CodeSignUtils::RemoveKeyForEnterpriseResign(cert_data);
 #ifdef NO_USE_CLANG_COVERAGE
-    EXPECT_EQ(ret, CS_ERR_ENTERPRISE_RESIGN);
+    EXPECT_EQ(ret, CS_ERR_IOCTL_ERROR);
 #else
     EXPECT_EQ(ret, CS_SUCCESS);
 #endif
@@ -1163,7 +1163,7 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0071, TestSize.Level0)
 
     int32_t ret = CodeSignUtils::EnableKeyForEnterpriseResign(cert_data);
 #ifdef NO_USE_CLANG_COVERAGE
-    EXPECT_EQ(ret, CS_ERR_ENTERPRISE_RESIGN);
+    EXPECT_EQ(ret, CS_ERR_INVALID_CERT);
 #else
     EXPECT_EQ(ret, CS_SUCCESS);
 #endif
