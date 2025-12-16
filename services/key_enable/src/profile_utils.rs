@@ -18,7 +18,7 @@ use super::cert_chain_utils::PemCollection;
 use super::cert_path_utils::{
     add_cert_path_info, remove_cert_path_info, common_format_fabricate_name, 
     DebugCertPathType, ReleaseCertPathType, EnterpriseCertPathType, TrustCertPath, EnterpriseResignCertParam,
-    add_enterprise_resign_cert, remove_enterprise_resign_cert
+    add_enterprise_resign_cert, remove_enterprise_resign_cert, EnterpriseCertError
 };
 use super::cert_utils::is_enterprise_device;
 use super::cs_hisysevent::report_parse_profile_err;
@@ -125,7 +125,7 @@ pub extern "C" fn EnableKeyForEnterpriseResignByRust(
 ) -> i32 {
     match enable_key_for_enterprise_resign_internal(cert, cert_size) {
         Ok(_) => SUCCESS_CODE,
-        Err(_) => ERROR_CODE,
+        Err(err) => err,
     }
 }
 
@@ -137,7 +137,7 @@ pub extern "C" fn RemoveKeyForEnterpriseResignByRust(
 ) -> i32 {
     match remove_key_for_enterprise_resign_internal(cert, cert_size) {
         Ok(_) => SUCCESS_CODE,
-        Err(_) => ERROR_CODE,
+        Err(err) => err,
     }
 }
 
@@ -677,7 +677,7 @@ fn cbyte_buffer_to_vec(data: *const u8, size: u32) -> Vec<u8> {
     }
 }
 
-fn enable_key_for_enterprise_resign_internal(cert: *const u8, cert_size: u32) -> Result<(), ()> {
+fn enable_key_for_enterprise_resign_internal(cert: *const u8, cert_size: u32) -> Result<(), i32> {
     let res = handle_key_for_enterprise_resign_internal(
         cert,
         cert_size,
@@ -689,7 +689,7 @@ fn enable_key_for_enterprise_resign_internal(cert: *const u8, cert_size: u32) ->
     res
 }
 
-fn remove_key_for_enterprise_resign_internal(cert: *const u8, cert_size: u32) -> Result<(), ()> {
+fn remove_key_for_enterprise_resign_internal(cert: *const u8, cert_size: u32) -> Result<(), i32> {
     let res = handle_key_for_enterprise_resign_internal(
         cert,
         cert_size,
@@ -705,19 +705,19 @@ fn handle_key_for_enterprise_resign_internal<F>(
     cert: *const u8,
     cert_size: u32,
     operation: F,
-) -> Result<(), ()> 
+) -> Result<(), i32> 
 where
-    F: Fn(&Vec<u8>) -> Result<(), ()> {
+    F: Fn(&Vec<u8>) -> Result<(), i32> {
     let cert_data = cbyte_buffer_to_vec(cert, cert_size);
     operation(&cert_data)
 }
 
-fn process_cert_data(cert_data: &[u8]) -> Result<(String, String, u32, String), ()> {
+fn process_cert_data(cert_data: &[u8]) -> Result<(String, String, u32, String), i32> {
     let certs = match X509::stack_from_pem(cert_data) {
         Ok(certs) => certs,
         Err(_) => {
             error!(LOG_LABEL, "load data to cert stack failed");
-            return Err(());
+            return Err(EnterpriseCertError::InvalidCert as i32);
         }
     };
 
@@ -725,7 +725,7 @@ fn process_cert_data(cert_data: &[u8]) -> Result<(String, String, u32, String), 
         Some(cert) => cert,
         None => {
             error!(LOG_LABEL, "empty cert chain");
-            return Err(());
+            return Err(EnterpriseCertError::InvalidCert as i32);
         }
     };
 
@@ -738,17 +738,17 @@ fn process_cert_data(cert_data: &[u8]) -> Result<(String, String, u32, String), 
     Ok((subject, issuer, profile_type, app_id))
 }
 
-fn handle_enterprise_resign_data<F, E>(
+fn handle_enterprise_resign_data<F>(
     cert_data: &Vec<u8>,
     operation: F,
     op_name: &str
-) -> Result<(), ()> 
+) -> Result<(), i32> 
 where
-    F: Fn(EnterpriseResignCertParam) -> Result<(), E> {
+    F: Fn(EnterpriseResignCertParam) -> Result<(), EnterpriseCertError> {
     info!(LOG_LABEL, "start {}", @public(op_name));
     if !is_enterprise_device() {
         error!(LOG_LABEL, "Not enterprise device, enterprise resign cert not allowed");
-        return Err(());
+        return Err(EnterpriseCertError::NotEnterpriseDevice as i32);
     }
     let (subject, issuer, profile_type, app_id) = process_cert_data(cert_data)?;
     let cert = EnterpriseResignCertParam {
@@ -759,14 +759,14 @@ where
         path_length: DEFAULT_MAX_CERT_PATH_LEN,
         cert_data,
     };
-    if operation(cert).is_err() {
+    if let Err(err) = operation(cert) {
         error!(LOG_LABEL, "{} failed", @public(op_name));
-        return Err(());
+        return Err(err as i32);
     }
     Ok(())
 }
 
-fn add_enterprise_resign_data(cert_data: &Vec<u8>) -> Result<(), ()> {
+fn add_enterprise_resign_data(cert_data: &Vec<u8>) -> Result<(), i32> {
     handle_enterprise_resign_data(
         cert_data,
         add_enterprise_resign_cert,
@@ -774,7 +774,7 @@ fn add_enterprise_resign_data(cert_data: &Vec<u8>) -> Result<(), ()> {
     )
 }
 
-fn remove_enterprise_resign_data(cert_data: &Vec<u8>) -> Result<(), ()> {
+fn remove_enterprise_resign_data(cert_data: &Vec<u8>) -> Result<(), i32> {
     handle_enterprise_resign_data(
         cert_data,
         remove_enterprise_resign_cert,

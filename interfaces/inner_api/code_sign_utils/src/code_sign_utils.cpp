@@ -290,21 +290,19 @@ int32_t CodeSignUtils::RemoveKeyInProfile(const std::string &bundleName)
 int32_t CodeSignUtils::EnableKeyForEnterpriseResign(const ByteBuffer &certBuffer)
 {
     int ret = EnableKeyForEnterpriseResignByRust(certBuffer.GetBuffer(), certBuffer.GetSize());
-    if (ret == CS_SUCCESS) {
-        return ret;
+    if (ret != CS_SUCCESS) {
+        LOG_ERROR("Enable key for enterprise resign failed. ret = %{public}d", ret);
     }
-    LOG_ERROR("Enable key for enterprise resign failed. ret = %{public}d", ret);
-    return CS_ERR_ENTERPRISE_RESIGN;
+    return ret;
 }
 
 int32_t CodeSignUtils::RemoveKeyForEnterpriseResign(const ByteBuffer &certBuffer)
 {
     int ret = RemoveKeyForEnterpriseResignByRust(certBuffer.GetBuffer(), certBuffer.GetSize());
-    if (ret == CS_SUCCESS) {
-        return ret;
+    if (ret != CS_SUCCESS) {
+        LOG_ERROR("Remove key for enterprise resign failed. ret = %{public}d", ret);
     }
-    LOG_ERROR("Remove key for enterprise resign failed. ret = %{public}d", ret);
-    return CS_ERR_ENTERPRISE_RESIGN;
+    return ret;
 }
 
 #ifdef SUPPORT_BINARY_ENABLE
