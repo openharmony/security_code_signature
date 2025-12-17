@@ -43,7 +43,7 @@ constexpr unsigned long XPM_PROC_LENGTH = 50;
 
 static int GetXpmRegion(struct XpmRegionArea &area)
 {
-    if (InitXpm(0, PROCESS_OWNERID_UNINIT, NULL, NULL) != 0) {
+    if (InitXpm(0, PROCESS_OWNERID_UNINIT, NULL, NULL, NULL) != 0) {
         LOG_ERROR("init xpm region failed");
         return -1;
     }

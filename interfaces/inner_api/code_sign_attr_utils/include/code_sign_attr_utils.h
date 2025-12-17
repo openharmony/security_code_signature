@@ -47,6 +47,7 @@ enum FileOwneridType {
     FILE_OWNERID_PLATFORM,        // 8
     FILE_OWNERID_NWEB,            // 9
     FILE_OWNERID_APP_TEMP_ALLOW,  // 10
+    FILE_OWNERID_ENT_RESIGN,      // 11
     FILE_OWNERID_MAX
 };
 
@@ -63,6 +64,7 @@ enum ProcessOwneridType {
     PROCESS_OWNERID_PLATFORM,        // 8
     PROCESS_OWNERID_NWEB,            // 9
     PROCESS_OWNERID_APP_TEMP_ALLOW,  // 10
+    PROCESS_OWNERID_ENT_RESIGN,      // 11
     PROCESS_OWNERID_MAX
 };
 
@@ -75,7 +77,8 @@ struct XpmConfig {
     uint32_t apiTargetVersion;
 };
 
-int InitXpm(int enableJitFort, uint32_t idType, const char *ownerId, const char *apiTargetVersionStr);
+int InitXpm(int enableJitFort, uint32_t idType, const char *ownerId, const char *apiTargetVersionStr,
+            const char *appSignType);
 
 int SetXpmOwnerId(uint32_t idType, const char *ownerId);
 

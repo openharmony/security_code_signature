@@ -108,7 +108,7 @@ static inline void AllocJitMemory()
 static inline void JitFortPrepare()
 {
 #ifndef JIT_FORT_DISABLE
-    EXPECT_EQ(InitXpm(1, PROCESS_OWNERID_UNINIT, NULL, NULL), CS_SUCCESS);
+    EXPECT_EQ(InitXpm(1, PROCESS_OWNERID_UNINIT, NULL, NULL, NULL), CS_SUCCESS);
     PrctlWrapper(JITFORT_PRCTL_OPTION, JITFORT_CREATE_COPGTABLE);
 #endif
 }

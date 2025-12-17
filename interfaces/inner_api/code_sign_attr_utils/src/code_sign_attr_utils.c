@@ -32,6 +32,7 @@
 #define XPM_SET_REGION _IOW('x', 0x01, struct XpmConfig)
 #define XPM_SET_OWNERID _IOW('x', 0x02, struct XpmConfig)
 #define XPM_SET_JITFORT_ENABLE _IOW('x', 0x3, unsigned long)
+#define ENTERPRISE_RESIGN "enterpriseResign"
 
 static int XpmIoctl(int fd, uint32_t cmd, struct XpmConfig *config)
 {
@@ -44,7 +45,8 @@ static int XpmIoctl(int fd, uint32_t cmd, struct XpmConfig *config)
     return CS_SUCCESS;
 }
 
-static int DoSetXpmOwnerId(int fd, uint32_t idType, const char *ownerId, uint32_t apiTargetVersion)
+static int DoSetXpmOwnerId(int fd, uint32_t idType, const char *ownerId,
+                           uint32_t apiTargetVersion, const char *appSignType)
 {
     struct XpmConfig config = {0};
 
@@ -53,7 +55,11 @@ static int DoSetXpmOwnerId(int fd, uint32_t idType, const char *ownerId, uint32_
         return CS_ERR_PARAM_INVALID;
     }
 
+    if (appSignType != NULL && strcmp(appSignType, ENTERPRISE_RESIGN) == 0) {
+        idType = PROCESS_OWNERID_ENT_RESIGN;
+    }
     config.idType = idType;
+
     if ((ownerId != NULL) && (strlen(ownerId) != 0)) {
         if (memcpy_s(config.ownerId, sizeof(config.ownerId) - 1, ownerId, strlen(ownerId)) != EOK) {
             LOG_ERROR("Memcpy ownerId failed, ownerId: %{public}s", ownerId);
@@ -61,14 +67,16 @@ static int DoSetXpmOwnerId(int fd, uint32_t idType, const char *ownerId, uint32_
         }
     }
     config.apiTargetVersion = apiTargetVersion;
+
     LOG_DEBUG("Set type = %{public}u, ownerId = %{public}s, apiTargetVersion is %{public}u",
-        idType, ownerId ? ownerId : "NULL", apiTargetVersion);
+        config.idType, ownerId ? ownerId : "NULL", config.apiTargetVersion);
     (void)XpmIoctl(fd, XPM_SET_OWNERID, &config);
     return CS_SUCCESS;
 }
 
 #define API_VERSION_DECIMAL 10
-int InitXpm(int enableJitFort, uint32_t idType, const char *ownerId, const char *apiTargetVersionStr)
+int InitXpm(int enableJitFort, uint32_t idType, const char *ownerId, const char *apiTargetVersionStr,
+            const char *appSignType)
 {
     // open /dev/xpm
     int fd = open(XPM_DEV_PATH, O_RDWR);
@@ -93,7 +101,7 @@ int InitXpm(int enableJitFort, uint32_t idType, const char *ownerId, const char 
             // we use 0 as default, and strtoul returns 0 if failed
             apiTargetVersion = strtoul(apiTargetVersionStr, &endPtr, API_VERSION_DECIMAL);
         }
-        ret = DoSetXpmOwnerId(fd, idType, ownerId, apiTargetVersion);
+        ret = DoSetXpmOwnerId(fd, idType, ownerId, apiTargetVersion, appSignType);
     }
 
     // enable jitfort
@@ -113,7 +121,7 @@ int SetXpmOwnerId(uint32_t idType, const char *ownerId)
         LOG_INFO("Open device file failed: %{public}s (ignore)", strerror(errno));
         return CS_SUCCESS;
     }
-    int ret = DoSetXpmOwnerId(fd, idType, ownerId, 0);
+    int ret = DoSetXpmOwnerId(fd, idType, ownerId, 0, NULL);
     close(fd);
     return ret;
 }
