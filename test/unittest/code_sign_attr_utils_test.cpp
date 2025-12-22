@@ -66,7 +66,7 @@ HWTEST_F(CodeSignAttrUtilsTest, CodeSignAttrUtilsTest_0001, TestSize.Level0)
     EXPECT_EQ(InitXpm(0, PROCESS_OWNERID_APP, "test", "20", NULL), CS_SUCCESS);
     EXPECT_EQ(InitXpm(0, PROCESS_OWNERID_APP, "test", "NaN", NULL), CS_SUCCESS);
     EXPECT_EQ(InitXpm(0, PROCESS_OWNERID_APP, "test", "20", "none"), CS_SUCCESS);
-    EXPECT_EQ(InitXpm(0, PROCESS_OWNERID_APP, "test", "20", "enterpriseResign"), CS_SUCCESS);
+    EXPECT_EQ(InitXpm(0, PROCESS_OWNERID_APP, "test", "20", "enterpriseReSign"), CS_SUCCESS);
     EXPECT_EQ(InitXpm(0, PROCESS_OWNERID_APP, "test", "20", "appgallery"), CS_SUCCESS);
 }
 
