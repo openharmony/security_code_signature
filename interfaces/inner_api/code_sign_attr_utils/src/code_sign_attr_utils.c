@@ -32,7 +32,7 @@
 #define XPM_SET_REGION _IOW('x', 0x01, struct XpmConfig)
 #define XPM_SET_OWNERID _IOW('x', 0x02, struct XpmConfig)
 #define XPM_SET_JITFORT_ENABLE _IOW('x', 0x3, unsigned long)
-#define ENTERPRISE_RESIGN "enterpriseResign"
+#define ENTERPRISE_RESIGN "enterpriseReSign"
 
 static int XpmIoctl(int fd, uint32_t cmd, struct XpmConfig *config)
 {
