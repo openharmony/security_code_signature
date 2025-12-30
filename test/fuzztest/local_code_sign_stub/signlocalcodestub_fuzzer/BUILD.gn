@@ -16,6 +16,7 @@ import("//build/test.gni")
 import("../../../../code_signature.gni")
 
 ohos_fuzztest("SignLocalCodeStubFuzzTest") {
+  testonly = true
   module_out_path = "${fuzz_module_output_path}"
   fuzz_config_file = "."
 

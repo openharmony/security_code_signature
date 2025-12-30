@@ -313,6 +313,33 @@ HWTEST_F(KeyEnableUtilsTest, KeyEnableUtilsTest_0011, TestSize.Level0)
     bool deviceCheck = IsEnterpriseDevice();
     ASSERT_EQ(param, deviceCheck);
 }
+
+/**
+ * @tc.name: KeyEnableUtilsTest_0012
+ * @tc.desc: test enterprise resign cert
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(KeyEnableUtilsTest, KeyEnableUtilsTest_0012, TestSize.Level0)
+{
+    EnterpriseResignCertInfo info = {};
+    int ret = AddEnterpriseResignCert(info);
+    ASSERT_EQ(ret == 0, false);
+    
+    ret = RemoveEnterpriseResignCert(info);
+    ASSERT_EQ(ret == 0, false);
+}
+
+/**
+ * @tc.name: UnlockEventHelperTest_0001
+ * @tc.desc: check device unlocked
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(KeyEnableUtilsTest, UnlockEventHelperTest_0001, TestSize.Level0)
+{
+    ASSERT_EQ(CheckUserUnlock(), true);
+}
 } // namespace CodeSign
 } // namespace Security
 } // namespace OHOS
