@@ -36,6 +36,7 @@ ohos_source_set("key_enable_src_set") {
 }
 
 ohos_unittest("add_cert_path_unittest") {
+  testonly = true
   module_out_path = "code_signature/code_signature"
   sources = [
     "${code_signature_root_dir}/services/key_enable/utils/src/cert_path.cpp",
@@ -55,6 +56,7 @@ ohos_unittest("add_cert_path_unittest") {
 }
 
 ohos_unittest("code_sign_utils_unittest") {
+  testonly = true
   module_out_path = "code_signature/code_signature"
   resource_config_file = "resources/ohos_test.xml"
   sources = [ "code_sign_utils_test.cpp" ]
@@ -87,6 +89,7 @@ ohos_unittest("code_sign_utils_unittest") {
 }
 
 ohos_unittest("code_sign_attr_utils_unittest") {
+  testonly = true
   module_out_path = "code_signature/code_signature"
   sources = [ "code_sign_attr_utils_test.cpp" ]
 
@@ -105,6 +108,7 @@ ohos_unittest("code_sign_attr_utils_unittest") {
 }
 
 ohos_unittest("code_sign_utils_in_c_unittest") {
+  testonly = true
   module_out_path = "code_signature/code_signature"
   resource_config_file = "resources/ohos_test.xml"
   sources = [ "code_sign_utils_in_c_test.cpp" ]
@@ -123,6 +127,7 @@ ohos_unittest("code_sign_utils_in_c_unittest") {
 }
 
 ohos_unittest("local_code_sign_unittest") {
+  testonly = true
   sanitize = {
     cfi = true
     cfi_cross_dso = true
@@ -159,6 +164,7 @@ ohos_unittest("local_code_sign_unittest") {
 }
 
 ohos_unittest("local_code_sign_utils_unittest") {
+  testonly = true
   module_out_path = "code_signature/code_signature"
   resource_config_file = "resources/ohos_test.xml"
   sources = [
@@ -191,6 +197,7 @@ ohos_unittest("local_code_sign_utils_unittest") {
 }
 
 ohos_unittest("local_code_sign_utils_mock_unittest") {
+  testonly = true
   module_out_path = "code_signature/code_signature"
   resource_config_file = "resources/ohos_test.xml"
   sources = [
@@ -226,6 +233,7 @@ ohos_unittest("local_code_sign_utils_mock_unittest") {
 }
 
 ohos_unittest("sign_and_enforce_unittest") {
+  testonly = true
   module_out_path = "code_signature/code_signature"
   resource_config_file = "resources/ohos_test.xml"
   sources = [ "sign_and_enforce_test.cpp" ]
@@ -256,6 +264,7 @@ ohos_unittest("sign_and_enforce_unittest") {
 }
 
 ohos_unittest("multi_thread_local_sign_unittest") {
+  testonly = true
   module_out_path = "code_signature/code_signature"
   resource_config_file = "resources/ohos_test.xml"
   sources = [ "multi_thread_local_sign_test.cpp" ]
@@ -331,6 +340,7 @@ ohos_rust_unittest("rust_key_enable_unittest") {
 }
 
 ohos_unittest("enable_verity_ioctl_unittest") {
+  testonly = true
   module_out_path = "code_signature/code_signature"
   resource_config_file = "resources/ohos_test.xml"
   sources = [
@@ -355,6 +365,7 @@ ohos_unittest("enable_verity_ioctl_unittest") {
 }
 
 ohos_unittest("jit_code_sign_unittest") {
+  testonly = true
   module_out_path = "code_signature/code_signature"
   include_dirs = [
     "utils/include",
@@ -379,6 +390,7 @@ ohos_unittest("jit_code_sign_unittest") {
 }
 
 ohos_unittest("key_enable_utils_unittest") {
+  testonly = true
   module_out_path = "code_signature/code_signature"
   resource_config_file = "resources/ohos_test.xml"
   sources = [
@@ -402,6 +414,7 @@ ohos_unittest("key_enable_utils_unittest") {
 }
 
 ohos_unittest("cert_chain_verifier_unittest") {
+  testonly = true
   module_out_path = "code_signature/code_signature"
   sources = [
     "${code_signature_root_dir}/utils/src/cert_utils.cpp",
