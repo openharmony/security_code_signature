@@ -93,6 +93,7 @@ extern "C" {
     pub fn IsDeveloperModeOn() -> bool;
     fn CodeSignGetUdid(udid: *mut u8) -> i32;
     fn IsRdDevice() -> bool;
+    fn WaitForEnterpriseParam() -> bool;
 }
 
 #[no_mangle]
@@ -399,11 +400,19 @@ pub fn add_profile_cert_path(
 
 /// add enterprise certs
 pub fn add_enterprise_certs() -> Result<(), ProfileError> {
-    if !is_enterprise_device() {
-        info!(LOG_LABEL, "Not enterprise device, skipping adding enterprise cert");
-    } else {
-        process_enterprise_certs()?;
+    let cert_paths = get_enterprise_cert_paths();
+    if !cert_paths.is_empty() {
+        info!(LOG_LABEL, "Found enterprise resign certs, now try adding them");
+        if !unsafe { WaitForEnterpriseParam() } {
+            report_parse_profile_err("Wait for enterprise param timeout", HisyseventProfileError::AddEnterpriseCert as i32);
+        }
+        if !is_enterprise_device() {
+            info!(LOG_LABEL, "Not enterprise device, skipping adding enterprise cert");
+        } else {
+            process_enterprise_certs()?;
+        }
     }
+    info!(LOG_LABEL, "Finish adding enterprise cert");
     Ok(())
 }
 
