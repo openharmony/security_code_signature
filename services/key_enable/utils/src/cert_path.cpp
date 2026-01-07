@@ -21,12 +21,16 @@
 #include <cstring>
 #include <unistd.h>
 #include <sys/ioctl.h>
+#include <chrono>
+#include <thread>
 #include <parameters.h>
 #include <parameter.h>
 #include "log_rust.h"
 #include "errcode.h"
 
 #define BMS_ENTERPRISE_PARAM "const.edm.is_enterprise_device"
+#define ENTERPRISE_PARAM_WAIT_TIMEOUT_SECONDS 600
+#define ENTERPRISE_PARAM_WAIT_TIME_MILLISECONDS 200
 
 using namespace OHOS::Security::CodeSign;
 
@@ -92,4 +96,21 @@ int RemoveEnterpriseResignCert(const EnterpriseResignCertInfo &info)
 bool IsEnterpriseDevice()
 {
     return OHOS::system::GetBoolParameter(BMS_ENTERPRISE_PARAM, false);
+}
+
+bool WaitForEnterpriseParam()
+{
+    const auto start = std::chrono::system_clock::now();
+    while (OHOS::system::GetParameter(BMS_ENTERPRISE_PARAM, "") == "") {
+        std::this_thread::sleep_for(std::chrono::milliseconds(ENTERPRISE_PARAM_WAIT_TIME_MILLISECONDS));
+        const auto now = std::chrono::system_clock::now();
+        const std::chrono::duration<double> duration = now - start;
+        if (duration.count() > ENTERPRISE_PARAM_WAIT_TIMEOUT_SECONDS) {
+            LOG_ERROR(LABEL, "Wait for enterprise sysparam timeout");
+            return false;
+        }
+    }
+    const auto param = OHOS::system::GetParameter(BMS_ENTERPRISE_PARAM, "");
+    LOG_INFO(LABEL, "Get enterprise sysparam %{public}s", param.c_str());
+    return true;
 }

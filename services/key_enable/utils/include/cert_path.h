@@ -75,6 +75,7 @@ extern "C" {
     bool IsDeveloperModeOn();
     int CodeSignGetUdid(char *udid);
     bool IsEnterpriseDevice();
+    bool WaitForEnterpriseParam();
 #ifdef __cplusplus
 }
 #endif
