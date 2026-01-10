@@ -21,6 +21,7 @@
 #include <mutex>
 #include <unistd.h>
 #include "errcode.h"
+#include "fdsan.h"
 
 namespace OHOS {
 namespace Security {
@@ -52,9 +53,10 @@ private:
                 errno, strerror(errno));
             return false;
         }
+        FDSAN_MARK(fd);
         uint32_t ret = 0;
         ssize_t len = read(fd, &ret, sizeof(ret));
-        (void) close(fd);
+        FDSAN_CLOSE(fd);
         if (len != sizeof(ret)) {
             return false;
         }

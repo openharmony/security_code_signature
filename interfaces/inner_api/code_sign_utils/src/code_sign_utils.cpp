@@ -45,6 +45,7 @@
 #ifdef SUPPORT_BINARY_ENABLE
 #include "elf_code_sign_block.h"
 #endif
+#include "fdsan.h"
 
 namespace OHOS {
 namespace Security {
@@ -142,6 +143,7 @@ int32_t CodeSignUtils::EnableCodeSignForFile(const std::string &path, const stru
             path.c_str(), errno, strerror(errno));
         return CS_ERR_FILE_OPEN;
     }
+    FDSAN_MARK(fd);
 
     do {
         ret = CodeSignEnableMultiTask::IsFsVerityEnabled(fd);
@@ -168,7 +170,7 @@ int32_t CodeSignUtils::EnableCodeSignForFile(const std::string &path, const stru
         }
         ret = CS_SUCCESS;
     } while (0);
-    close(fd);
+    FDSAN_CLOSE(fd);
     LOG_INFO("Enforcing file complete, path = %{public}s, ret = %{public}d", path.c_str(), ret);
     return ret;
 }

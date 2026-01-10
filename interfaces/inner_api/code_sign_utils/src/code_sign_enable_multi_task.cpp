@@ -28,6 +28,7 @@
 #include "log.h"
 #include "signer_info.h"
 #include "stat_utils.h"
+#include "fdsan.h"
 
 namespace OHOS {
 namespace Security {
@@ -75,11 +76,12 @@ int32_t CodeSignEnableMultiTask::IsFsVerityEnabled(const std::string &path)
             path.c_str(), errno, strerror(errno));
         return CS_ERR_FILE_OPEN;
     }
+    FDSAN_MARK(fd);
     int32_t ret = IsFsVerityEnabled(fd);
     if (ret != CS_SUCCESS) {
         LOG_INFO("Fs-verity is not enable for file = %{public}s.", path.c_str());
     }
-    close(fd);
+    FDSAN_CLOSE(fd);
     return ret;
 }
 
