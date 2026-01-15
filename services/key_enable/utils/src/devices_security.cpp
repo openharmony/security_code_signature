@@ -23,6 +23,7 @@
 #include <securec.h>
 
 #include "log_rust.h"
+#include "fdsan.h"
 
 using namespace OHOS::Security::CodeSign;
 
@@ -84,6 +85,7 @@ static void ParseCMDLine()
             PROC_CMDLINE_FILE_PATH.c_str(), strerror(errno));
         return;
     }
+    FDSAN_MARK(fd);
     char *buf = nullptr;
     int32_t status = DEVICE_MODE_NOT_RD;
     do {
@@ -104,7 +106,7 @@ static void ParseCMDLine()
         }
     } while (0);
     g_isRdDevice = status;
-    (void) close(fd);
+    (void) FDSAN_CLOSE(fd);
     free(buf);
 }
 

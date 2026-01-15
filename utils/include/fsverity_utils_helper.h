@@ -28,6 +28,7 @@
 #include "errcode.h"
 #include "byte_buffer.h"
 #include "log.h"
+#include "fdsan.h"
 
 namespace OHOS {
 namespace Security {
@@ -63,6 +64,7 @@ private:
                     path, errno, strerror(errno));
                 return false;
             }
+            FDSAN_MARK(fd_);
             return true;
         }
 
@@ -81,7 +83,7 @@ private:
         ~FileReader()
         {
             if (fd_ > 0) {
-                close(fd_);
+                FDSAN_CLOSE(fd_);
                 fd_ = -1;
             }
         }

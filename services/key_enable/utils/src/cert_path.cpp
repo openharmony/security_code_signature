@@ -26,6 +26,7 @@
 #include <parameters.h>
 #include <parameter.h>
 #include "log_rust.h"
+#include "fdsan.h"
 #include "errcode.h"
 
 #define BMS_ENTERPRISE_PARAM "const.edm.is_enterprise_device"
@@ -41,16 +42,17 @@ static int IoctlCertOperation(const void *arg, int cmd, const char *operation)
         LOG_ERROR(LABEL, "Error opening device, errno = <%{public}d, %{public}s>", errno, strerror(errno));
         return CS_ERR_FILE_OPEN;
     }
+    FDSAN_MARK(fd);
 
     int ret = ioctl(fd, cmd, arg);
     if (ret < 0) {
         LOG_ERROR(
             LABEL, "%s cert ioctl error, errno = <%{public}d, %{public}s>", operation, errno, strerror(errno));
-        close(fd);
+        FDSAN_CLOSE(fd);
         return ret;
     }
 
-    close(fd);
+    FDSAN_CLOSE(fd);
     return CS_SUCCESS;
 }
 

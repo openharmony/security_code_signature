@@ -26,6 +26,7 @@
 
 #include "errcode.h"
 #include "log.h"
+#include "fdsan.h"
 
 #define XPM_DEV_PATH "/dev/xpm"
 
@@ -84,6 +85,7 @@ int InitXpm(int enableJitFort, uint32_t idType, const char *ownerId, const char 
         LOG_INFO("Open device file failed: %{public}s (ignore)", strerror(errno));
         return CS_SUCCESS;
     }
+    FDSAN_MARK(fd);
 
     // init xpm region
     struct XpmConfig config = {0};
@@ -110,7 +112,7 @@ int InitXpm(int enableJitFort, uint32_t idType, const char *ownerId, const char 
     }
 
     // close /dev/xpm
-    close(fd);
+    FDSAN_CLOSE(fd);
     return ret;
 }
 
@@ -121,7 +123,8 @@ int SetXpmOwnerId(uint32_t idType, const char *ownerId)
         LOG_INFO("Open device file failed: %{public}s (ignore)", strerror(errno));
         return CS_SUCCESS;
     }
+    FDSAN_MARK(fd);
     int ret = DoSetXpmOwnerId(fd, idType, ownerId, 0, NULL);
-    close(fd);
+    FDSAN_CLOSE(fd);
     return ret;
 }
