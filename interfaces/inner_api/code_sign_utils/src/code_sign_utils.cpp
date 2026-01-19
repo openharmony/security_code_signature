@@ -270,7 +270,15 @@ int32_t CodeSignUtils::EnforceCodeSignForApp(const std::string &path, const Entr
 
 int32_t CodeSignUtils::EnableKeyInProfile(const std::string &bundleName, const ByteBuffer &profileBuffer)
 {
-    int ret = EnableKeyInProfileByRust(bundleName.c_str(), profileBuffer.GetBuffer(), profileBuffer.GetSize());
+    Verify::ProvisionInfo info;
+    int ret = Verify::VerifyProfileByP7bBlock(profileBuffer.GetSize(),
+        static_cast<unsigned char*>(profileBuffer.GetBuffer()), false, info);
+    if (ret != CS_SUCCESS) {
+        LOG_ERROR("Profile verify failed. ret = %{public}d", ret);
+        return ret;
+    }
+
+    ret = EnableKeyInProfileByRust(bundleName.c_str(), profileBuffer.GetBuffer(), profileBuffer.GetSize());
     if (ret == CS_SUCCESS) {
         ReportUserDataSize();
         return ret;
