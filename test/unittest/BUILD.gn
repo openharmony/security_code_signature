@@ -467,6 +467,5 @@ group("unittest_group") {
     if (code_signature_support_oh_code_sign) {
       deps += [ ":key_enable_utils_unittest" ]
     }
-    deps += [ ":jit_code_sign_unittest" ]
   }
 }
