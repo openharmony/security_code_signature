@@ -275,7 +275,7 @@ int32_t CodeSignUtils::EnableKeyInProfile(const std::string &bundleName, const B
         static_cast<unsigned char*>(profileBuffer.GetBuffer()), false, info);
     if (ret != CS_SUCCESS) {
         LOG_ERROR("Profile verify failed. ret = %{public}d", ret);
-        return ret;
+        return CS_ERR_PROFILE;
     }
 
     ret = EnableKeyInProfileByRust(bundleName.c_str(), profileBuffer.GetBuffer(), profileBuffer.GetSize());
