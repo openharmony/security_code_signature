@@ -14,13 +14,13 @@
  */
 
 use lazy_static::lazy_static;
-use super::cert_chain_utils::PemCollection;
+use super::cert_chain_utils::{PemCollection, verify_cert_chain};
 use super::cert_path_utils::{
     add_cert_path_info, remove_cert_path_info, common_format_fabricate_name, 
     DebugCertPathType, ReleaseCertPathType, EnterpriseCertPathType, TrustCertPath, EnterpriseResignCertParam,
     add_enterprise_resign_cert, remove_enterprise_resign_cert, EnterpriseCertError
 };
-use super::cert_utils::is_enterprise_device;
+use super::cert_utils::{is_enterprise_device, get_trusted_certs};
 use super::cs_hisysevent::report_parse_profile_err;
 use super::file_utils::{
     create_file_path, delete_file_path, file_exists, fmt_store_path,
@@ -399,7 +399,7 @@ pub fn add_profile_cert_path(
 }
 
 /// add enterprise certs
-pub fn add_enterprise_certs() -> Result<(), ProfileError> {
+pub fn add_enterprise_certs(root_cert: &PemCollection) -> Result<(), ProfileError> {
     let cert_paths = get_enterprise_cert_paths();
     if !cert_paths.is_empty() {
         info!(LOG_LABEL, "Found enterprise resign certs, now try adding them");
@@ -409,7 +409,7 @@ pub fn add_enterprise_certs() -> Result<(), ProfileError> {
         if !is_enterprise_device() {
             info!(LOG_LABEL, "Not enterprise device, skipping adding enterprise cert");
         } else {
-            process_enterprise_certs()?;
+            process_enterprise_certs(root_cert)?;
         }
     }
     info!(LOG_LABEL, "Finish adding enterprise cert");
@@ -464,8 +464,21 @@ fn process_profile(
     Ok(())
 }
 
-fn process_enterprise_certs() -> Result<(), ProfileError> {
+fn process_enterprise_certs(root_cert: &PemCollection) -> Result<(), ProfileError> {
     let cert_paths = get_enterprise_cert_paths();
+
+    // Build trusted root certificate store once for all enterprise certificates
+    let root_store = match root_cert.to_x509_store() {
+        Ok(store) => {
+            info!(LOG_LABEL, "Successfully built trusted root certificate store for enterprise certs");
+            store
+        },
+        Err(e) => {
+            error!(LOG_LABEL, "Failed to build trusted root certificate store for enterprise certs: {}", @public(e));
+            return Err(ProfileError::AddCertPathError);
+        }
+    };
+
     for path in cert_paths {
         let mut cert_data = Vec::new();
         if load_bytes_from_file(&path, &mut cert_data).is_err() {
@@ -474,7 +487,7 @@ fn process_enterprise_certs() -> Result<(), ProfileError> {
             continue;
         }
         info!(LOG_LABEL, "load cert success {}", @public(path));
-        if add_enterprise_resign_data(&cert_data).is_err() {
+        if add_enterprise_resign_data(&cert_data, &root_store).is_err() {
             error!(LOG_LABEL, "Failed to add enterprise cert for {}", @public(path));
             report_parse_profile_err(&path, HisyseventProfileError::AddEnterpriseCert as i32);
             continue;
@@ -714,44 +727,122 @@ fn handle_key_for_enterprise_resign_internal<F>(
     cert: *const u8,
     cert_size: u32,
     operation: F,
-) -> Result<(), i32> 
+) -> Result<(), i32>
 where
-    F: Fn(&Vec<u8>) -> Result<(), i32> {
+    F: Fn(&Vec<u8>, &X509Store) -> Result<(), i32> {
     let cert_data = cbyte_buffer_to_vec(cert, cert_size);
-    operation(&cert_data)
+
+    // Build trusted root certificate store for chain verification
+    let root_certs = get_trusted_certs();
+    let root_store = match root_certs.to_x509_store() {
+        Ok(store) => {
+            info!(LOG_LABEL, "Successfully built trusted root certificate store");
+            store
+        },
+        Err(e) => {
+            error!(LOG_LABEL, "Failed to build trusted root certificate store: {}", @public(e));
+            return Err(EnterpriseCertError::InvalidCert as i32);
+        }
+    };
+
+    operation(&cert_data, &root_store)
 }
 
-fn process_cert_data(cert_data: &[u8]) -> Result<(String, String, u32, String), i32> {
+fn get_leaf_certificate(certs: &[X509]) -> Option<(&X509, Vec<&X509>)> {
+    if certs.len() == 1 {
+        return Some((&certs[0], Vec::new()));
+    }
+
+    let mut issuer_to_cert = std::collections::HashSet::new();
+
+    for cert in certs {
+        let issuer = cert.issuer_name().to_der().unwrap_or_default();
+        issuer_to_cert.insert(issuer);
+    }
+
+    // Leaf cert is issuer to none
+    for (i, cert) in certs.iter().enumerate() {
+        let subject = cert.subject_name().to_der().unwrap_or_default();
+
+        // A cert with issuer to none could be the leaf cert
+        if !issuer_to_cert.contains(&subject) {
+            let intermediate_certs: Vec<&X509> = certs.iter()
+                .enumerate()
+                .filter(|(j, _)| *j != i)
+                .map(|(_, c)| c)
+                .collect();
+            return Some((cert, intermediate_certs));
+        }
+    }
+
+    None
+}
+
+fn process_cert_data(cert_data: &[u8], root_store: &X509Store) -> Result<(String, String, u32, String), i32> {
+    // 1. Parse PEM certificate stack
     let certs = match X509::stack_from_pem(cert_data) {
-        Ok(certs) => certs,
-        Err(_) => {
-            error!(LOG_LABEL, "load data to cert stack failed");
+        Ok(certs) => {
+            info!(LOG_LABEL, "Successfully parsed {} certificate(s) from PEM data", @public(certs.len()));
+            certs
+        },
+        Err(e) => {
+            error!(LOG_LABEL, "Failed to load certificate stack from PEM data: {}", @public(e));
             return Err(EnterpriseCertError::InvalidCert as i32);
         }
     };
 
-    let leaf_cert = match certs.last() {
-        Some(cert) => cert,
+    // 2. Validate certificate chain is not empty
+    if certs.is_empty() {
+        error!(LOG_LABEL, "Certificate chain is empty after parsing PEM data");
+        return Err(EnterpriseCertError::InvalidCert as i32);
+    }
+
+    // 3. Find leaf certificate (leaf cert's subject is not an issuer of any other cert)
+    let (leaf_cert, intermediate_certs) = match get_leaf_certificate(&certs) {
+        Some((leaf, intermediates)) => (leaf, intermediates),
         None => {
-            error!(LOG_LABEL, "empty cert chain");
+            error!(LOG_LABEL, "Failed to identify leaf certificate in chain");
             return Err(EnterpriseCertError::InvalidCert as i32);
         }
     };
 
+    let leaf_subject = format_x509name_to_string(leaf_cert.subject_name());
+    let leaf_issuer = format_x509name_to_string(leaf_cert.issuer_name());
+    info!(LOG_LABEL, "Leaf certificate - Subject: {}, Issuer: {}",
+        @public(leaf_subject.clone()), @public(leaf_issuer.clone()));
+    info!(LOG_LABEL, "Found {} intermediate CA certificate(s) in chain",
+        @public(intermediate_certs.len().to_string()));
+
+    // 4. Perform certificate chain verification against trusted root store
+    info!(LOG_LABEL, "Starting certificate chain verification against trusted roots");
+    match verify_cert_chain(leaf_cert, &intermediate_certs, root_store) {
+        Ok(_) => {
+            info!(LOG_LABEL, "Certificate chain verification successful");
+        },
+        Err(e) => {
+            error!(LOG_LABEL, "Certificate chain verification failed: {}", @public(e));
+            error!(LOG_LABEL, "Certificate is not issued by a trusted root certificate");
+            return Err(EnterpriseCertError::ChainVerifyFailed as i32);
+        }
+    }
+
+    // 5. Extract certificate information for kernel
     let subject = format_x509_fabricate_name(leaf_cert.subject_name());
     let issuer = format_x509_fabricate_name(leaf_cert.issuer_name());
     let profile_type = EnterpriseCertPathType::Authed as u32;
     let app_id = EMPTY_APP_ID.to_string();
-    info!(LOG_LABEL, "Enterprise cert info: subject: {}, issuer:{}, profile_type:{}, app_id:{}",
-        @public(subject), @public(issuer), @public(profile_type), @public(app_id));
+
+    info!(LOG_LABEL, "Enterprise cert info - Subject: {}, Issuer: {}, Type: {}, AppID: {}",
+        @public(subject.clone()), @public(issuer.clone()), @public(profile_type), @public(app_id.clone()));
     Ok((subject, issuer, profile_type, app_id))
 }
 
 fn handle_enterprise_resign_data<F>(
     cert_data: &Vec<u8>,
     operation: F,
-    op_name: &str
-) -> Result<(), i32> 
+    op_name: &str,
+    root_store: &X509Store,
+) -> Result<(), i32>
 where
     F: Fn(EnterpriseResignCertParam) -> Result<(), EnterpriseCertError> {
     info!(LOG_LABEL, "start {}", @public(op_name));
@@ -759,7 +850,7 @@ where
         error!(LOG_LABEL, "Not enterprise device, enterprise resign cert not allowed");
         return Err(EnterpriseCertError::NotEnterpriseDevice as i32);
     }
-    let (subject, issuer, profile_type, app_id) = process_cert_data(cert_data)?;
+    let (subject, issuer, profile_type, app_id) = process_cert_data(cert_data, root_store)?;
     let cert = EnterpriseResignCertParam {
         subject,
         issuer,
@@ -775,18 +866,20 @@ where
     Ok(())
 }
 
-fn add_enterprise_resign_data(cert_data: &Vec<u8>) -> Result<(), i32> {
+fn add_enterprise_resign_data(cert_data: &Vec<u8>, root_store: &X509Store) -> Result<(), i32> {
     handle_enterprise_resign_data(
         cert_data,
         add_enterprise_resign_cert,
-        "add enterprise resign cert data"
+        "add enterprise resign cert data",
+        root_store,
     )
 }
 
-fn remove_enterprise_resign_data(cert_data: &Vec<u8>) -> Result<(), i32> {
+fn remove_enterprise_resign_data(cert_data: &Vec<u8>, root_store: &X509Store) -> Result<(), i32> {
     handle_enterprise_resign_data(
         cert_data,
         remove_enterprise_resign_cert,
-        "remove enterprise resign cert data"
+        "remove enterprise resign cert data",
+        root_store,
     )
 }

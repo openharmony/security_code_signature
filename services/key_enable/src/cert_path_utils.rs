@@ -51,6 +51,8 @@ pub enum EnterpriseCertError {
     InvalidCert = -0x310,
     /// ioctl error
     IoctlFailed = -0x311,
+    /// certificate chain verification failed error
+    ChainVerifyFailed = -0x312,
 }
 /// release cert path type
 pub enum ReleaseCertPathType {

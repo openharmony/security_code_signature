@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use hilog_rust::{error, hilog, HiLogLabel, LogType};
+use hilog_rust::{error, hilog, info, HiLogLabel, LogType};
 use openssl::x509::store::{X509Store, X509StoreBuilder};
-use openssl::x509::X509PurposeId;
 use openssl::x509::verify::X509VerifyFlags;
-use openssl::x509::X509;
+use openssl::x509::{X509, X509PurposeId, X509StoreContext};
+use openssl::stack::Stack;
 use std::ffi::{c_char, CString};
 use ylong_json::JsonValue;
 
@@ -94,5 +94,42 @@ impl PemCollection {
             }
         }
     }
+}
+
+/// Verify certificate chain against trusted root store
+/// Returns Ok(()) if verification succeeds, Err with error code otherwise
+pub fn verify_cert_chain(
+    leaf_cert: &X509,
+    intermediate_certs: &[&X509],
+    trusted_store: &X509Store,
+) -> Result<(), openssl::error::ErrorStack> {
+    info!(LOG_LABEL, "Building certificate chain for verification with {} intermediate(s)",
+        @public(intermediate_certs.len()));
+
+    // Create stack of intermediate certificates for OpenSSL
+    let mut cert_stack = Stack::new()?;
+    for cert in intermediate_certs {
+        cert_stack.push((*cert).clone())?;
+    }
+
+    // Create and initialize store context
+    let mut store_ctx = X509StoreContext::new()?;
+    let verified = store_ctx.init(
+        trusted_store,
+        leaf_cert,
+        &cert_stack,
+        |store_ctx| {
+            // Perform the actual verification
+            store_ctx.verify_cert()
+        }
+    )?;
+
+    if !verified {
+        error!(LOG_LABEL, "Certificate chain verification failed: {}", @public(store_ctx.error()));
+        return Err(openssl::error::ErrorStack::get());
+    }
+
+    info!(LOG_LABEL, "Certificate chain verification completed successfully");
+    Ok(())
 }
 
