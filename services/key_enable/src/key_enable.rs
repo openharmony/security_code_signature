@@ -205,7 +205,7 @@ fn check_and_add_cert_path(root_cert: &PemCollection, cert_paths: &TrustCertPath
         if add_profile_cert_path(root_cert, cert_paths).is_err() {
             error!(LOG_LABEL, "Add cert path from local profile err.");
         }
-        if add_enterprise_certs().is_err() {
+        if add_enterprise_certs(root_cert).is_err() {
             error!(LOG_LABEL, "Add enterprise cert err.");
         }
         info!(LOG_LABEL, "Finished cert path adding.");

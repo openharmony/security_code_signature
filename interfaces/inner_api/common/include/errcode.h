@@ -65,6 +65,7 @@ enum VerifyErrCode {
     CS_ERR_NOT_ENTERPRISE_DEVICE = -0x309,
     CS_ERR_INVALID_CERT = -0x310,
     CS_ERR_IOCTL_ERROR = -0x311,
+    CS_ERR_VERIFY_ERROR = -0x312,
 };
 
 enum IPCErrCode {
