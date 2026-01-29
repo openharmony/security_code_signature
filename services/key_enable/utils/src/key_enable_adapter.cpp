@@ -68,7 +68,7 @@ bool WaitForBootCompletion()
 {
     constexpr const char* bootEventParam = "bootevent.boot.completed";
     constexpr int32_t delayUs = 500 * 1000; // 500 ms
-    constexpr int32_t maxWaitTimeUs = 60 * 1000 * 1000; // 60 seconds
+    constexpr int32_t maxWaitTimeUs = 20 * 1000 * 1000; // 20 seconds
 
     int32_t totalWaitTimeUs = 0;
 
