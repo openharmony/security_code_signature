@@ -69,6 +69,7 @@ extern "C" {
         restriction: *const u8,
     ) -> KeySerial;
     fn CheckUserUnlock() -> bool;
+    fn WaitForBootCompletion() -> bool;
 }
 
 fn print_openssl_error_stack(error_stack: ErrorStack) {
@@ -273,6 +274,13 @@ fn activate_local_cert(cert_data: Vec<u8>) {
 }
 
 fn enable_local_keys_after_user_unlock(key_id: KeySerial) {
+    // Wait for boot completion before adding local key
+    info!(LOG_LABEL, "Waiting for boot completion before adding local key...");
+    if !unsafe { WaitForBootCompletion() } {
+        error!(LOG_LABEL, "WaitForBootCompletion timed out, proceeding with local key");
+    } else {
+        info!(LOG_LABEL, "Boot completed, adding local key");
+    }
     // add local key before user unlock, but do not activate it
     let local_key = add_local_key(key_id);
     restrict_keys(key_id);

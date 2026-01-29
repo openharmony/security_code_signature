@@ -27,6 +27,7 @@ extern "C" {
 #endif
 int32_t InitLocalCertificate(uint8_t *cert, uint32_t *certSize);
 bool CheckUserUnlock();
+bool WaitForBootCompletion();
 #ifdef __cplusplus
 }
 #endif

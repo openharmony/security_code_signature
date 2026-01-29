@@ -18,6 +18,7 @@
 #include "byte_buffer.h"
 #include "common_event_data.h"
 #include "local_code_sign_kit.h"
+#include "parameters.h"
 #include "unlock_event_helper.h"
 
 using namespace OHOS::Security::CodeSign;
@@ -59,6 +60,24 @@ bool CheckUserUnlock()
     // if some error occours, check again at current
     if (UnlockEventHelper::GetInstance().CheckUserUnlockByScreenLockManager()) {
         return true;
+    }
+    return false;
+}
+
+bool WaitForBootCompletion()
+{
+    constexpr const char* bootEventParam = "bootevent.boot.completed";
+    constexpr int32_t delayUs = 500 * 1000; // 500 ms
+    constexpr int32_t maxWaitTimeUs = 20 * 1000 * 1000; // 20 seconds
+
+    int32_t totalWaitTimeUs = 0;
+
+    while (totalWaitTimeUs < maxWaitTimeUs) {
+        if (OHOS::system::GetBoolParameter(bootEventParam, false)) {
+            return true;
+        }
+        usleep(delayUs);
+        totalWaitTimeUs += delayUs;
     }
     return false;
 }
