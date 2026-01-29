@@ -70,15 +70,15 @@ public:
 
     /**
      * @brief Enforce code signature for a hap with owner ID
-     * @param ownerId app-identifier of the signature
      * @param path hap real path on disk
      * @param entryPath map from entryname in hap to real path on disk
      * @param type signature file type
+     * @param profileBuffer bytebuffer carring profile info
      * @param flag attributes of libs
      * @return err code, see err_code.h
      */
-    int32_t EnforceCodeSignForAppWithOwnerId(const std::string &ownerId, const std::string &path,
-        const EntryMap &entryPathMap, FileType type, uint32_t flag = 0);
+ 	int32_t EnforceCodeSignForAppWithOwnerId(const std::string &path,
+ 	    const EntryMap &entryPathMap, FileType type, const ByteBuffer &profileBuffer, uint32_t flag = 0);
 
     /**
      * @brief Enforce code signature for a hap with plugin ID
