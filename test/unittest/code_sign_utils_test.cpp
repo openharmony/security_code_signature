@@ -539,6 +539,22 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0020, TestSize.Level0)
 }
 
 /**
+ * @tc.name: CodeSignUtilsTest_0021
+ * @tc.desc: enable code signature for release app with libs input empty p7b buffer
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0021, TestSize.Level0)
+{
+    std::string hapRealPath = APP_BASE_PATH + "/demo_with_multi_lib/entry-default-signed-release.hap";
+    EntryMap entryMap;
+    CodeSignUtils utils;
+    ByteBuffer emptyBuffer;
+    int32_t ret = utils.EnforceCodeSignForAppWithOwnerId(hapRealPath, entryMap, FILE_SELF, emptyBuffer);
+    EXPECT_EQ(ret, CS_ERR_PROFILE);
+}
+
+/**
  * @tc.name: CodeSignUtilsTest_0023
  * @tc.desc: enable code signature for app
  * @tc.type: Func
