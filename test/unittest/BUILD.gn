@@ -59,7 +59,10 @@ ohos_unittest("code_sign_utils_unittest") {
   testonly = true
   module_out_path = "code_signature/code_signature"
   resource_config_file = "resources/ohos_test.xml"
-  sources = [ "code_sign_utils_test.cpp" ]
+  sources = [
+    "code_sign_utils_test.cpp",
+    "${code_signature_root_dir}/utils/src/file_helper.cpp",
+  ]
 
   deps = [
     ":key_enable_src_set",
