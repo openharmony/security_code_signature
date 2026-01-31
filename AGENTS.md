@@ -101,24 +101,27 @@ Feature flags in [code_signature.gni](code_signature.gni):
 
 ```bash
 # Build component only
-./build.sh --product-name rk3568 --build-target //base/security/code_signature:code_signature
+./build.sh --product-name rk3568 --build-target base/security/code_signature:code_signature
 
-# Build with tests
-./build.sh --product-name rk3568 --build-target //base/security/code_signature:unittest_group
-
-# Build with specific feature enabled
-./build.sh --product-name rk3568 --build-target //base/security/code_signature:unittest_group --code_signature_enable_xpm_mode=1
+# Build tests
+./build.sh --product-name rk3568 --build-target base/security/code_signature/test:testgroup --no-indep
 ```
 
-**Build Variants**: Some features conditionally compile based on `build_variant` (root/user):
-- `build_variant == "root"` enables debuggable code paths
-- Rust tests are skipped when `use_clang_coverage` or `ohos_indep_compiler_enable` is true
+Or use independent compilation
+
+```bash
+# Build component only
+hb build code_signature -i
+
+# Build tests
+hb build code_signature -t
+```
 
 ### Test Commands
 
 ```bash
 # Build all tests
-./build.sh --product-name rk3568 --build-target //base/security/code_signature:unittest_group
+./build.sh --product-name rk3568 --build-target base/security/code_signature/test:testgroup  --no-indep
 
 # Test binaries location: out/{product}/tests/unittest/code_signature/code_signature/
 # Available unit tests:
@@ -162,11 +165,14 @@ hdc shell "cd /data/test && for test in *_unittest; do ./\$test; done"
 
 | Artifact Type | Location |
 |---------------|----------|
-| Libraries | out/{product}/libs/libcode_sign_utils.so, liblocal_code_sign_sdk.so, libcode_sign_attr_utils.so |
-| Service | out/{product}/bin/code_signature_service |
+| Libraries and Binaries | out/{product}/security/code_signature/ |
 | Test binaries | out/{product}/tests/unittest/code_signature/ |
 
 ---
+
+### Coding style
+- [Coding style guide](../../../docs/en/contribute/OpenHarmony-cpp-coding-style-guide.md)
+- [License header](../../../docs/en/contribute/license-and-copyright-specifications.md)
 
 ## API Reference
 
