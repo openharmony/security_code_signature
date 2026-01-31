@@ -123,7 +123,7 @@ hb build code_signature -t
 # Build all tests
 ./build.sh --product-name rk3568 --build-target base/security/code_signature/test:testgroup  --no-indep
 
-# Test binaries location: out/{product}/tests/unittest/code_signature/code_signature/
+# Test binaries location: out/{product}/tests/{unittest,fuzztest}/code_signature/code_signature/
 # Available unit tests:
 #   - code_sign_utils_unittest
 #   - local_code_sign_unittest
