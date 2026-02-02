@@ -91,14 +91,7 @@ int32_t CheckCertHasEnterpriseResignExtension(const uint8_t *certDer, uint32_t c
         return CS_ERR_PARAM_INVALID;
     }
 
-    ASN1_OBJECT *obj = OBJ_nid2obj(nid);
-    if (obj == nullptr) {
-        LOG_ERROR(LABEL, "Failed to get ASN1_OBJECT for NID");
-        X509_free(cert);
-        return CS_ERR_PARAM_INVALID;
-    }
-
-    int loc = X509_get_ext_by_OBJ(cert, obj, -1);
+    int loc = X509_get_ext_by_NID(cert, nid, -1);
     X509_free(cert);
 
     if (loc >= 0) {
