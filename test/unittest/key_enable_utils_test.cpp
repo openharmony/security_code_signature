@@ -340,6 +340,59 @@ HWTEST_F(KeyEnableUtilsTest, UnlockEventHelperTest_0001, TestSize.Level0)
 {
     ASSERT_EQ(CheckUserUnlock(), true);
 }
+
+/**
+ * @tc.name: CheckCertHasEnterpriseResignExtension_0001
+ * @tc.desc: test with nullptr certificate DER
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(KeyEnableUtilsTest, CheckCertHasEnterpriseResignExtension_0001, TestSize.Level0)
+{
+    int32_t ret = CheckCertHasEnterpriseResignExtension(nullptr, 100);
+    ASSERT_EQ(ret, CS_ERR_PARAM_INVALID);
+}
+
+/**
+ * @tc.name: CheckCertHasEnterpriseResignExtension_0002
+ * @tc.desc: test with zero certificate size
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(KeyEnableUtilsTest, CheckCertHasEnterpriseResignExtension_0002, TestSize.Level0)
+{
+    uint8_t certData[] = {0x01, 0x02, 0x03};
+    int32_t ret = CheckCertHasEnterpriseResignExtension(certData, 0);
+    ASSERT_EQ(ret, CS_ERR_PARAM_INVALID);
+}
+
+/**
+ * @tc.name: CheckCertHasEnterpriseResignExtension_0003
+ * @tc.desc: test with invalid certificate data
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(KeyEnableUtilsTest, CheckCertHasEnterpriseResignExtension_0003, TestSize.Level0)
+{
+    uint8_t invalidCertData[] = {0x01, 0x02, 0x03, 0x04};
+    int32_t ret = CheckCertHasEnterpriseResignExtension(invalidCertData, sizeof(invalidCertData));
+    ASSERT_EQ(ret, CS_ERR_PARAM_INVALID);
+}
+
+/**
+ * @tc.name: CheckCertHasEnterpriseResignExtension_0004
+ * @tc.desc: test with valid certificate without enterprise resign extension
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(KeyEnableUtilsTest, CheckCertHasEnterpriseResignExtension_0004, TestSize.Level0)
+{
+    ByteBuffer certData;
+    ASSERT_TRUE(ReadDataFromFile(TEST_CA_CERT_PATH, certData));
+    int32_t ret = CheckCertHasEnterpriseResignExtension(certData.GetBuffer(), certData.GetSize());
+    ASSERT_EQ(ret, CS_ERR_PARAM_INVALID);
+}
+
 } // namespace CodeSign
 } // namespace Security
 } // namespace OHOS

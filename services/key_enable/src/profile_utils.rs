@@ -932,6 +932,7 @@ pub mod test_utils {
     use openssl::x509::store::X509StoreBuilder;
 
     /// Test helper function to validate enterprise resign cert chain
+    #[allow(dead_code)]
     pub fn validate_enterprise_resign_cert_for_test(cert_data: &[u8]) -> Result<(), EnterpriseCertError> {
         // Build a minimal X509 store for testing
         let param = openssl::x509::verify::X509VerifyParam::new().unwrap();
