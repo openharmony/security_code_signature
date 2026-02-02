@@ -35,3 +35,8 @@ int32_t RemoveKeyForEnterpriseResignByRust(const uint8_t* cert, uint32_t certSiz
 {
     return CS_SUCCESS;
 }
+
+int32_t CheckCertHasEnterpriseResignExtension(const uint8_t* certDer, uint32_t certSize)
+{
+    return CS_SUCCESS;
+}

@@ -20,6 +20,7 @@
 #define LOG_RUST
 #endif
 
+#include <stdint.h>
 #include <sys/types.h>
 
 #ifdef KEY_ENABLE_UTILS_TEST
@@ -47,6 +48,7 @@ KeySerial KeyctlRestrictKeyring(
     const char *restriction);
 
 bool IsRdDevice();
+int32_t CheckCertHasEnterpriseResignExtension(const uint8_t *certDer, uint32_t certSize);
 #ifdef __cplusplus
 }
 #endif

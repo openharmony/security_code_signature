@@ -36,11 +36,12 @@ ohos_static_library("libkey_enable_utils") {
     "ability_base:want",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
+    "eventhandler:libeventhandler",
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
+    "openssl:libcrypto_shared",
     "samgr:samgr_proxy",
-    "eventhandler:libeventhandler",
   ]
 
   defines = []
