@@ -343,7 +343,7 @@ HWTEST_F(KeyEnableUtilsTest, UnlockEventHelperTest_0001, TestSize.Level0)
 
 /**
  * @tc.name: CheckCertHasEnterpriseResignExtension_0001
- * @tc.desc: test with nullptr certificate DER
+ * @tc.desc: test with nullptr and zero certificate size
  * @tc.type: Func
  * @tc.require:
  */
@@ -351,28 +351,18 @@ HWTEST_F(KeyEnableUtilsTest, CheckCertHasEnterpriseResignExtension_0001, TestSiz
 {
     int32_t ret = CheckCertHasEnterpriseResignExtension(nullptr, 100);
     ASSERT_EQ(ret, CS_ERR_PARAM_INVALID);
-}
-
-/**
- * @tc.name: CheckCertHasEnterpriseResignExtension_0002
- * @tc.desc: test with zero certificate size
- * @tc.type: Func
- * @tc.require:
- */
-HWTEST_F(KeyEnableUtilsTest, CheckCertHasEnterpriseResignExtension_0002, TestSize.Level0)
-{
     uint8_t certData[] = {0x01, 0x02, 0x03};
-    int32_t ret = CheckCertHasEnterpriseResignExtension(certData, 0);
+    ret = CheckCertHasEnterpriseResignExtension(certData, 0);
     ASSERT_EQ(ret, CS_ERR_PARAM_INVALID);
 }
 
 /**
- * @tc.name: CheckCertHasEnterpriseResignExtension_0003
+ * @tc.name: CheckCertHasEnterpriseResignExtension_0002
  * @tc.desc: test with invalid certificate data
  * @tc.type: Func
  * @tc.require:
  */
-HWTEST_F(KeyEnableUtilsTest, CheckCertHasEnterpriseResignExtension_0003, TestSize.Level0)
+HWTEST_F(KeyEnableUtilsTest, CheckCertHasEnterpriseResignExtension_0002, TestSize.Level0)
 {
     uint8_t invalidCertData[] = {0x01, 0x02, 0x03, 0x04};
     int32_t ret = CheckCertHasEnterpriseResignExtension(invalidCertData, sizeof(invalidCertData));
@@ -380,12 +370,12 @@ HWTEST_F(KeyEnableUtilsTest, CheckCertHasEnterpriseResignExtension_0003, TestSiz
 }
 
 /**
- * @tc.name: CheckCertHasEnterpriseResignExtension_0004
+ * @tc.name: CheckCertHasEnterpriseResignExtension_0003
  * @tc.desc: test with valid certificate without enterprise resign extension
  * @tc.type: Func
  * @tc.require:
  */
-HWTEST_F(KeyEnableUtilsTest, CheckCertHasEnterpriseResignExtension_0004, TestSize.Level0)
+HWTEST_F(KeyEnableUtilsTest, CheckCertHasEnterpriseResignExtension_0003, TestSize.Level0)
 {
     ByteBuffer certData;
     ASSERT_TRUE(ReadDataFromFile(TEST_CA_CERT_PATH, certData));
