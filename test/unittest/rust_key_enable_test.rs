@@ -504,3 +504,42 @@ Hn+GmxZA
     let cert = X509::from_pem(cert_data.as_bytes()).expect("Parse pem cert error");
     assert!(activate_cert(&cert.to_der().unwrap(), CertStatus::BeforeUnlock, CertType::Other).is_err());
 }
+
+#[cfg(test)]
+mod enterprise_resign_cert_tests {
+    use super::*;
+    use key_enable::profile_utils::test_utils::validate_enterprise_resign_cert_for_test;
+    use key_enable::cert_path_utils::EnterpriseCertError;
+    use std::fs;
+
+    const CERT_PATH_2: &str = "/data/test/tmp/cert_chain_2.pem";
+    const CERT_PATH_3_NO_EXT: &str = "/data/test/tmp/cert_chain_3_no_extension.pem";
+
+    fn read_cert_file(path: &str) -> Vec<u8> {
+        fs::read(path).unwrap_or_else(|_| {
+            panic!("Failed to read certificate file: {}. Please ensure the file exists.", path);
+        })
+    }
+
+    #[test]
+    fn test_enterprise_resign_cert_chain_length_2_should_fail() {
+        let cert_data = read_cert_file(CERT_PATH_2);
+        let result = validate_enterprise_resign_cert_for_test(&cert_data);
+        assert!(result.is_err(), "Expected error for cert chain with 2 certificates");
+        match result {
+            Err(EnterpriseCertError::InvalidCert) => {},
+            _ => panic!("Expected InvalidCert error for cert chain with 2 certificates"),
+        }
+    }
+
+    #[test]
+    fn test_enterprise_resign_cert_missing_extension_should_fail() {
+        let cert_data = read_cert_file(CERT_PATH_3_NO_EXT);
+        let result = validate_enterprise_resign_cert_for_test(&cert_data);
+        assert!(result.is_err(), "Expected error for cert chain without enterprise resign extension");
+        match result {
+            Err(EnterpriseCertError::InvalidCert) => {},
+            _ => panic!("Expected InvalidCert error for missing enterprise resign extension"),
+        }
+    }
+}

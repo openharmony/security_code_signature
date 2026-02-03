@@ -201,6 +201,8 @@
             <option name="push" value="demo_cert/cert_path/valid_cert_path.json -> /data/test/tmp" src="res"/>
             <option name="push" value="demo_cert/cert_path/invalid_structure_cert_path.json -> /data/test/tmp" src="res"/>
             <option name="push" value="demo_cert/cert_path/empty_cert_path.json -> /data/test/tmp" src="res"/>
+            <option name="push" value="demo_cert/enterprise_cert/cert_chain_2.pem -> /data/test/tmp" src="res"/>
+            <option name="push" value="demo_cert/enterprise_cert/cert_chain_3_no_extension.pem -> /data/test/tmp" src="res"/>
         </preparer>
         <cleaner>
             <option name="shell" value="rm -rf /data/test/tmp"/>

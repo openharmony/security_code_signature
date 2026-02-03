@@ -334,7 +334,10 @@ ohos_rust_unittest("rust_key_enable_unittest") {
     "ylong_json:lib",
     "rust_rust-openssl:lib"
   ]
-  deps = [ ":rust_key_enable_lib" ]
+  deps = [
+    ":rust_key_enable_lib",
+    "${code_signature_root_dir}/services/key_enable/utils:libkey_enable_utils",
+  ]
   subsystem_name = "security"
   part_name = "code_signature"
 }

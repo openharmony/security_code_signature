@@ -65,6 +65,7 @@ const APP_DISTRIBUTION_TYPE_ENTERPRISE: &str = "enterprise";
 const APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL: &str = "enterprise_normal";
 const APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM: &str = "enterprise_mdm";
 const DEFAULT_MAX_CERT_PATH_LEN: u32 = 3;
+const ENTERPRISE_RESIGN_CHAIN_LENGTH: usize = 3;
 const PROFILE_RELEASE_TYPE: &str = "release";
 const PROFILE_DEBUG_TYPE: &str = "debug";
 const EMPTY_APP_ID: &str = "";
@@ -94,6 +95,7 @@ extern "C" {
     fn CodeSignGetUdid(udid: *mut u8) -> i32;
     fn IsRdDevice() -> bool;
     fn WaitForEnterpriseParam() -> bool;
+    fn CheckCertHasEnterpriseResignExtension(cert_der: *const u8, cert_size: u32) -> i32;
 }
 
 #[no_mangle]
@@ -778,6 +780,32 @@ fn get_leaf_certificate(certs: &[X509]) -> Option<(&X509, Vec<&X509>)> {
     None
 }
 
+/// Check if leaf certificate contains the enterprise resign extension
+fn check_enterprise_resign_extension(cert: &X509) -> Result<(), EnterpriseCertError> {
+    // Get the DER bytes of the certificate
+    let der = match cert.to_der() {
+        Ok(bytes) => bytes,
+        Err(e) => {
+            error!(LOG_LABEL, "Failed to convert certificate to DER: {}", @public(e));
+            return Err(EnterpriseCertError::InvalidCert);
+        }
+    };
+
+    // Call C function to check for enterprise resign extension
+    let ret = unsafe {
+        CheckCertHasEnterpriseResignExtension(der.as_ptr(), der.len() as u32)
+    };
+
+    if ret == 0 {
+        // CS_SUCCESS = 0
+        info!(LOG_LABEL, "Found enterprise resign extension in leaf certificate");
+        Ok(())
+    } else {
+        error!(LOG_LABEL, "Enterprise resign extension not found in leaf certificate");
+        Err(EnterpriseCertError::InvalidCert)
+    }
+}
+
 fn process_cert_data(cert_data: &[u8], root_store: &X509Store) -> Result<(String, String, u32, String), i32> {
     // 1. Parse PEM certificate stack
     let certs = match X509::stack_from_pem(cert_data) {
@@ -797,6 +825,13 @@ fn process_cert_data(cert_data: &[u8], root_store: &X509Store) -> Result<(String
         return Err(EnterpriseCertError::InvalidCert as i32);
     }
 
+    // 2.1 Validate certificate chain length must be exactly 3
+    if certs.len() != ENTERPRISE_RESIGN_CHAIN_LENGTH {
+        error!(LOG_LABEL, "Enterprise resign cert chain must contain exactly 3 certificates, got {}",
+            @public(certs.len()));
+        return Err(EnterpriseCertError::InvalidCert as i32);
+    }
+
     // 3. Find leaf certificate (leaf cert's subject is not an issuer of any other cert)
     let (leaf_cert, intermediate_certs) = match get_leaf_certificate(&certs) {
         Some((leaf, intermediates)) => (leaf, intermediates),
@@ -812,6 +847,12 @@ fn process_cert_data(cert_data: &[u8], root_store: &X509Store) -> Result<(String
         @public(leaf_subject.clone()), @public(leaf_issuer.clone()));
     info!(LOG_LABEL, "Found {} intermediate CA certificate(s) in chain",
         @public(intermediate_certs.len().to_string()));
+
+    // 3.1 Check leaf certificate has enterprise resign extension
+    if let Err(e) = check_enterprise_resign_extension(leaf_cert) {
+        error!(LOG_LABEL, "Leaf certificate missing enterprise resign extension");
+        return Err(e as i32);
+    }
 
     // 4. Perform certificate chain verification against trusted root store
     info!(LOG_LABEL, "Starting certificate chain verification against trusted roots");
@@ -882,4 +923,35 @@ fn remove_enterprise_resign_data(cert_data: &Vec<u8>, root_store: &X509Store) ->
         "remove enterprise resign cert data",
         root_store,
     )
+}
+
+// Test utilities module - publicly available for integration testing
+#[allow(missing_docs)]
+pub mod test_utils {
+    use super::*;
+    use openssl::x509::store::X509StoreBuilder;
+
+    /// Test helper function to validate enterprise resign cert chain
+    #[allow(dead_code)]
+    pub fn validate_enterprise_resign_cert_for_test(cert_data: &[u8]) -> Result<(), EnterpriseCertError> {
+        // Build a minimal X509 store for testing
+        let param = openssl::x509::verify::X509VerifyParam::new().unwrap();
+        let mut builder = X509StoreBuilder::new().unwrap();
+        let _ = builder.set_param(&param);
+        let store = builder.build();
+
+        match process_cert_data(cert_data, &store) {
+            Ok(_) => Ok(()),
+            Err(err) => {
+                let err_code = err as i32;
+                if err_code == (EnterpriseCertError::InvalidCert as i32) {
+                    Err(EnterpriseCertError::InvalidCert)
+                } else if err_code == (EnterpriseCertError::ChainVerifyFailed as i32) {
+                    Err(EnterpriseCertError::ChainVerifyFailed)
+                } else {
+                    Err(EnterpriseCertError::InvalidCert)
+                }
+            }
+        }
+    }
 }
