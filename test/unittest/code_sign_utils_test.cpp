@@ -26,6 +26,7 @@
 #include "code_sign_block.h"
 #include "directory_ex.h"
 #include "enable_key_utils.h"
+#include "file_helper.h"
 #include "xpm_common.h"
 
 namespace OHOS {
@@ -164,6 +165,23 @@ static bool ReadSignatureFromFile(const std::string &path, ByteBuffer &data)
 
 // excute the exceptional examples first, because of it's always successful
 // once the same file signature verified successfully
+
+/**
+ * @tc.name: FileHelperTest_0001
+ * @tc.desc: enable code signature for app failed, reason = invalied signature path
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, FileHelperTest_0001, TestSize.Level0)
+{
+    bool ret = CheckFilePathValid(g_sigWithoutLibRetSucPath, TMP_BASE_PATH);
+    EXPECT_EQ(ret, true);
+
+    std::string invalidPath = TMP_BASE_PATH + "invalid";
+    EXPECT_EQ(std::filesystem::copy_file(g_sigWithoutLibRetSucPath, invalidPath), true);
+    ret = CheckFilePathValid(invalidPath, TMP_BASE_PATH);
+    EXPECT_EQ(ret, false);
+}
 
 /**
  * @tc.name: CodeSignUtilsTest_0001
