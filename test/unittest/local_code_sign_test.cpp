@@ -19,6 +19,7 @@
 
 #include "access_token_setter.h"
 #include "byte_buffer.h"
+#include "code_sign_attr_utils.h"
 #include "code_sign_test_common.h"
 #include "code_sign_utils.h"
 #include "local_code_sign_client.h"
@@ -284,6 +285,40 @@ HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0013, TestSize.Level0)
     sptr<IRemoteObject> remoteObject =
         systemAbilityManager->GetSystemAbility(LOCAL_CODE_SIGN_SA_ID);
     cb.OnLoadSystemAbilitySuccess(LOCAL_CODE_SIGN_SA_ID, remoteObject);
+}
+
+/**
+ * @tc.name: LocalCodeSignTest_0014
+ * @tc.desc: sign local code failed with ownerID equals SYSTEM_LIB_ID
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0014, TestSize.Level0)
+{
+    ByteBuffer sig;
+    uint64_t selfTokenId = GetSelfTokenID();
+    EXPECT_TRUE(MockTokenId("compiler_service"));
+    std::string ownerID = OWNERID_SYSTEM_TAG;
+    int ret = LocalCodeSignKit::SignLocalCode(ownerID, DEMO_AN_PATH2, sig);
+    EXPECT_EQ(0, SetSelfTokenID(selfTokenId));
+    EXPECT_EQ(ret, CS_ERR_FORBIDDEN_OWNER_ID);
+}
+
+/**
+ * @tc.name: LocalCodeSignTest_0015
+ * @tc.desc: sign local code failed with ownerID equals COMPAT_LIB_ID
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0015, TestSize.Level0)
+{
+    ByteBuffer sig;
+    uint64_t selfTokenId = GetSelfTokenID();
+    EXPECT_TRUE(MockTokenId("compiler_service"));
+    std::string ownerID = OWNERID_COMPAT_TAG;
+    int ret = LocalCodeSignKit::SignLocalCode(ownerID, DEMO_AN_PATH2, sig);
+    EXPECT_EQ(0, SetSelfTokenID(selfTokenId));
+    EXPECT_EQ(ret, CS_ERR_FORBIDDEN_OWNER_ID);
 }
 } // namespace CodeSign
 } // namespace Security
