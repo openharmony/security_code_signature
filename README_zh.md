@@ -46,7 +46,7 @@
 | int32_t EnforceCodeSignForApp(const std::string &path, const EntryMap &entryPathMap, FileType type, uint32_t flag); | 对hap使能代码签名 |
 | int32_t EnforceCodeSignForFile(const std::string &path, const ByteBuffer &signature); | 对文件使能代码签名 |
 | int32_t EnforceCodeSignForFile(const std::string &path); | 对二进制文件使能代码签名 |
-| int32_t EnforceCodeSignForAppWithOwnerId(const std::string ownerId, const std::string &path, const EntryMap &entryPathMap, FileType type, uint32_t flag); | 对hap使能代码签名和OwnerId校验 |
+| int32_t EnforceCodeSignForAppWithOwnerId(const std::string &path, const EntryMap &entryPathMap, FileType type, const ByteBuffer &profileBuffer, uint32_t flag); | 对hap使能代码签名和OwnerId校验 |
 | int32_t EnforceCodeSignForAppWithPluginId(const std::string ownerId, const std::string pluginId, const std::string &path, const EntryMap &entryPathMap, FileType type, uint32_t flag); | 对hap使能代码签名、OwnerId和PluginId校验 |
 | int ParseOwnerIdFromSignature(const ByteBuffer &sigbuffer, std::string &ownerID); | 从签名中解析OwnerId |
 | int32_t EnableKeyInProfile(const std::string &bundleName, const ByteBuffer &profileBuffer); | 信任开发者证书 |

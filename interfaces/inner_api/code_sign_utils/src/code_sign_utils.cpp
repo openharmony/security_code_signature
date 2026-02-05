@@ -201,9 +201,21 @@ int32_t CodeSignUtils::EnforceCodeSignForFile(const std::string &path, const uin
     return EnableCodeSignForFile(realPath, arg);
 }
 
-int32_t CodeSignUtils::EnforceCodeSignForAppWithOwnerId(const std::string &ownerId, const std::string &path,
-    const EntryMap &entryPathMap, FileType type, uint32_t flag)
+int32_t CodeSignUtils::EnforceCodeSignForAppWithOwnerId(const std::string &path,
+    const EntryMap &entryPathMap, FileType type, const ByteBuffer &profileBuffer, uint32_t flag)
 {
+    if (profileBuffer.Empty()) {
+        LOG_ERROR("Profile is empty.");
+        return CS_ERR_PROFILE;
+    }
+    Verify::ProvisionInfo info;
+    int ret = Verify::VerifyProfileByP7bBlock(profileBuffer.GetSize(),
+        static_cast<unsigned char*>(profileBuffer.GetBuffer()), true, info);
+    if (ret != Verify::VERIFY_SUCCESS) {
+        LOG_ERROR("Profile verify failed. ret = %{public}d", ret);
+        return CS_ERR_PROFILE;
+    }
+    std::string ownerId = info.bundleInfo.appIdentifier;
     return EnforceCodeSignForAppWithPluginId(ownerId, "", path, entryPathMap, type, flag);
 }
 
@@ -265,7 +277,7 @@ int32_t CodeSignUtils::HandleCodeSignBlockFailure(const std::string &realPath, i
 int32_t CodeSignUtils::EnforceCodeSignForApp(const std::string &path, const EntryMap &entryPathMap,
     FileType type, uint32_t flag)
 {
-    return EnforceCodeSignForAppWithOwnerId("", path, entryPathMap, type, flag);
+    return EnforceCodeSignForAppWithPluginId("", "", path, entryPathMap, type, flag);
 }
 
 int32_t CodeSignUtils::EnableKeyInProfile(const std::string &bundleName, const ByteBuffer &profileBuffer)

@@ -503,7 +503,7 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0017, TestSize.Level0)
     std::string hapRealPath = APP_BASE_PATH + "/demo_with_multi_lib/entry-default-signed-debug.hap";
     EntryMap entryMap;
     CodeSignUtils utils;
-    int32_t ret = utils.EnforceCodeSignForAppWithOwnerId("DEBUG_LIB_ID",
+    int32_t ret = utils.EnforceCodeSignForAppWithPluginId("DEBUG_LIB_ID", "",
         hapRealPath, entryMap, FILE_SELF);
     EXPECT_EQ(ret, CS_SUCCESS);
 }
@@ -519,7 +519,7 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0018, TestSize.Level0)
     std::string hapRealPath = APP_BASE_PATH + "/demo_with_multi_lib/entry-default-signed-release.hap";
     EntryMap entryMap;
     CodeSignUtils utils;
-    int32_t ret = utils.EnforceCodeSignForAppWithOwnerId("test-app-identifier",
+    int32_t ret = utils.EnforceCodeSignForAppWithPluginId("test-app-identifier", "",
         hapRealPath, entryMap, FILE_SELF);
     EXPECT_EQ(ret, CS_SUCCESS);
 }
@@ -535,7 +535,7 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0019, TestSize.Level0)
     std::string hapRealPath = APP_BASE_PATH + "/demo_with_multi_lib/entry-default-signed-debug.hap";
     EntryMap entryMap;
     CodeSignUtils utils;
-    int32_t ret = utils.EnforceCodeSignForAppWithOwnerId("INVALID_ID",
+    int32_t ret = utils.EnforceCodeSignForAppWithPluginId("INVALID_ID", "",
         hapRealPath, entryMap, FILE_SELF);
     EXPECT_EQ(ret, CS_ERR_INVALID_OWNER_ID);
 }
@@ -551,9 +551,41 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0020, TestSize.Level0)
     std::string hapRealPath = APP_BASE_PATH + "/demo_with_multi_lib/entry-default-signed-release.hap";
     EntryMap entryMap;
     CodeSignUtils utils;
-    int32_t ret = utils.EnforceCodeSignForAppWithOwnerId("INVALID_ID",
+    int32_t ret = utils.EnforceCodeSignForAppWithPluginId("INVALID_ID", "",
         hapRealPath, entryMap, FILE_SELF);
     EXPECT_EQ(ret, CS_ERR_INVALID_OWNER_ID);
+}
+
+/**
+ * @tc.name: CodeSignUtilsTest_0021
+ * @tc.desc: enable code signature for release app with libs input empty p7b buffer
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0021, TestSize.Level0)
+{
+    std::string hapRealPath = APP_BASE_PATH + "/demo_with_multi_lib/entry-default-signed-release.hap";
+    EntryMap entryMap;
+    CodeSignUtils utils;
+    ByteBuffer emptyBuffer;
+    int32_t ret = utils.EnforceCodeSignForAppWithOwnerId(hapRealPath, entryMap, FILE_SELF, emptyBuffer);
+    EXPECT_EQ(ret, CS_ERR_PROFILE);
+}
+
+/**
+ * @tc.name: CodeSignUtilsTest_0022
+ * @tc.desc: enable code signature for release app with libs input error p7b buffer
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0022, TestSize.Level0)
+{
+    std::string hapRealPath = APP_BASE_PATH + "/demo_with_multi_lib/entry-default-signed-release.hap";
+    EntryMap entryMap;
+    CodeSignUtils utils;
+    ByteBuffer pBuffer(100);
+    int32_t ret = utils.EnforceCodeSignForAppWithOwnerId(hapRealPath, entryMap, FILE_SELF, pBuffer);
+    EXPECT_EQ(ret, CS_ERR_PROFILE);
 }
 
 /**
@@ -651,7 +683,7 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0026, TestSize.Level0)
     EXPECT_EQ(ret, CS_SUCCESS);
     entryMap.clear();
 
-    ret = utils.EnforceCodeSignForAppWithOwnerId("test-app-identifier", hapRealPath, entryMap, FILE_ALL);
+    ret = utils.EnforceCodeSignForAppWithPluginId("test-app-identifier", "", hapRealPath, entryMap, FILE_ALL);
     EXPECT_EQ(ret, CS_ERR_NO_SIGNATURE);
 }
 
