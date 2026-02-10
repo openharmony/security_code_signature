@@ -105,7 +105,7 @@ Key responsibilities:
     │  resign cert thread       │   │                             │
     │  (background)             │   └──────────┬──────────────────┘
     └──────────┬────────────────┘              │
-               │                             ▼
+               │                               ▼
                │                  ┌─────────────────────────────┐
                │                  │ Wait for boot completion    │
                ▼                  │ (max 20 seconds)            │
@@ -116,7 +116,7 @@ Key responsibilities:
     └──────────┬────────────────┘ │ Add local key (inactive)    │
                │                  └──────────┬──────────────────┘
                ▼                             │
-    ┌───────────────────────────┐             ▼
+    ┌───────────────────────────┐            ▼
     │ Parse profiles for:       │ ┌─────────────────────────────┐
     │ - Developer cert paths    │ │ Restrict fs-verity keyring  │
     │ - Enterprise certs        │ │ (prevent further changes)   │
