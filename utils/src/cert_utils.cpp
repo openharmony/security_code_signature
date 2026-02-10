@@ -15,14 +15,17 @@
 
 #include "cert_utils.h"
 
+#include <chrono>
 #include <cstring>
 #include <memory>
 #include <openssl/rand.h>
 #include <securec.h>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include "byte_buffer.h"
+#include "cs_hisysevent.h"
 #include "errcode.h"
 #include "huks_param_set.h"
 #include "log.h"
@@ -181,10 +184,25 @@ std::unique_ptr<ByteBuffer> GetRandomChallenge()
 {
     std::unique_ptr<ByteBuffer> challenge = std::make_unique<ByteBuffer>(CHALLENGE_LEN);
     if (challenge == nullptr) {
+        LOG_ERROR("Failed to allocate ByteBuffer for challenge");
         return nullptr;
     }
-    RAND_bytes(challenge->GetBuffer(), CHALLENGE_LEN);
-    return challenge;
+    const int maxRetries = 4;
+    int delayMs = 50;  // 50ms
+    for (int i = 1; i <= maxRetries; i++) {
+        if (RAND_bytes(challenge->GetBuffer(), CHALLENGE_LEN) == 1) {
+            return challenge;
+        }
+        if (i < maxRetries) {
+            LOG_WARN("RAND_bytes failed, retry %{public}d/%{public}d after %{public}dms",
+                     i, maxRetries - 1, delayMs);
+            std::this_thread::sleep_for(std::chrono::milliseconds(delayMs));
+            delayMs *= 2;  // 50ms, 100ms, 200ms
+        }
+    }
+    LOG_ERROR("RAND_bytes failed after %{public}d retries", maxRetries);
+    ReportLoadSAError(CS_ERR_GENERATE_CHALLENGE);
+    return nullptr;
 }
 
 bool CheckChallengeSize(uint32_t size)
