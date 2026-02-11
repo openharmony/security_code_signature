@@ -1155,6 +1155,27 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0071, TestSize.Level0)
     EXPECT_EQ(ret, CS_SUCCESS);
 #endif
 }
+
+/**
+* @tc.name: CodeSignUtilsTest_0072
+* @tc.desc: enable code signature for release app with libs input p7b buffer
+* @tc.type: Func
+* @tc.require:
+*/
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0072, TestSize.Level0)
+{
+    std::string hapRealPath = APP_BASE_PATH + "/demo_with_multi_lib/entry-default-signed-debug.hap";
+    std::string p7bPath = APP_BASE_PATH + "/demo_with_multi_lib/entry-default-signed-debug.p7b";
+    EntryMap entryMap;
+    CodeSignUtils utils;
+
+    ByteBuffer pBuffer;
+    bool flag = ReadSignatureFromFile(p7bPath, pBuffer);
+    EXPECT_EQ(flag, true);
+
+    int32_t ret = utils.EnforceCodeSignForAppWithOwnerId(hapRealPath, entryMap, FILE_SELF, pBuffer);
+    EXPECT_EQ(ret, CS_SUCCESS);
+}
 }  // namespace CodeSign
 }  // namespace Security
 }  // namespace OHOS
