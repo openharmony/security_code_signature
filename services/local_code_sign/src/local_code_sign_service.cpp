@@ -15,6 +15,7 @@
 
 #include "local_code_sign_service.h"
 
+#include "code_sign_attr_utils.h"
 #include "directory_ex.h"
 #include "fsverity_utils_helper.h"
 #include "ipc_skeleton.h"
@@ -124,6 +125,10 @@ int32_t LocalCodeSignService::SignLocalCode(const std::string &ownerID, const st
     if (ownerID.length() > MAX_OWNER_ID_LEN) {
         LOG_ERROR("ownerID len %{public}zu should not exceed %{public}u", ownerID.length(), MAX_OWNER_ID_LEN);
         return CS_ERR_INVALID_OWNER_ID;
+    }
+    if (ownerID == OWNERID_SYSTEM_TAG || ownerID == OWNERID_COMPAT_TAG) {
+        LOG_ERROR("ownerID %{public}s is not allowed for local signing", ownerID.c_str());
+        return CS_ERR_FORBIDDEN_OWNER_ID;
     }
     ByteBuffer digest;
     std::string realPath;

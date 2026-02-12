@@ -66,6 +66,7 @@ enum VerifyErrCode {
     CS_ERR_INVALID_CERT = -0x310,
     CS_ERR_IOCTL_ERROR = -0x311,
     CS_ERR_VERIFY_ERROR = -0x312,
+    CS_ERR_FORBIDDEN_OWNER_ID = -0x313,
 };
 
 enum IPCErrCode {
