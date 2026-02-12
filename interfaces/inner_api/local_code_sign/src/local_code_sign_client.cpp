@@ -148,6 +148,10 @@ int32_t LocalCodeSignClient::InitLocalCertificate(ByteBuffer &cert)
     }
     ByteBuffer certChainBuffer;
     std::unique_ptr<ByteBuffer> challenge = GetRandomChallenge();
+    if (challenge == nullptr) {
+        LOG_ERROR("GetRandomChallenge failed");
+        return CS_ERR_GENERATE_CHALLENGE;
+    }
     int32_t ret = localCodeSignProxy_->InitLocalCertificate(*challenge, certChainBuffer);
     if (ret != CS_SUCCESS) {
         LOG_ERROR("InitLocalCertificate err, error code = %{public}d", ret);

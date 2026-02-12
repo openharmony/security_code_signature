@@ -191,6 +191,7 @@ ohos_unittest("local_code_sign_utils_unittest") {
     "c_utils:utils",
     "fsverity-utils:libfsverity_utils",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "huks:libhukssdk",
     "openssl:libcrypto_shared",
     "bundle_framework:appexecfwk_base",
@@ -226,6 +227,7 @@ ohos_unittest("local_code_sign_utils_mock_unittest") {
     "c_utils:utils",
     "fsverity-utils:libfsverity_utils",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "huks:libhukssdk",
     "init:libbegetutil",
     "openssl:libcrypto_shared",
@@ -447,6 +449,7 @@ ohos_unittest("cert_chain_verifier_unittest") {
     "access_token:libtoken_setproc",
     "c_utils:utils",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "huks:libhukssdk",
     "openssl:libcrypto_shared",
   ]

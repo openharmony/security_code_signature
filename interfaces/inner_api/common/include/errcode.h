@@ -41,7 +41,8 @@ enum SignErrCode {
     CS_ERR_NO_OWNER_ID = -0x205,
     CS_ERR_INIT_LOCAL_CERT = -0x206,
     CS_ERR_VERIFY_CERT = -0x207,
-    CS_ERR_NO_PLUGIN_ID = -0x208
+    CS_ERR_NO_PLUGIN_ID = -0x208,
+    CS_ERR_GENERATE_CHALLENGE = -0x209
 };
 
 enum OpenSSLErrCode {
