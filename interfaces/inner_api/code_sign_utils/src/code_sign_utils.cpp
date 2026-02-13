@@ -29,6 +29,7 @@
 #include <linux/stat.h>
 #include <linux/types.h>
 
+#include "code_sign_attr_utils.h"
 #include "cs_hisysevent.h"
 #include "cs_hitrace.h"
 #include "code_sign_helper.h"
@@ -216,6 +217,9 @@ int32_t CodeSignUtils::EnforceCodeSignForAppWithOwnerId(const std::string &path,
         return CS_ERR_PROFILE;
     }
     std::string ownerId = info.bundleInfo.appIdentifier;
+    if (info.type == Verify::ProvisionType::DEBUG) {
+        ownerId = OWNERID_DEBUG_TAG;
+    }
     return EnforceCodeSignForAppWithPluginId(ownerId, "", path, entryPathMap, type, flag);
 }
 
