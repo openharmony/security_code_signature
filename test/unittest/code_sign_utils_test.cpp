@@ -178,6 +178,7 @@ HWTEST_F(CodeSignUtilsTest, FileHelperTest_0001, TestSize.Level0)
     EXPECT_EQ(ret, true);
 
     std::string invalidPath = TMP_BASE_PATH + "invalid";
+    std::filesystem::remove(invalidPath);
     EXPECT_EQ(std::filesystem::copy_file(g_sigWithoutLibRetSucPath, invalidPath), true);
     ret = CheckFilePathValid(invalidPath, TMP_BASE_PATH);
     EXPECT_EQ(ret, false);
@@ -569,7 +570,11 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0021, TestSize.Level0)
     CodeSignUtils utils;
     ByteBuffer emptyBuffer;
     int32_t ret = utils.EnforceCodeSignForAppWithOwnerId(hapRealPath, entryMap, FILE_SELF, emptyBuffer);
-    EXPECT_EQ(ret, CS_ERR_PROFILE);
+    #ifdef SUPPORT_OH_CODE_SIGN
+        EXPECT_EQ(ret, CS_ERR_PROFILE);
+    #else
+        EXPECT_EQ(ret, CS_SUCCESS);
+    #endif
 }
 
 /**
@@ -585,7 +590,11 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0022, TestSize.Level0)
     CodeSignUtils utils;
     ByteBuffer pBuffer(100);
     int32_t ret = utils.EnforceCodeSignForAppWithOwnerId(hapRealPath, entryMap, FILE_SELF, pBuffer);
-    EXPECT_EQ(ret, CS_ERR_PROFILE);
+    #ifdef SUPPORT_OH_CODE_SIGN
+        EXPECT_EQ(ret, CS_ERR_PROFILE);
+    #else
+        EXPECT_EQ(ret, CS_SUCCESS);
+    #endif
 }
 
 /**
@@ -864,14 +873,16 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0033, TestSize.Level0)
  */
 HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0034, TestSize.Level0)
 {
-    std::string bundleName = "";
-    const ByteBuffer profileBuffer;
+    std::string bundleName = "com.example.myapplication";
+    std::string p7bPath = APP_BASE_PATH + "/demo_with_multi_lib/entry-default-signed-debug.p7b";
+    ByteBuffer profileBuffer;
+    bool flag = ReadSignatureFromFile(p7bPath, profileBuffer);
+    EXPECT_EQ(flag, true);
     int32_t ret = CodeSignUtils::EnableKeyInProfile(bundleName, profileBuffer);
-#ifdef NO_USE_CLANG_COVERAGE
-    EXPECT_EQ(ret, CS_ERR_PROFILE);
-#else
     EXPECT_EQ(ret, CS_SUCCESS);
-#endif
+
+    ret = CodeSignUtils::RemoveKeyInProfile(bundleName);
+    EXPECT_EQ(ret, CS_SUCCESS);
 }
 
 /**
@@ -883,9 +894,24 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0034, TestSize.Level0)
 HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0035, TestSize.Level0)
 {
     std::string bundleName = "";
-    int32_t ret = CodeSignUtils::RemoveKeyInProfile(bundleName);
+    const ByteBuffer profileBuffer;
+    int32_t ret = CodeSignUtils::EnableKeyInProfile(bundleName, profileBuffer);
 #ifdef NO_USE_CLANG_COVERAGE
+#ifdef SUPPORT_OH_CODE_SIGN
     EXPECT_EQ(ret, CS_ERR_PROFILE);
+#else
+    EXPECT_EQ(ret, CS_SUCCESS);
+#endif
+#else
+    EXPECT_EQ(ret, CS_SUCCESS);
+#endif
+    ret = CodeSignUtils::RemoveKeyInProfile(bundleName);
+#ifdef NO_USE_CLANG_COVERAGE
+#ifdef SUPPORT_OH_CODE_SIGN
+    EXPECT_EQ(ret, CS_ERR_PROFILE);
+#else
+    EXPECT_EQ(ret, CS_SUCCESS);
+#endif
 #else
     EXPECT_EQ(ret, CS_SUCCESS);
 #endif
@@ -1166,6 +1192,77 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0072, TestSize.Level0)
 {
     std::string hapRealPath = APP_BASE_PATH + "/demo_with_multi_lib/entry-default-signed-debug.hap";
     std::string p7bPath = APP_BASE_PATH + "/demo_with_multi_lib/entry-default-signed-debug.p7b";
+    EntryMap entryMap;
+    CodeSignUtils utils;
+
+    ByteBuffer pBuffer;
+    bool flag = ReadSignatureFromFile(p7bPath, pBuffer);
+    EXPECT_EQ(flag, true);
+
+    int32_t ret = utils.EnforceCodeSignForAppWithOwnerId(hapRealPath, entryMap, FILE_SELF, pBuffer);
+    EXPECT_EQ(ret, CS_SUCCESS);
+}
+
+/**
+* @tc.name: CodeSignUtilsTest_0073
+* @tc.desc: enable code signature for release app with libs input p7b buffer
+* @tc.type: Func
+* @tc.require:
+*/
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0073, TestSize.Level0)
+{
+    std::string hapRealPath = APP_BASE_PATH + "/demo_with_multi_lib/entry-default-signed-debug-wrong-cert.hap";
+    std::string p7bPath = APP_BASE_PATH + "/demo_with_multi_lib/entry-default-signed-debug-wrong-cert.p7b";
+    EntryMap entryMap;
+    CodeSignUtils utils;
+
+    ByteBuffer pBuffer;
+    bool flag = ReadSignatureFromFile(p7bPath, pBuffer);
+    EXPECT_EQ(flag, true);
+
+    int32_t ret = utils.EnforceCodeSignForAppWithOwnerId(hapRealPath, entryMap, FILE_SELF, pBuffer);
+#ifdef SUPPORT_OH_CODE_SIGN
+    EXPECT_EQ(ret, CS_ERR_PROFILE);
+#else
+    EXPECT_EQ(ret, CS_SUCCESS);
+#endif
+}
+
+/**
+* @tc.name: CodeSignUtilsTest_0074
+* @tc.desc: enable code signature for release app with libs input p7b buffer
+* @tc.type: Func
+* @tc.require:
+*/
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0074, TestSize.Level0)
+{
+    std::string hapRealPath = APP_BASE_PATH + "/demo_with_multi_lib/entry-default-signed-release.hap";
+    std::string p7bPath = APP_BASE_PATH + "/demo_with_multi_lib/entry-default-signed-release.p7b";
+    EntryMap entryMap;
+    CodeSignUtils utils;
+
+    ByteBuffer pBuffer;
+    bool flag = ReadSignatureFromFile(p7bPath, pBuffer);
+    EXPECT_EQ(flag, true);
+
+    int32_t ret = utils.EnforceCodeSignForAppWithOwnerId(hapRealPath, entryMap, FILE_SELF, pBuffer);
+#ifdef SUPPORT_OH_CODE_SIGN
+    EXPECT_EQ(ret, CS_ERR_PROFILE);
+#else
+    EXPECT_EQ(ret, CS_SUCCESS);
+#endif
+}
+
+/**
+* @tc.name: CodeSignUtilsTest_0075
+* @tc.desc: enable code signature for release app with libs input p7b buffer
+* @tc.type: Func
+* @tc.require:
+*/
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0075, TestSize.Level0)
+{
+    std::string hapRealPath = APP_BASE_PATH + "/demo_with_multi_lib/entry-default-signed-release.hap";
+    std::string p7bPath = APP_BASE_PATH + "/demo_with_multi_lib/entry-default-signed-release2.p7b";
     EntryMap entryMap;
     CodeSignUtils utils;
 
