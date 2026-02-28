@@ -70,6 +70,10 @@
             <option name="push" value="demo_with_multi_lib/entry-default-signed-release.hap -> /data/app/el1/bundle/public/tmp/demo_with_multi_lib" src="res"/>
             <option name="push" value="demo_with_multi_lib/entry-default-signed-debug.p7b -> /data/app/el1/bundle/public/tmp/demo_with_multi_lib" src="res"/>
             <option name="push" value="demo_with_multi_lib/entry-default-signed-debug.hap -> /data/app/el1/bundle/public/tmp/demo_with_multi_lib" src="res"/>
+            <option name="push" value="demo_with_multi_lib/entry-default-signed-release.p7b -> /data/app/el1/bundle/public/tmp/demo_with_multi_lib" src="res"/>
+            <option name="push" value="demo_with_multi_lib/entry-default-signed-release2.p7b -> /data/app/el1/bundle/public/tmp/demo_with_multi_lib" src="res"/>
+            <option name="push" value="demo_with_multi_lib/entry-default-signed-debug-wrong-cert.hap -> /data/app/el1/bundle/public/tmp/demo_with_multi_lib" src="res"/>
+            <option name="push" value="demo_with_multi_lib/entry-default-signed-debug-wrong-cert.p7b -> /data/app/el1/bundle/public/tmp/demo_with_multi_lib" src="res"/>
             <option name="push" value="demo_elf_v1/elf-signed-release -> /data/app/el1/bundle/public/tmp/demo_elf_v1" src="res"/>
             <option name="push" value="demo_elf_v1/elf-signed-magic-error -> /data/app/el1/bundle/public/tmp/demo_elf_v1" src="res"/>
             <option name="push" value="demo_elf_v1/elf-signed-version-error -> /data/app/el1/bundle/public/tmp/demo_elf_v1" src="res"/>
