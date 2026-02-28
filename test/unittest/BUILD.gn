@@ -455,6 +455,28 @@ ohos_unittest("cert_chain_verifier_unittest") {
   ]
 }
 
+ohos_unittest("openssl_utils_unittest") {
+  testonly = true
+  module_out_path = "code_signature/code_signature"
+  sources = [
+    "${code_signature_root_dir}/utils/src/openssl_utils.cpp",
+    "openssl_utils_test.cpp",
+  ]
+  include_dirs = [
+    "utils/include",
+    "${code_signature_root_dir}/utils/include",
+  ]
+  configs = [
+    "${code_signature_root_dir}:common_utils_config",
+    "${code_signature_root_dir}:common_public_config",
+  ]
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "openssl:libcrypto_shared",
+  ]
+}
+
 group("unittest_group") {
   testonly = true
   if (!defined(ohos_lite)) {
@@ -469,6 +491,7 @@ group("unittest_group") {
       ":local_code_sign_utils_mock_unittest",
       ":local_code_sign_utils_unittest",
       ":multi_thread_local_sign_unittest",
+      ":openssl_utils_unittest",
       ":sign_and_enforce_unittest",
     ]
     if (!use_clang_coverage && !ohos_indep_compiler_enable) {
