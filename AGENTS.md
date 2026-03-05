@@ -303,7 +303,8 @@ hdc shell "cd /data/test && for test in *_unittest; do ./\$test; done"
 
 | API | Description | Header |
 |-----|-------------|--------|
-| `int InitXpm(int enableJitFort, uint32_t idType, const char *ownerId, const char *apiTargetVersionStr, const char *appSignType)` | Initialize XPM resources | [code_sign_attr_utils.h](interfaces/inner_api/code_sign_attr_utils/include/code_sign_attr_utils.h) |
+| `int InitXpmWithParam(const struct XpmInitParam *initParam)` | Initialize XPM resources with grouped parameters (preferred) | [code_sign_attr_utils.h](interfaces/inner_api/code_sign_attr_utils/include/code_sign_attr_utils.h) |
+| `int InitXpm(int enableJitFort, uint32_t idType, const char *ownerId, const char *apiTargetVersionStr, const char *appSignType)` | Compatibility wrapper for legacy callers | [code_sign_attr_utils.h](interfaces/inner_api/code_sign_attr_utils/include/code_sign_attr_utils.h) |
 | `int SetXpmOwnerId(uint32_t idType, const char *ownerId)` | Set owner ID for XPM | [code_sign_attr_utils.h](interfaces/inner_api/code_sign_attr_utils/include/code_sign_attr_utils.h) |
 
 ### JIT Code Signing APIs

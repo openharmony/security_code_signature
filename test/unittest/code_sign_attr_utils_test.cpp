@@ -45,6 +45,18 @@ public:
     void TearDown() {};
 };
 
+static struct XpmInitParam CreateInitParam(uint32_t idType)
+{
+    struct XpmInitParam initParam = XPM_INIT_PARAM_DEFAULT;
+    initParam.idType = idType;
+    return initParam;
+}
+
+static int CallInitXpm(const struct XpmInitParam &initParam)
+{
+    return InitXpmWithParam(&initParam);
+}
+
 /**
  * @tc.name: CodeSignAttrUtilsTest_0001
  * @tc.desc: test InitXpm with valid param should success
@@ -53,21 +65,35 @@ public:
  */
 HWTEST_F(CodeSignAttrUtilsTest, CodeSignAttrUtilsTest_0001, TestSize.Level0)
 {
-    EXPECT_EQ(InitXpm(0, PROCESS_OWNERID_APP, NULL, NULL, NULL), CS_SUCCESS);
-    EXPECT_EQ(InitXpm(0, PROCESS_OWNERID_COMPAT, NULL, NULL, NULL), CS_SUCCESS);
-    EXPECT_EQ(InitXpm(0, PROCESS_OWNERID_DEBUG, NULL, NULL, NULL), CS_SUCCESS);
-    EXPECT_EQ(InitXpm(0, PROCESS_OWNERID_EXTEND, NULL, NULL, NULL), CS_SUCCESS);
-    EXPECT_EQ(InitXpm(0, PROCESS_OWNERID_DEBUG_PLATFORM, NULL, NULL, NULL), CS_SUCCESS);
-    EXPECT_EQ(InitXpm(0, PROCESS_OWNERID_PLATFORM, NULL, NULL, NULL), CS_SUCCESS);
-    EXPECT_EQ(InitXpm(0, PROCESS_OWNERID_NWEB, NULL, NULL, NULL), CS_SUCCESS);
-    EXPECT_EQ(InitXpm(0, PROCESS_OWNERID_SHARED, NULL, NULL, NULL), CS_SUCCESS);
-    EXPECT_EQ(InitXpm(0, PROCESS_OWNERID_SYSTEM, NULL, NULL, NULL), CS_SUCCESS);
-    EXPECT_EQ(InitXpm(0, PROCESS_OWNERID_APP, "test", NULL, NULL), CS_SUCCESS);
-    EXPECT_EQ(InitXpm(0, PROCESS_OWNERID_APP, "test", "20", NULL), CS_SUCCESS);
-    EXPECT_EQ(InitXpm(0, PROCESS_OWNERID_APP, "test", "NaN", NULL), CS_SUCCESS);
-    EXPECT_EQ(InitXpm(0, PROCESS_OWNERID_APP, "test", "20", "none"), CS_SUCCESS);
-    EXPECT_EQ(InitXpm(0, PROCESS_OWNERID_APP, "test", "20", "enterpriseReSign"), CS_SUCCESS);
-    EXPECT_EQ(InitXpm(0, PROCESS_OWNERID_APP, "test", "20", "appgallery"), CS_SUCCESS);
+    EXPECT_EQ(CallInitXpm(CreateInitParam(PROCESS_OWNERID_APP)), CS_SUCCESS);
+    EXPECT_EQ(CallInitXpm(CreateInitParam(PROCESS_OWNERID_COMPAT)), CS_SUCCESS);
+    EXPECT_EQ(CallInitXpm(CreateInitParam(PROCESS_OWNERID_DEBUG)), CS_SUCCESS);
+    EXPECT_EQ(CallInitXpm(CreateInitParam(PROCESS_OWNERID_EXTEND)), CS_SUCCESS);
+    EXPECT_EQ(CallInitXpm(CreateInitParam(PROCESS_OWNERID_DEBUG_PLATFORM)), CS_SUCCESS);
+    EXPECT_EQ(CallInitXpm(CreateInitParam(PROCESS_OWNERID_PLATFORM)), CS_SUCCESS);
+    EXPECT_EQ(CallInitXpm(CreateInitParam(PROCESS_OWNERID_NWEB)), CS_SUCCESS);
+    EXPECT_EQ(CallInitXpm(CreateInitParam(PROCESS_OWNERID_SHARED)), CS_SUCCESS);
+    EXPECT_EQ(CallInitXpm(CreateInitParam(PROCESS_OWNERID_SYSTEM)), CS_SUCCESS);
+
+    struct XpmInitParam initParam = CreateInitParam(PROCESS_OWNERID_APP);
+    initParam.ownerId = "test";
+    EXPECT_EQ(CallInitXpm(initParam), CS_SUCCESS);
+
+    initParam.apiTargetVersionStr = "20";
+    EXPECT_EQ(CallInitXpm(initParam), CS_SUCCESS);
+
+    initParam.apiTargetVersionStr = "NaN";
+    EXPECT_EQ(CallInitXpm(initParam), CS_SUCCESS);
+
+    initParam.apiTargetVersionStr = "20";
+    initParam.appSignType = "none";
+    EXPECT_EQ(CallInitXpm(initParam), CS_SUCCESS);
+
+    initParam.appSignType = "enterpriseReSign";
+    EXPECT_EQ(CallInitXpm(initParam), CS_SUCCESS);
+
+    initParam.appSignType = "appgallery";
+    EXPECT_EQ(CallInitXpm(initParam), CS_SUCCESS);
 }
 
 /**
@@ -79,11 +105,13 @@ HWTEST_F(CodeSignAttrUtilsTest, CodeSignAttrUtilsTest_0001, TestSize.Level0)
 HWTEST_F(CodeSignAttrUtilsTest, CodeSignAttrUtilsTest_0002, TestSize.Level0)
 {
     // test invalid ownerid type
-    EXPECT_EQ(InitXpm(0, PROCESS_OWNERID_MAX, NULL, NULL, NULL), CS_ERR_PARAM_INVALID);
+    EXPECT_EQ(CallInitXpm(CreateInitParam(PROCESS_OWNERID_MAX)), CS_ERR_PARAM_INVALID);
     // test invalid ownerid valud
     char ownerid[MAX_OWNERID_LEN + 1] = { 0 };
     (void)memset_s(ownerid, MAX_OWNERID_LEN + 1, 'a', MAX_OWNERID_LEN + 1);
-    EXPECT_EQ(InitXpm(0, PROCESS_OWNERID_APP, ownerid, NULL, NULL), CS_ERR_MEMORY);
+    struct XpmInitParam initParam = CreateInitParam(PROCESS_OWNERID_APP);
+    initParam.ownerId = ownerid;
+    EXPECT_EQ(CallInitXpm(initParam), CS_ERR_MEMORY);
 }
 
 /**
@@ -103,6 +131,35 @@ HWTEST_F(CodeSignAttrUtilsTest, CodeSignAttrUtilsTest_0003, TestSize.Level0)
     EXPECT_EQ(ConvertIdType(PROCESS_OWNERID_APP_TEMP_ALLOW, "1"), PROCESS_OWNERID_APP);
     // test nullptr
     EXPECT_EQ(ConvertIdType(PROCESS_OWNERID_APP, nullptr), PROCESS_OWNERID_APP);
+}
+
+/**
+ * @tc.name: CodeSignAttrUtilsTest_0004
+ * @tc.desc: test InitXpmWithParam with supported appDistributionType values
+ * @tc.type: Func
+ * @tc.require: IAHWOP
+ */
+HWTEST_F(CodeSignAttrUtilsTest, CodeSignAttrUtilsTest_0004, TestSize.Level0)
+{
+    const char *distributionTypes[] = {
+        XPM_DISTRIBUTION_STR_NONE,
+        XPM_DISTRIBUTION_STR_APP_GALLERY,
+        XPM_DISTRIBUTION_STR_ENTERPRISE,
+        XPM_DISTRIBUTION_STR_ENTERPRISE_NORMAL,
+        XPM_DISTRIBUTION_STR_ENTERPRISE_MDM,
+        XPM_DISTRIBUTION_STR_INTERNALTESTING,
+        XPM_DISTRIBUTION_STR_OS_INTEGRATION,
+        XPM_DISTRIBUTION_STR_CROWDTESTING,
+    };
+
+    struct XpmInitParam initParam = CreateInitParam(PROCESS_OWNERID_APP);
+    initParam.ownerId = "test";
+    initParam.apiTargetVersionStr = "20";
+
+    for (const char *distributionType : distributionTypes) {
+        initParam.appDistributionType = distributionType;
+        EXPECT_EQ(CallInitXpm(initParam), CS_SUCCESS);
+    }
 }
 }
 }
