@@ -29,6 +29,7 @@
 #include <linux/stat.h>
 #include <linux/types.h>
 
+#include "code_sign_attr_utils.h"
 #include "cs_hisysevent.h"
 #include "cs_hitrace.h"
 #include "code_sign_helper.h"
@@ -201,9 +202,34 @@ int32_t CodeSignUtils::EnforceCodeSignForFile(const std::string &path, const uin
     return EnableCodeSignForFile(realPath, arg);
 }
 
-int32_t CodeSignUtils::EnforceCodeSignForAppWithOwnerId(const std::string &ownerId, const std::string &path,
-    const EntryMap &entryPathMap, FileType type, uint32_t flag)
+int32_t CodeSignUtils::EnforceCodeSignForAppWithOwnerId(const std::string &path,
+    const EntryMap &entryPathMap, FileType type, const ByteBuffer &profileBuffer, uint32_t flag)
 {
+#ifdef SUPPORT_OH_CODE_SIGN
+    if (profileBuffer.Empty()) {
+        LOG_ERROR("Profile is empty.");
+        return CS_ERR_PROFILE;
+    }
+    Verify::ProvisionInfo info;
+    int ret = Verify::VerifyProfileByP7bBlock(profileBuffer.GetSize(),
+        static_cast<unsigned char*>(profileBuffer.GetBuffer()), true, info);
+    if (ret != Verify::VERIFY_SUCCESS) {
+        LOG_ERROR("Profile verify failed. ret = %{public}d", ret);
+        return CS_ERR_PROFILE;
+    }
+#else
+    Verify::HapVerifyResult hapVerifyResult;
+    int ret = Verify::ParseHapProfile(path, hapVerifyResult);
+    if (ret != Verify::VERIFY_SUCCESS) {
+        LOG_ERROR("ParseHapProfile ret = %{public}d", ret);
+        return CS_ERR_PROFILE;
+    }
+    Verify::ProvisionInfo info = hapVerifyResult.GetProvisionInfo();
+#endif
+    std::string ownerId = info.bundleInfo.appIdentifier;
+    if (info.type == Verify::ProvisionType::DEBUG) {
+        ownerId = OWNERID_DEBUG_TAG;
+    }
     return EnforceCodeSignForAppWithPluginId(ownerId, "", path, entryPathMap, type, flag);
 }
 
@@ -265,25 +291,26 @@ int32_t CodeSignUtils::HandleCodeSignBlockFailure(const std::string &realPath, i
 int32_t CodeSignUtils::EnforceCodeSignForApp(const std::string &path, const EntryMap &entryPathMap,
     FileType type, uint32_t flag)
 {
-    return EnforceCodeSignForAppWithOwnerId("", path, entryPathMap, type, flag);
+    return EnforceCodeSignForAppWithPluginId("", "", path, entryPathMap, type, flag);
 }
 
 int32_t CodeSignUtils::EnableKeyInProfile(const std::string &bundleName, const ByteBuffer &profileBuffer)
 {
+#ifdef SUPPORT_OH_CODE_SIGN
     Verify::ProvisionInfo info;
     int ret = Verify::VerifyProfileByP7bBlock(profileBuffer.GetSize(),
         static_cast<unsigned char*>(profileBuffer.GetBuffer()), false, info);
-    if (ret != CS_SUCCESS) {
+    if (ret != Verify::VERIFY_SUCCESS) {
         LOG_ERROR("Profile verify failed. ret = %{public}d", ret);
         return CS_ERR_PROFILE;
     }
-
-    ret = EnableKeyInProfileByRust(bundleName.c_str(), profileBuffer.GetBuffer(), profileBuffer.GetSize());
-    if (ret == CS_SUCCESS) {
+#endif
+    int result = EnableKeyInProfileByRust(bundleName.c_str(), profileBuffer.GetBuffer(), profileBuffer.GetSize());
+    if (result == CS_SUCCESS) {
         ReportUserDataSize();
-        return ret;
+        return result;
     }
-    LOG_ERROR("Enable key in profile failed. ret = %{public}d", ret);
+    LOG_ERROR("Enable key in profile failed. result = %{public}d", result);
     return CS_ERR_PROFILE;
 }
 
