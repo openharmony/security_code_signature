@@ -77,6 +77,45 @@ struct XpmConfig {
     uint32_t apiTargetVersion;
 };
 
+struct XpmExtInfo {
+    uint8_t distributionType;
+    uint8_t reserved[63];
+};
+
+#define XPM_DISTRIBUTION_STR_NONE "none"
+#define XPM_DISTRIBUTION_STR_APP_GALLERY "app_gallery"
+#define XPM_DISTRIBUTION_STR_ENTERPRISE "enterprise"
+#define XPM_DISTRIBUTION_STR_ENTERPRISE_NORMAL "enterprise_normal"
+#define XPM_DISTRIBUTION_STR_ENTERPRISE_MDM "enterprise_mdm"
+#define XPM_DISTRIBUTION_STR_INTERNALTESTING "internaltesting"
+#define XPM_DISTRIBUTION_STR_OS_INTEGRATION "os_integration"
+#define XPM_DISTRIBUTION_STR_CROWDTESTING "crowdtesting"
+
+enum XPMDistributionEnum {
+    XPM_DISTRIBUTION_DEFAULT = 0,
+    XPM_DISTRIBUTION_APP_GALLERY = 1,
+    XPM_DISTRIBUTION_INTERNALTESTING = 2,
+    XPM_DISTRIBUTION_CROWDTESTING = 3,
+    XPM_DISTRIBUTION_OS_INTEGRATION = 4,
+    XPM_DISTRIBUTION_ENTERPRISE = 5,
+    XPM_DISTRIBUTION_ENTERPRISE_NORMAL = 6,
+    XPM_DISTRIBUTION_ENTERPRISE_MDM = 7,
+    XPM_DISTRIBUTION_MAX,
+};
+
+struct XpmInitParam {
+    int enableJitFort;
+    uint32_t idType;
+    const char *ownerId;
+    const char *apiTargetVersionStr;
+    const char *appSignType;
+    const char *appDistributionType;
+};
+
+#define XPM_INIT_PARAM_DEFAULT {0}
+
+int InitXpmWithParam(const struct XpmInitParam *initParam);
+
 int InitXpm(int enableJitFort, uint32_t idType, const char *ownerId, const char *apiTargetVersionStr,
             const char *appSignType);
 
