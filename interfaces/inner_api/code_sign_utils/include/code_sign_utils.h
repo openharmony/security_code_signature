@@ -44,6 +44,7 @@ typedef enum {
 
 enum CodeSignInfoFlag {
     IS_UNCOMPRESSED_NATIVE_LIBS = 0x01 << 0,
+    IS_ENTERPRISE_RESIGN = 0x01 << 1,
 };
 
 class CodeSignUtils {
