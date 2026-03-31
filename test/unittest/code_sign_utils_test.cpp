@@ -1273,6 +1273,127 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0075, TestSize.Level0)
     int32_t ret = utils.EnforceCodeSignForAppWithOwnerId(hapRealPath, entryMap, FILE_SELF, pBuffer);
     EXPECT_EQ(ret, CS_SUCCESS);
 }
+
+/**
+* @tc.name: CodeSignUtilsTest_0076
+* @tc.desc: Parse code sign block with IS_ENTERPRISE_RESIGN flag
+* @tc.type: Func
+* @tc.require:
+*/
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0076, TestSize.Level0)
+{
+    std::string hapRealPath = APP_BASE_PATH + "/demo_with_multi_lib/demo_with_code_sign_block.hap";
+    EntryMap entryMap;
+
+    CodeSignBlock codeSignBlock;
+    // Test with IS_ENTERPRISE_RESIGN flag - should try to find ENTERPRISE_CODE_RE_SIGN_BLOB
+    int32_t ret = codeSignBlock.ParseCodeSignBlock(hapRealPath, entryMap, FILE_SELF, IS_ENTERPRISE_RESIGN);
+    // Expected to return CS_CODE_SIGN_NOT_EXISTS since test file doesn't have ENTERPRISE_CODE_RE_SIGN_BLOB
+    EXPECT_EQ(ret, CS_CODE_SIGN_NOT_EXISTS);
+}
+
+/**
+* @tc.name: CodeSignUtilsTest_0077
+* @tc.desc: Parse code sign block with IS_ENTERPRISE_RESIGN flag
+* @tc.type: Func
+* @tc.require:
+*/
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0077, TestSize.Level0)
+{
+    std::string hapRealPath = APP_BASE_PATH + "/demo_with_multi_lib/entry-enterprise-resigned-release.hap";
+    EntryMap entryMap;
+
+    CodeSignBlock codeSignBlock;
+    // Test with IS_ENTERPRISE_RESIGN flag - should try to find ENTERPRISE_CODE_RE_SIGN_BLOB
+    int32_t ret = codeSignBlock.ParseCodeSignBlock(hapRealPath, entryMap, FILE_SELF, IS_ENTERPRISE_RESIGN);
+    EXPECT_EQ(ret, CS_SUCCESS);
+}
+
+/**
+* @tc.name: CodeSignUtilsTest_0078
+* @tc.desc: Test IS_UNCOMPRESSED_NATIVE_LIBS flag value
+* @tc.type: Func
+* @tc.require:
+*/
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0078, TestSize.Level0)
+{
+    std::string hapRealPath = APP_BASE_PATH + "/demo_with_multi_lib/entry-default-signed-release.hap";
+    std::string p7bPath = APP_BASE_PATH + "/demo_with_multi_lib/entry-default-signed-release2.p7b";
+    EntryMap entryMap;
+    CodeSignUtils utils;
+
+    ByteBuffer pBuffer;
+    bool flag = ReadSignatureFromFile(p7bPath, pBuffer);
+    EXPECT_EQ(flag, true);
+
+    // Test with IS_ENTERPRISE_RESIGN flag
+    int32_t ret = utils.EnforceCodeSignForAppWithOwnerId(hapRealPath, entryMap, FILE_SELF, pBuffer,
+        IS_ENTERPRISE_RESIGN);
+    // Expected to return CS_CODE_SIGN_NOT_EXISTS or CS_SUCCESS depending on whether
+    EXPECT_EQ(ret, CS_CODE_SIGN_NOT_EXISTS);
+}
+
+/**
+* @tc.name: CodeSignUtilsTest_0079
+* @tc.desc: Test IS_UNCOMPRESSED_NATIVE_LIBS flag value
+* @tc.type: Func
+* @tc.require:
+*/
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0079, TestSize.Level0)
+{
+    // Verify flag enum values
+    EXPECT_EQ(IS_UNCOMPRESSED_NATIVE_LIBS, 0x01 << 0);
+    EXPECT_EQ(IS_ENTERPRISE_RESIGN, 0x01 << 1);
+
+    // Test combined flags
+    uint32_t combinedFlag = IS_UNCOMPRESSED_NATIVE_LIBS | IS_ENTERPRISE_RESIGN;
+    EXPECT_EQ(combinedFlag & IS_ENTERPRISE_RESIGN, IS_ENTERPRISE_RESIGN);
+    EXPECT_EQ(combinedFlag & IS_UNCOMPRESSED_NATIVE_LIBS, IS_UNCOMPRESSED_NATIVE_LIBS);
+}
+
+/**
+* @tc.name: CodeSignUtilsTest_0080
+* @tc.desc: Parse code sign block with combined flags
+* @tc.type: Func
+* @tc.require:
+*/
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0080, TestSize.Level0)
+{
+    std::string hapRealPath = APP_BASE_PATH + "/demo_with_multi_lib/demo_with_code_sign_block.hap";
+    EntryMap entryMap;
+
+    std::string filePath1("libs/arm64-v8a/libc++_shared.so");
+    std::string targetPath1 = TEST_APP_DTAT_DIR + "libs/arm64/libc++_shared.so";
+    entryMap.emplace(filePath1, targetPath1);
+    std::string filePath2("libs/arm64-v8a/libentry.so");
+    std::string targetPath2 = TEST_APP_DTAT_DIR + "libs/arm64/libentry.so";
+    entryMap.emplace(filePath2, targetPath2);
+
+    CodeSignBlock codeSignBlock;
+    // Test with combined flags - IS_ENTERPRISE_RESIGN should take precedence for blob type selection
+    uint32_t combinedFlag = IS_UNCOMPRESSED_NATIVE_LIBS | IS_ENTERPRISE_RESIGN;
+    int32_t ret = codeSignBlock.ParseCodeSignBlock(hapRealPath, entryMap, FILE_ENTRY_ONLY, combinedFlag);
+    // Since test file doesn't have ENTERPRISE_CODE_RE_SIGN_BLOB, expect CS_CODE_SIGN_NOT_EXISTS
+    EXPECT_EQ(ret, CS_CODE_SIGN_NOT_EXISTS);
+}
+
+/**
+* @tc.name: CodeSignUtilsTest_0081
+* @tc.desc: EnforceCodeSignForAppWithPluginId with IS_ENTERPRISE_RESIGN flag
+* @tc.type: Func
+* @tc.require:
+*/
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0081, TestSize.Level0)
+{
+    std::string hapRealPath = APP_BASE_PATH + "/demo_with_multi_lib/entry-default-signed-release.hap";
+    EntryMap entryMap;
+    CodeSignUtils utils;
+
+    // Test with IS_ENTERPRISE_RESIGN flag via EnforceCodeSignForAppWithPluginId
+    int32_t ret = utils.EnforceCodeSignForAppWithPluginId("test-app-identifier", "",
+        hapRealPath, entryMap, FILE_SELF, IS_ENTERPRISE_RESIGN);
+    EXPECT_EQ(ret, CS_CODE_SIGN_NOT_EXISTS);
+}
 }  // namespace CodeSign
 }  // namespace Security
 }  // namespace OHOS

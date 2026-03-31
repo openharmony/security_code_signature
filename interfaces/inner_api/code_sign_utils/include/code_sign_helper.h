@@ -32,7 +32,8 @@ public:
      * @param FileType signature file type
      * @return err code, see err_code.h
      */
-    int32_t ParseCodeSignBlock(const std::string &realPath, const EntryMap &entryMap, FileType fileType);
+    int32_t ParseCodeSignBlock(const std::string &realPath, const EntryMap &entryMap, FileType fileType,
+        uint32_t flag = 0);
     /**
      * @brief multithreading code signing enable task
      * @param ownerId string to abtain owner ID from the signature file

@@ -270,7 +270,7 @@ int32_t CodeSignUtils::ProcessCodeSignBlock(const std::string &ownerId, const st
     }
     int32_t ret;
     CodeSignHelper codeSignHelper;
-    ret = codeSignHelper.ParseCodeSignBlock(realPath, storedEntryMap_, type);
+    ret = codeSignHelper.ParseCodeSignBlock(realPath, storedEntryMap_, type, flag);
     if (ret != CS_SUCCESS) {
         return HandleCodeSignBlockFailure(realPath, ret);
     }
