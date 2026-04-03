@@ -25,9 +25,9 @@ namespace OHOS {
 namespace Security {
 namespace CodeSign {
 int32_t CodeSignHelper::ParseCodeSignBlock(const std::string &realPath,
-    const EntryMap &entryMap, FileType fileType)
+    const EntryMap &entryMap, FileType fileType, uint32_t flag)
 {
-    return codeSignBlock_.ParseCodeSignBlock(realPath, entryMap, fileType);
+    return codeSignBlock_.ParseCodeSignBlock(realPath, entryMap, fileType, flag);
 }
 
 int32_t CodeSignHelper::ProcessMultiTask(const std::string &ownerId, const std::string &pluginId,

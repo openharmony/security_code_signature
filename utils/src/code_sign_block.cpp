@@ -33,6 +33,7 @@ namespace Security {
 namespace CodeSign {
 constexpr uint32_t HAP_CODE_SIGN_BLOCK_ID = 0x30000001;
 constexpr uint32_t CSB_PROPERTY_BLOB = 0x20000003;
+constexpr uint32_t ENTERPRISE_CODE_RE_SIGN_BLOB = 0x20000005;
 
 CodeSignBlock::CodeSignBlock()
 {
@@ -240,7 +241,8 @@ int32_t CodeSignBlock::ParseCodeSignBlockBaseInfo(ReadBuffer codeSignBlock, uint
     return SetNativeLibSignInfo(CONST_STATIC_CAST(NativeLibSignInfo, codeSignBlock + segHeader->offset));
 }
 
-int32_t CodeSignBlock::GetCodeSignBlockBuffer(const std::string &path, ReadBuffer &signBuffer, uint32_t &size)
+int32_t CodeSignBlock::GetCodeSignBlockBuffer(const std::string &path, ReadBuffer &signBuffer, uint32_t &size,
+    uint32_t flag)
 {
     ReadBuffer blobBuffer = nullptr;
     uint32_t blobSize = 0;
@@ -249,12 +251,13 @@ int32_t CodeSignBlock::GetCodeSignBlockBuffer(const std::string &path, ReadBuffe
 
     int32_t ret = Verify::ParseHapSignatureInfo(path, signatureInfo_);
     if (ret != Verify::VERIFY_SUCCESS) {
-        LOG_ERROR("find code sign block buffer failed. errno = %{public}d ", ret);
+        LOG_ERROR("Verify sign block failed. errno = %{public}d ", ret);
         return CS_ERR_FILE_INVALID;
     }
 
+    uint32_t targetBlobType = (flag & IS_ENTERPRISE_RESIGN) ? ENTERPRISE_CODE_RE_SIGN_BLOB : CSB_PROPERTY_BLOB;
     for (const auto &value : signatureInfo_.optionBlocks) {
-        if (value.optionalType != CSB_PROPERTY_BLOB) {
+        if (value.optionalType != targetBlobType) {
             continue;
         }
 
@@ -264,6 +267,7 @@ int32_t CodeSignBlock::GetCodeSignBlockBuffer(const std::string &path, ReadBuffe
     }
 
     if ((blobBuffer == nullptr) || (blobSize <= sizeof(PropertyBlobHeader))) {
+        LOG_ERROR("Find code sign block failed. flag = %{public}u, blobType = %{public}u", flag, targetBlobType);
         return CS_CODE_SIGN_NOT_EXISTS;
     }
 
@@ -282,6 +286,7 @@ int32_t CodeSignBlock::GetCodeSignBlockBuffer(const std::string &path, ReadBuffe
     } while (length < blobSize);
 
     if ((signBlockBuffer == nullptr) || !signBlockSize) {
+        LOG_ERROR("Find code sign block failed. blobType = %{public}u", HAP_CODE_SIGN_BLOCK_ID);
         return CS_CODE_SIGN_NOT_EXISTS;
     }
 
@@ -291,13 +296,13 @@ int32_t CodeSignBlock::GetCodeSignBlockBuffer(const std::string &path, ReadBuffe
 }
 
 int32_t CodeSignBlock::ParseCodeSignBlock(const std::string &realPath,
-    const EntryMap &entryMap, FileType fileType)
+    const EntryMap &entryMap, FileType fileType, uint32_t flag)
 {
     int32_t ret;
     ReadBuffer codeSignBlock = nullptr;
     uint32_t codeSignSize;
 
-    ret = GetCodeSignBlockBuffer(realPath, codeSignBlock, codeSignSize);
+    ret = GetCodeSignBlockBuffer(realPath, codeSignBlock, codeSignSize, flag);
     if (ret != CS_SUCCESS) {
         LOG_ERROR("Get code sign block buffer failed. errno = %{public}d ", ret);
         return ret;
