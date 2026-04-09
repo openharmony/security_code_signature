@@ -35,6 +35,7 @@ public:
 private:
     int32_t InitLocalCertificateInner(MessageParcel &data, MessageParcel &reply);
     int32_t SignLocalCodeInner(MessageParcel &data, MessageParcel &reply);
+    int32_t SignLocalCodeByFdInner(MessageParcel &data, MessageParcel &reply);
 };
 }
 }

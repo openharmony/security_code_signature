@@ -50,6 +50,7 @@ public:
      * @return err code, see err_code.h
      */
     static int32_t SignLocalCode(const std::string &ownerID, const std::string &filePath, ByteBuffer &signature);
+    static int32_t SignLocalCodeByFd(const std::string &ownerID, int32_t fd, ByteBuffer &signature);
 };
 }
 }

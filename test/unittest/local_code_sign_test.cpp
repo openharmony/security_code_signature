@@ -14,8 +14,12 @@
  */
 
 #include <cstdlib>
+#include <fcntl.h>
 #include <gtest/gtest.h>
 #include <string>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "access_token_setter.h"
 #include "byte_buffer.h"
@@ -39,6 +43,7 @@ namespace CodeSign {
 static const std::string AN_BASE_PATH = "/data/local/ark-cache/tmp/";
 static const std::string DEMO_AN_PATH = AN_BASE_PATH + "demo.an";
 static const std::string DEMO_AN_PATH2 = AN_BASE_PATH + "demo2.an";
+static const std::string EMPTY_FILE_PATH = AN_BASE_PATH + "empty.an";
 
 class LocalCodeSignTest : public testing::Test {
 public:
@@ -319,6 +324,229 @@ HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0015, TestSize.Level0)
     int ret = LocalCodeSignKit::SignLocalCode(ownerID, DEMO_AN_PATH2, sig);
     EXPECT_EQ(0, SetSelfTokenID(selfTokenId));
     EXPECT_EQ(ret, CS_ERR_FORBIDDEN_OWNER_ID);
+}
+
+/**
+ * @tc.name: LocalCodeSignTest_0016
+ * @tc.desc: sign local code by fd successfully with empty owner ID
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0016, TestSize.Level0)
+{
+    ByteBuffer sig;
+    uint64_t selfTokenId = GetSelfTokenID();
+    EXPECT_TRUE(MockTokenId("compiler_service"));
+    int fd = open(DEMO_AN_PATH.c_str(), O_RDONLY);
+    EXPECT_GE(fd, 0);
+    std::string ownerID;
+    int ret = LocalCodeSignKit::SignLocalCodeByFd(ownerID, fd, sig);
+    close(fd);
+    EXPECT_EQ(0, SetSelfTokenID(selfTokenId));
+    EXPECT_EQ(ret, CS_SUCCESS);
+}
+
+/**
+ * @tc.name: LocalCodeSignTest_0017
+ * @tc.desc: sign local code by fd failed with invalid caller
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0017, TestSize.Level0)
+{
+    ByteBuffer sig;
+    int fd = open(DEMO_AN_PATH.c_str(), O_RDONLY);
+    EXPECT_GE(fd, 0);
+    std::string ownerID;
+    int ret = LocalCodeSignKit::SignLocalCodeByFd(ownerID, fd, sig);
+    close(fd);
+    EXPECT_EQ(ret, CS_ERR_NO_PERMISSION);
+}
+
+/**
+ * @tc.name: LocalCodeSignTest_0018
+ * @tc.desc: sign local code by fd failed with invalid fd (negative)
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0018, TestSize.Level0)
+{
+    ByteBuffer sig;
+    uint64_t selfTokenId = GetSelfTokenID();
+    EXPECT_TRUE(MockTokenId("compiler_service"));
+    std::string ownerID;
+    int ret = LocalCodeSignKit::SignLocalCodeByFd(ownerID, -1, sig);
+    EXPECT_EQ(0, SetSelfTokenID(selfTokenId));
+    EXPECT_EQ(ret, CS_ERR_INVALID_FD);
+}
+
+/**
+ * @tc.name: LocalCodeSignTest_0019
+ * @tc.desc: sign local code by fd successfully with owner ID, parse owner ID from signature success
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0019, TestSize.Level0)
+{
+    ByteBuffer sig;
+    uint64_t selfTokenId = GetSelfTokenID();
+    EXPECT_TRUE(MockTokenId("compiler_service"));
+    std::string ownerID = "AppName123";
+    int fd = open(DEMO_AN_PATH2.c_str(), O_RDONLY);
+    EXPECT_GE(fd, 0);
+    int ret = LocalCodeSignKit::SignLocalCodeByFd(ownerID, fd, sig);
+    close(fd);
+    EXPECT_EQ(0, SetSelfTokenID(selfTokenId));
+    EXPECT_EQ(ret, CS_SUCCESS);
+
+    std::string retOwnerID;
+    ret = CodeSignUtils::ParseOwnerIdFromSignature(sig, retOwnerID);
+    EXPECT_EQ(ownerID, retOwnerID);
+    ret = CodeSignUtils::EnforceCodeSignForFile(DEMO_AN_PATH2, sig);
+    EXPECT_EQ(ret, GetEnforceFileResult());
+}
+
+/**
+ * @tc.name: LocalCodeSignTest_0020
+ * @tc.desc: sign local code by fd with pipe fd (non-regular fd accepted after S_ISREG removal)
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0020, TestSize.Level0)
+{
+    if (GetEnforceFileResult() != CS_SUCCESS) {
+        GTEST_SKIP() << "Local signing key not provisioned, skipping pipe fd signing test";
+    }
+
+    ByteBuffer sig;
+    uint64_t selfTokenId = GetSelfTokenID();
+    EXPECT_TRUE(MockTokenId("compiler_service"));
+    int pipefd[2];
+    EXPECT_EQ(pipe(pipefd), 0);
+    std::string ownerID;
+    int ret = LocalCodeSignKit::SignLocalCodeByFd(ownerID, pipefd[0], sig);
+    close(pipefd[0]);
+    close(pipefd[1]);
+    EXPECT_EQ(0, SetSelfTokenID(selfTokenId));
+    // After removing S_ISREG check, pipe fd is accepted — signing succeeds with empty content
+    EXPECT_EQ(ret, CS_SUCCESS);
+}
+
+/**
+ * @tc.name: LocalCodeSignTest_0021
+ * @tc.desc: sign local code by fd failed with ownerID exceeding 32 bytes
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0021, TestSize.Level0)
+{
+    ByteBuffer sig;
+    uint64_t selfTokenId = GetSelfTokenID();
+    EXPECT_TRUE(MockTokenId("compiler_service"));
+    std::string ownerID(33, 'a');
+    int fd = open(DEMO_AN_PATH2.c_str(), O_RDONLY);
+    EXPECT_GE(fd, 0);
+    int ret = LocalCodeSignKit::SignLocalCodeByFd(ownerID, fd, sig);
+    close(fd);
+    EXPECT_EQ(0, SetSelfTokenID(selfTokenId));
+    EXPECT_EQ(ret, CS_ERR_INVALID_OWNER_ID);
+}
+
+/**
+ * @tc.name: LocalCodeSignTest_0022
+ * @tc.desc: sign local code by fd failed with ownerID equals SYSTEM_LIB_ID
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0022, TestSize.Level0)
+{
+    ByteBuffer sig;
+    uint64_t selfTokenId = GetSelfTokenID();
+    EXPECT_TRUE(MockTokenId("compiler_service"));
+    std::string ownerID = OWNERID_SYSTEM_TAG;
+    int fd = open(DEMO_AN_PATH2.c_str(), O_RDONLY);
+    EXPECT_GE(fd, 0);
+    int ret = LocalCodeSignKit::SignLocalCodeByFd(ownerID, fd, sig);
+    close(fd);
+    EXPECT_EQ(0, SetSelfTokenID(selfTokenId));
+    EXPECT_EQ(ret, CS_ERR_FORBIDDEN_OWNER_ID);
+}
+
+/**
+ * @tc.name: LocalCodeSignTest_0023
+ * @tc.desc: sign local code by fd failed with ownerID equals COMPAT_LIB_ID
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0023, TestSize.Level0)
+{
+    ByteBuffer sig;
+    uint64_t selfTokenId = GetSelfTokenID();
+    EXPECT_TRUE(MockTokenId("compiler_service"));
+    std::string ownerID = OWNERID_COMPAT_TAG;
+    int fd = open(DEMO_AN_PATH2.c_str(), O_RDONLY);
+    EXPECT_GE(fd, 0);
+    int ret = LocalCodeSignKit::SignLocalCodeByFd(ownerID, fd, sig);
+    close(fd);
+    EXPECT_EQ(0, SetSelfTokenID(selfTokenId));
+    EXPECT_EQ(ret, CS_ERR_FORBIDDEN_OWNER_ID);
+}
+
+/**
+ * @tc.name: LocalCodeSignTest_0024
+ * @tc.desc: sign local code by fd with empty file (libfsverity computes digest for size=0, signing succeeds)
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0024, TestSize.Level0)
+{
+    // This test requires local signing key to be provisioned.
+    // Skip on environments where the key is not available (e.g., RK boards without HUKS provisioning).
+    if (GetEnforceFileResult() != CS_SUCCESS) {
+        GTEST_SKIP() << "Local signing key not provisioned, skipping empty file signing test";
+    }
+
+    ByteBuffer sig;
+    uint64_t selfTokenId = GetSelfTokenID();
+    EXPECT_TRUE(MockTokenId("compiler_service"));
+    int fd = open(EMPTY_FILE_PATH.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0644);
+    EXPECT_GE(fd, 0);
+    std::string ownerID = "AppName123";
+    int ret = LocalCodeSignKit::SignLocalCodeByFd(ownerID, fd, sig);
+    close(fd);
+    unlink(EMPTY_FILE_PATH.c_str());
+    EXPECT_EQ(0, SetSelfTokenID(selfTokenId));
+    // libfsverity can compute digest for empty file (size=0), signing succeeds
+    EXPECT_EQ(ret, CS_SUCCESS);
+}
+
+/**
+ * @tc.name: LocalCodeSignTest_0025
+ * @tc.desc: sign local code by fd with memfd (non-regular file)
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0025, TestSize.Level0)
+{
+    if (GetEnforceFileResult() != CS_SUCCESS) {
+        GTEST_SKIP() << "Local signing key not provisioned, skipping memfd signing test";
+    }
+
+    int fd = memfd_create("test_memfd_sign", MFD_ALLOW_SEALING);
+    ASSERT_GE(fd, 0);
+    const char data[] = "memfd test data for code signing";
+    ssize_t written = write(fd, data, sizeof(data));
+    ASSERT_EQ(written, static_cast<ssize_t>(sizeof(data)));
+    lseek(fd, 0, SEEK_SET);
+
+    ByteBuffer sig;
+    uint64_t selfTokenId = GetSelfTokenID();
+    EXPECT_TRUE(MockTokenId("compiler_service"));
+    std::string ownerID = "MemfdTest";
+    int ret = LocalCodeSignKit::SignLocalCodeByFd(ownerID, fd, sig);
+    close(fd);
+    EXPECT_EQ(0, SetSelfTokenID(selfTokenId));
+    EXPECT_EQ(ret, CS_SUCCESS);
 }
 } // namespace CodeSign
 } // namespace Security

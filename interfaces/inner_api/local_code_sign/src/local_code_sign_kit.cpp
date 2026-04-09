@@ -16,6 +16,7 @@
 #include "local_code_sign_kit.h"
 
 #include "local_code_sign_client.h"
+#include "log.h"
 
 namespace OHOS {
 namespace Security {
@@ -33,6 +34,14 @@ int32_t LocalCodeSignKit::SignLocalCode(const std::string &filePath, ByteBuffer 
 int32_t LocalCodeSignKit::SignLocalCode(const std::string &ownerID, const std::string &filePath, ByteBuffer &signature)
 {
     return LocalCodeSignClient::GetInstance().SignLocalCode(ownerID, filePath, signature);
+}
+
+int32_t LocalCodeSignKit::SignLocalCodeByFd(const std::string &ownerID, int32_t fd, ByteBuffer &signature)
+{
+    if (fd < 0) {
+        return CS_ERR_INVALID_FD;
+    }
+    return LocalCodeSignClient::GetInstance().SignLocalCodeByFd(ownerID, fd, signature);
 }
 }
 }

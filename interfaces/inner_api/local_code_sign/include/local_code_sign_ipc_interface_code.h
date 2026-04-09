@@ -22,7 +22,8 @@ namespace CodeSign {
 /* SAID: 3507 */
 enum class LocalCodeSignInterfaceCode {
     INIT_LOCAL_CERTIFICATE = 1,
-    SIGN_LOCAL_CODE = 2
+    SIGN_LOCAL_CODE = 2,
+    SIGN_LOCAL_CODE_BY_FD = 3
 };
 }
 }
