@@ -257,7 +257,7 @@ int32_t CodeSignBlock::GetCodeSignBlockBuffer(const std::string &path, ReadBuffe
 
     uint32_t targetBlobType = (flag & IS_ENTERPRISE_RESIGN) ? ENTERPRISE_CODE_RE_SIGN_BLOB : CSB_PROPERTY_BLOB;
     for (const auto &value : signatureInfo_.optionBlocks) {
-        if (value.optionalType != targetBlobType) {
+        if (static_cast<uint32_t>(value.optionalType) != targetBlobType) {
             continue;
         }
 
