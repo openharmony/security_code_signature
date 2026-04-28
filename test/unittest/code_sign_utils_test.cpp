@@ -897,21 +897,14 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0035, TestSize.Level0)
     const ByteBuffer profileBuffer;
     int32_t ret = CodeSignUtils::EnableKeyInProfile(bundleName, profileBuffer);
 #ifdef NO_USE_CLANG_COVERAGE
-#ifdef SUPPORT_OH_CODE_SIGN
     EXPECT_EQ(ret, CS_ERR_PROFILE);
 #else
     EXPECT_EQ(ret, CS_SUCCESS);
 #endif
-#else
-    EXPECT_EQ(ret, CS_SUCCESS);
-#endif
+
     ret = CodeSignUtils::RemoveKeyInProfile(bundleName);
 #ifdef NO_USE_CLANG_COVERAGE
-#ifdef SUPPORT_OH_CODE_SIGN
     EXPECT_EQ(ret, CS_ERR_PROFILE);
-#else
-    EXPECT_EQ(ret, CS_SUCCESS);
-#endif
 #else
     EXPECT_EQ(ret, CS_SUCCESS);
 #endif
