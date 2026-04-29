@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <climits>
 #include <cstdio>
 #include <cstring>
 #include <fcntl.h>
@@ -848,6 +849,32 @@ HWTEST_F(JitCodeSignTest, JitCodeSignTest_0024, TestSize.Level0)
     verifyCtx.Init(0);
     for (i = 0; i < INSTRUCTIONS_SET_SIZE; i++) {
         EXPECT_EQ(signature[i], verifyCtx.Update(g_testInstructionSet[i]));
+    }
+}
+
+/**
+ * @tc.name: JitCodeSignTest_0025
+ * @tc.desc: patch instruction failed with offset overflow
+ * @tc.type: Func
+ * @tc.require: I9O6PK
+ */
+HWTEST_F(JitCodeSignTest, JitCodeSignTest_0025, TestSize.Level0)
+{
+    JitCodeSigner *signer = nullptr;
+    for (JitBufferIntegrityLevel level = MIN_LEVEL;
+        level <= MAX_LEVEL; level = static_cast<JitBufferIntegrityLevel>(
+        static_cast<int>(level) + 1)) {
+        signer = CreateJitCodeSigner();
+
+        // Set tmpBuffer_ to a low address so that a far-away buffer triggers overflow
+        Byte *tmpBuffer = reinterpret_cast<Byte *>(0x1000);
+        signer->RegisterTmpBuffer(tmpBuffer);
+        // Construct buffer pointer more than INT_MAX bytes ahead of tmpBuffer
+        Byte *overflowBuffer = tmpBuffer + static_cast<ptrdiff_t>(INT_MAX) + 1;
+        EXPECT_EQ(PatchInstruction(signer, overflowBuffer, 0), CS_ERR_PATCH_INVALID);
+
+        delete signer;
+        signer = nullptr;
     }
 }
 }

@@ -105,6 +105,7 @@ static bool AddCAToStore(X509_STORE *store)
             GetOpensslErrorMessage();
         }
         LOG_INFO("Add root CA successfully");
+        X509_free(caCert);
     } while (caCert != nullptr);
     (void) fclose(fp);
     return true;

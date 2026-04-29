@@ -65,7 +65,7 @@ bool PermissionUtils::VerifyCallingProcess(const std::vector<std::string> &valid
     const AccessToken::AccessTokenID &callerTokenId)
 {
     if (!g_isAtmInited && !HasATMInitilized()) {
-        LOG_DEBUG("AccessTokenManager has not started yet.");
+        LOG_ERROR("AccessTokenManager has not started yet. (ingore)");
         return true;
     }
     for (const auto &caller: validCallers) {

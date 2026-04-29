@@ -15,6 +15,7 @@
 
 #include "jit_code_signer.h"
 
+#include <climits>
 #include <sstream>
 #ifndef JIT_FORT_DISABLE
 #include "securec.h"
@@ -98,7 +99,12 @@ int32_t JitCodeSigner::PatchInstruction(Byte *buffer, Instr insn)
     if ((buffer == nullptr) || (tmpBuffer_ == nullptr)) {
         return CS_ERR_PATCH_INVALID;
     }
-    return PatchInstruction(static_cast<int>(buffer - tmpBuffer_), insn);
+    ptrdiff_t offset = buffer - tmpBuffer_;
+    if (offset > static_cast<ptrdiff_t>(INT_MAX)) {
+        LOG_ERROR("Offset overflow, offset = %{public}td", offset);
+        return CS_ERR_PATCH_INVALID;
+    }
+    return PatchInstruction(static_cast<int>(offset), insn);
 }
 
 int32_t JitCodeSigner::PatchData(int offset, const Byte *const data, uint32_t size)
