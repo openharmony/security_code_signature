@@ -44,6 +44,7 @@
             <option name="push" value="demo_with_multi_lib/demo_with_multi_lib.hap ->  /data/app/el1/bundle/public/tmp/demo_with_multi_lib" src="res"/>
             <option name="push" value="demo_with_multi_lib/demo_with_multi_lib.sig -> /data/service/el1/public/bms/bundle_manager_service/tmp/demo_with_multi_lib" src="res"/>
             <option name="push" value="demo_with_multi_lib/demo_with_code_sign_block.hap ->  /data/app/el1/bundle/public/tmp/demo_with_multi_lib" src="res"/>
+            <option name="push" value="demo_with_multi_lib/demo_with_code_sign_block_size_error.hap ->  /data/app/el1/bundle/public/tmp/demo_with_multi_lib" src="res"/>
             <option name="push" value="demo_with_multi_lib/libs/arm64-v8a/libc++_shared.so ->  /data/app/el1/bundle/public/tmp/demo_with_multi_lib/libs/arm64-v8a" src="res"/>
             <option name="push" value="demo_with_multi_lib/libs/arm64-v8a/libc++_shared.so.fsv-sig -> /data/service/el1/public/bms/bundle_manager_service/tmp/demo_with_multi_lib/libs/arm64-v8a" src="res"/>
             <option name="push" value="demo_with_multi_lib/libs/arm64-v8a/libentry.so ->  /data/app/el1/bundle/public/tmp/demo_with_multi_lib/libs/arm64-v8a" src="res"/>

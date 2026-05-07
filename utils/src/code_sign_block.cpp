@@ -275,7 +275,7 @@ int32_t CodeSignBlock::GetCodeSignBlockBuffer(const std::string &path, ReadBuffe
     do {
         if (length + sizeof(PropertyBlobHeader) > blobSize) {
             LOG_ERROR("PropertyBlobHeader size or blobSize is invalid.");
-            break;
+            return CS_ERR_BLOCK_SIZE;
         }
         auto blobHeader = CONST_STATIC_CAST(PropertyBlobHeader, blobBuffer + length);
         if (blobHeader->type == HAP_CODE_SIGN_BLOCK_ID) {
