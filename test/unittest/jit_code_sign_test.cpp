@@ -79,8 +79,6 @@ static void *g_afterPatchInstructionBuf = CAST_VOID_PTR(g_afterPatchInstructionS
 static void *g_testPatchInstructionBuf = CAST_VOID_PTR(g_testPatchInstructionSet);
 static void *g_jitMemory = nullptr;
 
-void *g_mapJitBase = CAST_VOID_PTR(0x800000000);
-void *g_mapJitBase2 = CAST_VOID_PTR(0x800001000);
 constexpr int BUFFER_SIZE = 4096;
 
 #define JITFORT_PRCTL_OPTION 0x6a6974
@@ -94,13 +92,14 @@ std::mutex g_jitMemory_mutex;
 
 static inline void AllocJitMemory()
 {
-    g_jitMemory = mmap(g_mapJitBase, PAGE_SIZE + PAGE_SIZE,
-        PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
 #ifndef JIT_FORT_DISABLE
     int cookie = std::random_device{}();
-    g_jitMemory = mmap(g_mapJitBase2, PAGE_SIZE,
+    g_jitMemory = mmap(nullptr, PAGE_SIZE,
         PROT_READ | PROT_WRITE | PROT_EXEC,
         MAP_ANONYMOUS | MAP_PRIVATE | MAP_JIT, cookie, 0);
+#else
+    g_jitMemory = mmap(nullptr, PAGE_SIZE,
+        PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
 #endif
     EXPECT_NE(g_jitMemory, MAP_FAILED);
 }
@@ -118,10 +117,10 @@ static inline void JitFortPrepare()
 
 static inline void FreeJitMemory()
 {
-#ifndef JIT_FORT_DISABLE
-    munmap(g_mapJitBase, PAGE_SIZE);
-    munmap(g_mapJitBase2, PAGE_SIZE);
-#endif
+    if (g_jitMemory != nullptr && g_jitMemory != MAP_FAILED) {
+        munmap(g_jitMemory, PAGE_SIZE);
+        g_jitMemory = nullptr;
+    }
 }
 
 class JitCodeSignTest : public testing::Test {
