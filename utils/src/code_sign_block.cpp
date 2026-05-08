@@ -170,11 +170,13 @@ int32_t CodeSignBlock::ParseNativeLibSignInfo(const EntryMap &entryMap)
             entryInfo++;
             continue;
         }
-
         if (entryInfo->signOffset >= soInfo->length) {
             return CS_ERR_SO_SIGN_OFFSET;
         }
         if (entryInfo->signSize >= soInfo->length) {
+            return CS_ERR_SO_SIGN_SIZE;
+        }
+        if (entryInfo->signOffset > soInfo->length - entryInfo->signSize) {
             return CS_ERR_SO_SIGN_SIZE;
         }
         auto info = reinterpret_cast<uintptr_t>(dataInfo + entryInfo->signOffset);
