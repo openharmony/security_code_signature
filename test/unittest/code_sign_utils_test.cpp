@@ -1387,6 +1387,22 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0081, TestSize.Level0)
         hapRealPath, entryMap, FILE_SELF, IS_ENTERPRISE_RESIGN);
     EXPECT_EQ(ret, CS_CODE_SIGN_NOT_EXISTS);
 }
+
+/**
+ * @tc.name: CodeSignUtilsTest_0082
+ * @tc.desc: Parse code signature for hap successfully
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0082, TestSize.Level0)
+{
+    std::string hapRealPath = APP_BASE_PATH + "/demo_with_multi_lib/demo_with_code_sign_block_size_error.hap";
+    EntryMap entryMap;
+
+    CodeSignBlock codeSignBlock;
+    int32_t ret = codeSignBlock.ParseCodeSignBlock(hapRealPath, entryMap, FILE_SELF);
+    EXPECT_EQ(ret, CS_ERR_BLOCK_SIZE);
+}
 }  // namespace CodeSign
 }  // namespace Security
 }  // namespace OHOS
