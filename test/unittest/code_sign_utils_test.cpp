@@ -22,6 +22,9 @@
 #include <unistd.h>
 #include <parameters.h>
 
+#define private public
+#include "elf_code_sign_block.h"
+#undef private
 #include "code_sign_utils.h"
 #include "code_sign_block.h"
 #include "directory_ex.h"
@@ -966,6 +969,390 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0038, TestSize.Level0)
     EXPECT_EQ(ret, CS_SUCCESS);
     entryMap.clear();
 }
+
+#ifdef SUPPORT_BINARY_ENABLE
+/**
+ * @tc.name: CodeSignUtilsTest_0039
+ * @tc.desc: enable code signature for elf file
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0039, TestSize.Level0)
+{
+    CodeSignUtils utils;
+    CertPathInfo arg = { 0 };
+    std::string app_id = "OpenHarmony Team";
+    uint32_t cert_path_type = 0x6;
+    arg.signing = reinterpret_cast<uint64_t>(OH_SUBJECT.c_str());
+    arg.issuer = reinterpret_cast<uint64_t>(OH_ISSUER.c_str());
+    arg.app_id = reinterpret_cast<uint64_t>(app_id.c_str());
+    arg.signing_length = strlen(OH_SUBJECT.c_str());
+    arg.issuer_length = strlen(OH_ISSUER.c_str());
+    arg.app_id_length = strlen(app_id.c_str());
+    arg.path_len = 3;
+    arg.path_type = cert_path_type;
+
+    EXPECT_EQ(utils.EnableKey(arg), 0);
+
+    std::string hapRealPath = APP_BASE_PATH + "/demo_elf_file/elf-release-signed";
+    int32_t ret = utils.EnforceCodeSignForFile(hapRealPath);
+    EXPECT_EQ(ret, CS_SUCCESS);
+
+    EXPECT_EQ(utils.RemoveKey(arg), 0);
+}
+
+/**
+ * @tc.name: CodeSignUtilsTest_0040
+ * @tc.desc: enable code signature for elf file
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0040, TestSize.Level0)
+{
+    CodeSignUtils utils;
+    CertPathInfo arg = { 0 };
+    std::string app_id = "OpenHarmony Team";
+    uint32_t cert_path_type = 0x106;
+    arg.signing = reinterpret_cast<uint64_t>(OH_SUBJECT.c_str());
+    arg.issuer = reinterpret_cast<uint64_t>(OH_ISSUER.c_str());
+    arg.app_id = reinterpret_cast<uint64_t>(app_id.c_str());
+    arg.signing_length = strlen(OH_SUBJECT.c_str());
+    arg.issuer_length = strlen(OH_ISSUER.c_str());
+    arg.app_id_length = strlen(app_id.c_str());
+    arg.path_len = 3;
+    arg.path_type = cert_path_type;
+
+    EXPECT_EQ(utils.EnableKey(arg), 0);
+
+    std::string hapRealPath = APP_BASE_PATH + "/demo_elf_file/elf-release-signed";
+    int32_t ret = utils.EnforceCodeSignForFile(hapRealPath);
+    EXPECT_EQ(ret, CS_SUCCESS);
+
+    EXPECT_EQ(utils.RemoveKey(arg), 0);
+}
+
+/**
+ * @tc.name: CodeSignUtilsTest_0041
+ * @tc.desc: enable code signature for elf file
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0041, TestSize.Level0)
+{
+    CodeSignUtils utils;
+    std::string hapRealPath = APP_BASE_PATH + "/demo_elf_file/elf-file-small";
+    int32_t ret = utils.EnforceCodeSignForFile(hapRealPath);
+    EXPECT_EQ(ret, CS_CODE_SIGN_NOT_EXISTS);
+}
+
+/**
+ * @tc.name: CodeSignUtilsTest_0042
+ * @tc.desc: enable code signature for elf file
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0042, TestSize.Level0)
+{
+    CodeSignUtils utils;
+    std::string hapRealPath = APP_BASE_PATH + "/demo_elf_file/elf-adhoc-signed";
+    int32_t ret = utils.EnforceCodeSignForFile(hapRealPath);
+    EXPECT_EQ(ret, CS_SUCCESS);
+}
+
+/**
+ * @tc.name: CodeSignUtilsTest_0043
+ * @tc.desc: enable code signature for elf file
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0043, TestSize.Level0)
+{
+    CodeSignUtils utils;
+    std::string hapRealPath = APP_BASE_PATH + "/demo_elf_file/elf-codesign-section-off-not-aligned";
+    int32_t ret = utils.EnforceCodeSignForFile(hapRealPath);
+    EXPECT_EQ(ret, CS_ERR_SECTION_OFFSET);
+}
+
+/**
+ * @tc.name: CodeSignUtilsTest_0044
+ * @tc.desc: enable code signature for elf file
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0044, TestSize.Level0)
+{
+    CodeSignUtils utils;
+    std::string hapRealPath = APP_BASE_PATH + "/demo_elf_file/elf-codesign-section-size-not-aligned";
+    int32_t ret = utils.EnforceCodeSignForFile(hapRealPath);
+    EXPECT_EQ(ret, CS_ERR_SECTION_SIZE);
+}
+
+/**
+ * @tc.name: CodeSignUtilsTest_0045
+ * @tc.desc: enable code signature for elf file
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0045, TestSize.Level0)
+{
+    CodeSignUtils utils;
+    std::string hapRealPath = APP_BASE_PATH + "/demo_elf_file/elf-fsd-type-error";
+    int32_t ret = utils.EnforceCodeSignForFile(hapRealPath);
+    EXPECT_EQ(ret, CS_ERR_SEGMENT_FSVERITY_TYPE);
+}
+
+/**
+ * @tc.name: CodeSignUtilsTest_0046
+ * @tc.desc: enable code signature for elf file
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0046, TestSize.Level0)
+{
+    CodeSignUtils utils;
+    std::string hapRealPath = APP_BASE_PATH + "/demo_elf_file/elf-fsd-length-error";
+    int32_t ret = utils.EnforceCodeSignForFile(hapRealPath);
+    EXPECT_EQ(ret, CS_ERR_BLOCK_SIZE);
+}
+
+/**
+ * @tc.name: CodeSignUtilsTest_0047
+ * @tc.desc: enable code signature for elf file
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0047, TestSize.Level0)
+{
+    CodeSignUtils utils;
+    std::string hapRealPath = APP_BASE_PATH + "/demo_elf_file/elf-fs-version-error";
+    int32_t ret = utils.EnforceCodeSignForFile(hapRealPath);
+    EXPECT_EQ(ret, CS_ERR_FSVERITY_VERSION);
+}
+
+/**
+ * @tc.name: CodeSignUtilsTest_0048
+ * @tc.desc: enable code signature for elf file
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0048, TestSize.Level0)
+{
+    CodeSignUtils utils;
+    std::string hapRealPath = APP_BASE_PATH + "/demo_elf_file/elf-fs-log-error";
+    int32_t ret = utils.EnforceCodeSignForFile(hapRealPath);
+    EXPECT_EQ(ret, CS_ERR_FSVERITY_BLOCK_SIZE);
+}
+
+/**
+ * @tc.name: CodeSignUtilsTest_0049
+ * @tc.desc: enable code signature for elf file
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0049, TestSize.Level0)
+{
+    CodeSignUtils utils;
+    std::string hapRealPath = APP_BASE_PATH + "/demo_elf_file/elf-not-exists";
+    int32_t ret = utils.EnforceCodeSignForFile(hapRealPath);
+    EXPECT_EQ(ret, CS_ERR_FILE_PATH);
+}
+
+/**
+ * @tc.name: CodeSignUtilsTest_0050
+ * @tc.desc: enable code signature for elf file
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0050, TestSize.Level0)
+{
+    CodeSignUtils utils;
+    std::string hapRealPath = APP_BASE_PATH + "/demo_elf_file/not-elf";
+    int32_t ret = utils.EnforceCodeSignForFile(hapRealPath);
+    EXPECT_EQ(ret, CS_ERR_FILE_INVALID);
+}
+
+/**
+ * @tc.name: CodeSignUtilsTest_0051
+ * @tc.desc: enable code signature for elf file
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0051, TestSize.Level0)
+{
+    CodeSignUtils utils;
+    std::string hapRealPath = APP_BASE_PATH + "/demo_elf_file/elf-no-codesign";
+    int32_t ret = utils.EnforceCodeSignForFile(hapRealPath);
+    EXPECT_EQ(ret, CS_CODE_SIGN_NOT_EXISTS);
+}
+
+/**
+ * @tc.name: CodeSignUtilsTest_0052
+ * @tc.desc: enable code signature for elf file
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0052, TestSize.Level0)
+{
+    CodeSignUtils utils;
+    std::string hapRealPath = APP_BASE_PATH + "/demo_elf_file/elf-release-sign-error";
+    int32_t ret = utils.EnforceCodeSignForFile(hapRealPath);
+    EXPECT_EQ(ret, CS_ERR_ENABLE);
+}
+
+/**
+* @tc.name: ParseSignBlockTest_0001
+* @tc.desc: parse sign block for elf release signed successfully
+* @tc.type: Func
+* @tc.require:
+*/
+HWTEST_F(CodeSignUtilsTest, ParseSignBlockTest_0001, TestSize.Level0)
+{
+    std::string elfPath = APP_BASE_PATH + "/demo_elf_file/elf-release-signed";
+    ElfCodeSignBlock elfCodeSignBlock;
+    int32_t ret = elfCodeSignBlock.ParseSignBlock(elfPath);
+    EXPECT_EQ(ret, CS_SUCCESS);
+}
+
+/**
+* @tc.name: ParseSignBlockTest_0002
+* @tc.desc: parse sign block for elf adhoc signed successfully
+* @tc.type: Func
+* @tc.require:
+*/
+HWTEST_F(CodeSignUtilsTest, ParseSignBlockTest_0002, TestSize.Level0)
+{
+    std::string elfPath = APP_BASE_PATH + "/demo_elf_file/elf-adhoc-signed";
+    ElfCodeSignBlock elfCodeSignBlock;
+    int32_t ret = elfCodeSignBlock.ParseSignBlock(elfPath);
+    EXPECT_EQ(ret, CS_SUCCESS);
+}
+
+/**
+* @tc.name: ParseSignBlockTest_0003
+* @tc.desc: parse sign block for elf file too small
+* @tc.type: Func
+* @tc.require:
+*/
+HWTEST_F(CodeSignUtilsTest, ParseSignBlockTest_0003, TestSize.Level0)
+{
+    std::string elfPath = APP_BASE_PATH + "/demo_elf_file/elf-file-small";
+    ElfCodeSignBlock elfCodeSignBlock;
+    int32_t ret = elfCodeSignBlock.ParseSignBlock(elfPath);
+    EXPECT_EQ(ret, CS_CODE_SIGN_NOT_EXISTS);
+}
+
+/**
+* @tc.name: ParseSignBlockTest_0004
+* @tc.desc: parse sign block for elf with codesign section offset not aligned
+* @tc.type: Func
+* @tc.require:
+*/
+HWTEST_F(CodeSignUtilsTest, ParseSignBlockTest_0004, TestSize.Level0)
+{
+    std::string elfPath = APP_BASE_PATH + "/demo_elf_file/elf-codesign-section-off-not-aligned";
+    ElfCodeSignBlock elfCodeSignBlock;
+    int32_t ret = elfCodeSignBlock.ParseSignBlock(elfPath);
+    EXPECT_EQ(ret, CS_ERR_SECTION_OFFSET);
+}
+
+/**
+* @tc.name: ParseSignBlockTest_0005
+* @tc.desc: parse sign block for elf with codesign section size not aligned
+* @tc.type: Func
+* @tc.require:
+*/
+HWTEST_F(CodeSignUtilsTest, ParseSignBlockTest_0005, TestSize.Level0)
+{
+    std::string elfPath = APP_BASE_PATH + "/demo_elf_file/elf-codesign-section-size-not-aligned";
+    ElfCodeSignBlock elfCodeSignBlock;
+    int32_t ret = elfCodeSignBlock.ParseSignBlock(elfPath);
+    EXPECT_EQ(ret, CS_ERR_SECTION_SIZE);
+}
+
+/**
+* @tc.name: ParseSignBlockTest_0006
+* @tc.desc: parse sign block for elf with fsverity descriptor type error
+* @tc.type: Func
+* @tc.require:
+*/
+HWTEST_F(CodeSignUtilsTest, ParseSignBlockTest_0006, TestSize.Level0)
+{
+    std::string elfPath = APP_BASE_PATH + "/demo_elf_file/elf-fsd-type-error";
+    ElfCodeSignBlock elfCodeSignBlock;
+    int32_t ret = elfCodeSignBlock.ParseSignBlock(elfPath);
+    EXPECT_EQ(ret, CS_ERR_SEGMENT_FSVERITY_TYPE);
+}
+
+/**
+* @tc.name: ParseSignBlockTest_0007
+* @tc.desc: parse sign block for elf with fsverity descriptor length error
+* @tc.type: Func
+* @tc.require:
+*/
+HWTEST_F(CodeSignUtilsTest, ParseSignBlockTest_0007, TestSize.Level0)
+{
+    std::string elfPath = APP_BASE_PATH + "/demo_elf_file/elf-fsd-length-error";
+    ElfCodeSignBlock elfCodeSignBlock;
+    int32_t ret = elfCodeSignBlock.ParseSignBlock(elfPath);
+    EXPECT_EQ(ret, CS_ERR_BLOCK_SIZE);
+}
+
+/**
+* @tc.name: ParseSignBlockTest_0008
+* @tc.desc: parse sign block for elf with fsverity version error
+* @tc.type: Func
+* @tc.require:
+*/
+HWTEST_F(CodeSignUtilsTest, ParseSignBlockTest_0008, TestSize.Level0)
+{
+    std::string elfPath = APP_BASE_PATH + "/demo_elf_file/elf-fs-version-error";
+    ElfCodeSignBlock elfCodeSignBlock;
+    int32_t ret = elfCodeSignBlock.ParseSignBlock(elfPath);
+    EXPECT_EQ(ret, CS_ERR_FSVERITY_VERSION);
+}
+
+/**
+* @tc.name: ParseSignBlockTest_0009
+* @tc.desc: parse sign block for elf with fsverity log block size error
+* @tc.type: Func
+* @tc.require:
+*/
+HWTEST_F(CodeSignUtilsTest, ParseSignBlockTest_0009, TestSize.Level0)
+{
+    std::string elfPath = APP_BASE_PATH + "/demo_elf_file/elf-fs-log-error";
+    ElfCodeSignBlock elfCodeSignBlock;
+    int32_t ret = elfCodeSignBlock.ParseSignBlock(elfPath);
+    EXPECT_EQ(ret, CS_ERR_FSVERITY_BLOCK_SIZE);
+}
+
+/**
+* @tc.name: ParseSignBlockTest_0010
+* @tc.desc: parse sign block for elf without codesign section
+* @tc.type: Func
+* @tc.require:
+*/
+HWTEST_F(CodeSignUtilsTest, ParseSignBlockTest_0010, TestSize.Level0)
+{
+    std::string elfPath = APP_BASE_PATH + "/demo_elf_file/elf-no-codesign";
+    ElfCodeSignBlock elfCodeSignBlock;
+    int32_t ret = elfCodeSignBlock.ParseSignBlock(elfPath);
+    EXPECT_EQ(ret, CS_CODE_SIGN_NOT_EXISTS);
+}
+
+/**
+* @tc.name: ParseSignBlockTest_0011
+* @tc.desc: parse sign block for non-elf file
+* @tc.type: Func
+* @tc.require:
+*/
+HWTEST_F(CodeSignUtilsTest, ParseSignBlockTest_0011, TestSize.Level0)
+{
+    std::string elfPath = APP_BASE_PATH + "/demo_elf_file/not-elf";
+    ElfCodeSignBlock elfCodeSignBlock;
+    int32_t ret = elfCodeSignBlock.ParseSignBlock(elfPath);
+    EXPECT_EQ(ret, CS_ERR_FILE_INVALID);
+}
+#endif
 
 /**
 * @tc.name: CodeSignUtilsTest_0057
