@@ -86,6 +86,7 @@ ohos_unittest("code_sign_utils_unittest") {
   external_deps = [
     "appverify:libhapverify",
     "c_utils:utils",
+    "elfio:elfio",
     "hilog:libhilog",
     "init:libbegetutil",
   ]
