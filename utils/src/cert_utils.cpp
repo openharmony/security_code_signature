@@ -122,7 +122,7 @@ static inline bool CheckSizeAndAssign(uint8_t *&bufferPtr, uint32_t &restSize, u
     if (restSize < sizeof(uint32_t)) {
         return false;
     }
-    retSize = *reinterpret_cast<uint32_t *>(bufferPtr);
+    memcpy(&retSize, bufferPtr, sizeof(uint32_t));
     bufferPtr += sizeof(uint32_t);
     restSize -= sizeof(uint32_t);
     return true;
@@ -150,7 +150,8 @@ bool GetCertChainFormBuffer(const ByteBuffer &certChainBuffer,
         LOG_ERROR("empty cert chain buffer.");
         return false;
     }
-    uint32_t certsCount = *reinterpret_cast<uint32_t *>(rawPtr);
+    uint32_t certsCount;
+    memcpy(&certsCount, rawPtr, sizeof(uint32_t));
     rawPtr += sizeof(uint32_t);
     if (certsCount == 0) {
         return false;

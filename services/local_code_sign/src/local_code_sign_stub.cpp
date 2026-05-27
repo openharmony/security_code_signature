@@ -57,7 +57,7 @@ int32_t LocalCodeSignStub::OnRemoteRequest(uint32_t code,
 int32_t LocalCodeSignStub::InitLocalCertificateInner(MessageParcel &data, MessageParcel &reply)
 {
     if (!PermissionUtils::IsValidCallerOfCert()) {
-        reply.WriteInt32(CS_ERR_NO_PERMISSION);
+        (void)reply.WriteInt32(CS_ERR_NO_PERMISSION);
         return CS_ERR_NO_PERMISSION;
     }
 
@@ -68,6 +68,10 @@ int32_t LocalCodeSignStub::InitLocalCertificateInner(MessageParcel &data, Messag
     }
     ByteBuffer challenge;
     const uint8_t *challengeBuffer = data.ReadBuffer(challengeLen);
+    if (challengeBuffer == nullptr) {
+        LOG_ERROR("Read challenge from IPC failed.");
+        return CS_ERR_IPC_READ_DATA;
+    }
     if (!challenge.CopyFrom(challengeBuffer, challengeLen)) {
         return CS_ERR_MEMORY;
     }
