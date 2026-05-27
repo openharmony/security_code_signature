@@ -26,12 +26,22 @@ int32_t RemoveKeyInProfileByRust(const char* bundleName)
     return CS_SUCCESS;
 }
 
+int32_t RemoveKeyInProfileCertSnByRust(const char* sn)
+{
+    return CS_SUCCESS;
+}
+
 int32_t EnableKeyForEnterpriseResignByRust(const uint8_t* cert, uint32_t certSize)
 {
     return CS_SUCCESS;
 }
 
 int32_t RemoveKeyForEnterpriseResignByRust(const uint8_t* cert, uint32_t certSize)
+{
+    return CS_SUCCESS;
+}
+
+int32_t CheckCertHasBinaryCertExtension(const uint8_t* certDer, uint32_t certSize)
 {
     return CS_SUCCESS;
 }

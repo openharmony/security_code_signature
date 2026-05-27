@@ -61,6 +61,7 @@ const PROFILE_BUNDLE_INFO_DEBUG_KEY: &str = "development-certificate";
 const PROFILE_APP_DISTRIBUTION_TYPE_KEY: &str = "app-distribution-type";
 const PROFILE_APP_IDENTIFIER_KEY: &str = "app-identifier";
 const APP_DISTRIBUTION_TYPE_INTERNALTESTING: &str = "internaltesting";
+const APP_DISTRIBUTION_TYPE_BINARY: &str = "developer";
 const APP_DISTRIBUTION_TYPE_ENTERPRISE: &str = "enterprise";
 const APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL: &str = "enterprise_normal";
 const APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM: &str = "enterprise_mdm";
@@ -96,6 +97,7 @@ extern "C" {
     fn IsRdDevice() -> bool;
     fn WaitForEnterpriseParam() -> bool;
     fn CheckCertHasEnterpriseResignExtension(cert_der: *const u8, cert_size: u32) -> i32;
+    fn CheckCertHasBinaryCertExtension(cert_der: *const u8, cert_size: u32) -> i32;
 }
 
 #[no_mangle]
@@ -115,6 +117,15 @@ pub extern "C" fn EnableKeyInProfileByRust(
 /// the interface remove key in profile
 pub extern "C" fn RemoveKeyInProfileByRust(bundle_name: *const c_char) -> i32 {
     match remove_key_in_profile_internal(bundle_name) {
+        Ok(_) => SUCCESS_CODE,
+        Err(_) => ERROR_CODE,
+    }
+}
+
+#[no_mangle]
+/// the interface remove key in profile
+pub extern "C" fn RemoveKeyInProfileCertSnByRust(sn: *const c_char) -> i32 {
+    match remove_key_in_profile_cert_sn_internal(sn) {
         Ok(_) => SUCCESS_CODE,
         Err(_) => ERROR_CODE,
     }
@@ -186,6 +197,8 @@ pub fn validate_bundle_and_distribution_type(
                         return Err("Invalid UDID.".into());
                     }
                 },
+                APP_DISTRIBUTION_TYPE_BINARY => {
+                },
                 APP_DISTRIBUTION_TYPE_ENTERPRISE |
                 APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL |
                 APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM => {
@@ -213,7 +226,7 @@ fn parse_and_validate_profile(
 
 fn get_cert_details(profile_json: &JsonValue) -> Result<(String, String, u32, String), Box<dyn Error>> {
     let bundle_type = profile_json[PROFILE_TYPE_KEY].try_as_string()?.as_str();
-    let profile_type = match bundle_type {
+    let mut profile_type = match bundle_type {
         PROFILE_DEBUG_TYPE => DebugCertPathType::Developer as u32,
         PROFILE_RELEASE_TYPE => ReleaseCertPathType::Developer as u32,
         _ => return Err("Invalid bundle type.".into()),
@@ -228,6 +241,10 @@ fn get_cert_details(profile_json: &JsonValue) -> Result<(String, String, u32, St
         _ => return Err("Invalid bundle type.".into()),
     };
     let signed_pem = X509::from_pem(signed_cert.as_bytes())?;
+    if env!("support_binary_enable") == "on" && check_cert_has_oid(&signed_pem) {
+        info!(LOG_LABEL, "Found binary cert OID, adjusting profile type to BINARY");
+        profile_type = ReleaseCertPathType::BINARY as u32;
+    }
     let subject = format_x509_fabricate_name(signed_pem.subject_name());
     let issuer = format_x509_fabricate_name(signed_pem.issuer_name());
     Ok((subject, issuer, profile_type, app_id))
@@ -565,12 +582,31 @@ fn process_data(profile_data: &[u8]) -> Result<(String, String, u32, String), ()
     }
 }
 
+fn check_cert_has_oid(cert: &X509) -> bool {
+    let der = match cert.to_der() {
+        Ok(bytes) => bytes,
+        Err(e) => {
+            error!(LOG_LABEL, "Failed to convert cert to DER: {}", @public(e));
+            return false;
+        }
+    };
+
+    let ret = unsafe {
+        CheckCertHasBinaryCertExtension(der.as_ptr(), der.len() as u32)
+    };
+
+    ret == 0
+}
+
 fn create_bundle_path(bundle_name: &str, profile_type: u32) -> Result<String, ()> {
     let bundle_path = match profile_type {
         value if value == DebugCertPathType::Developer as u32 => {
             fmt_store_path(DEBUG_PROFILE_STORE_EL1_PUBLIC_PREFIX, bundle_name)
         }
         value if value == ReleaseCertPathType::Developer as u32 => {
+            fmt_store_path(PROFILE_STORE_EL1_PUBLIC_PREFIX, bundle_name)
+        }
+        value if value == ReleaseCertPathType::BINARY as u32 => {
             fmt_store_path(PROFILE_STORE_EL1_PUBLIC_PREFIX, bundle_name)
         }
         _ => {
@@ -677,6 +713,119 @@ fn remove_key_in_profile_internal(bundle_name: *const c_char) -> Result<(), ()> 
         error!(LOG_LABEL, "Failed to remove bundle profile info, bundleName: {}.", @public(_bundle_name));
         Err(())
     }
+}
+
+fn remove_key_in_profile_cert_sn_internal(sn: *const c_char) -> Result<(), ()> {
+    let _sn = c_char_to_string(sn);
+    if _sn.is_empty() {
+        error!(LOG_LABEL, "Empty serial number");
+        return Err(());
+    }
+
+    let profile_prefix = vec![
+        DEBUG_PROFILE_STORE_EL0_PREFIX,
+        PROFILE_STORE_EL0_PREFIX,
+        DEBUG_PROFILE_STORE_EL1_PREFIX,
+        PROFILE_STORE_EL1_PREFIX,
+        DEBUG_PROFILE_STORE_EL1_PUBLIC_PREFIX,
+        PROFILE_STORE_EL1_PUBLIC_PREFIX,
+    ];
+
+    let mut rm_succ = false;
+    for prefix in profile_prefix {
+        if process_remove_by_cert_sn(prefix, &_sn) {
+            rm_succ = true;
+        }
+    }
+    if rm_succ {
+        Ok(())
+    } else {
+        error!(LOG_LABEL, "Failed to remove bundle profile info by cert SN: {}.", @public(_sn));
+        Err(())
+    }
+}
+
+fn process_remove_by_cert_sn(prefix: &str, target_sn: &str) -> bool {
+    let profile_paths = get_profile_paths_from_prefix(prefix);
+    if profile_paths.is_empty() {
+        return false;
+    }
+    let mut rm_succ = false;
+    for (bundle_path, filename) in profile_paths {
+        let mut profile_data = Vec::new();
+        if load_bytes_from_file(&filename, &mut profile_data).is_err() {
+            error!(LOG_LABEL, "load profile data error for {}", @public(filename));
+            continue;
+        }
+        let cert_sn = match extract_cert_sn_from_profile_data(&profile_data) {
+            Ok(sn) => sn,
+            Err(_) => {
+                error!(LOG_LABEL, "extract cert SN error for {}", @public(filename));
+                continue;
+            }
+        };
+
+        if !cert_sn.eq_ignore_ascii_case(target_sn) {
+            continue;
+        }
+
+        let (subject, issuer, profile_type, app_id) = match process_data(&profile_data) {
+            Ok(tuple) => tuple,
+            Err(_) => {
+                error!(LOG_LABEL, "parse profile data error for SN match!");
+                continue;
+            }
+        };
+
+        if delete_file_path(&bundle_path).is_err() {
+            error!(LOG_LABEL, "remove profile data error!");
+            continue;
+        }
+        info!(LOG_LABEL, "remove bundle_path path {}!", @public(bundle_path));
+
+        if remove_cert_path_info(subject, issuer, profile_type, app_id, DEFAULT_MAX_CERT_PATH_LEN).is_err() {
+            error!(LOG_LABEL, "remove profile data error!");
+            continue;
+        }
+        info!(LOG_LABEL, "finish remove cert path in ioctl!");
+        rm_succ = true;
+    }
+
+    rm_succ
+}
+
+fn get_profile_paths_from_prefix(prefix: &str) -> Vec<(String, String)> {
+    let mut paths = Vec::new();
+    if let Ok(entries) = read_dir(prefix) {
+        for entry in entries.filter_map(Result::ok) {
+            let path = entry.path();
+            if !path.is_dir() {
+                continue;
+            }
+            let bundle_path = path.to_string_lossy().to_string();
+            let filename = fmt_store_path(&bundle_path, PROFILE_STORE_TAIL);
+            if file_exists(&filename) {
+                paths.push((bundle_path, filename));
+            }
+        }
+    }
+    paths
+}
+
+fn extract_cert_sn_from_profile_data(profile_data: &[u8]) -> Result<String, Box<dyn Error>> {
+    let pkcs7 = Pkcs7::from_der(profile_data)?;
+    let store = X509StoreBuilder::new()?.build();
+    let profile = verify_pkcs7_signature(&pkcs7, &store, Pkcs7Flags::NOVERIFY)?;
+    let profile_json = JsonValue::from_text(profile)?;
+    let bundle_type = profile_json[PROFILE_TYPE_KEY].try_as_string()?.as_str();
+    let signed_cert = match bundle_type {
+        PROFILE_DEBUG_TYPE => profile_json[PROFILE_BUNDLE_INFO_KEY][PROFILE_BUNDLE_INFO_DEBUG_KEY].try_as_string()?,
+        PROFILE_RELEASE_TYPE => profile_json[PROFILE_BUNDLE_INFO_KEY][PROFILE_BUNDLE_INFO_RELEASE_KEY].try_as_string()?,
+        _ => return Err("Invalid bundle type.".into()),
+    };
+    let signed_pem = X509::from_pem(signed_cert.as_bytes())?;
+    let serial_bn = signed_pem.serial_number().to_bn()?;
+    Ok(serial_bn.to_hex_str()?.to_string())
 }
 
 fn c_char_to_string(c_str: *const c_char) -> String {

@@ -122,6 +122,9 @@ int32_t CodeSignBlock::GetOneFileAndCodeSignInfo(std::string &targetFile,
     if (!signInfo->flags) {
         return CS_SUCCESS;
     }
+    if (flag & IS_LOCAL_HSP_PLUGIN) {
+        arg.flags |= BINARY_CERT_FLAGS;
+    }
 
     uint32_t extensionCount = 0;
     uint32_t extensionNum = signInfo->extensionNum;

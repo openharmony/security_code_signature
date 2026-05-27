@@ -352,6 +352,16 @@ int32_t CodeSignUtils::RemoveKey(const CertPathInfo &info)
 {
     return static_cast<int32_t>(RemoveCertPath(info));
 }
+
+int32_t CodeSignUtils::RemoveKeyInProfileCertSn(const std::string &sn)
+{
+    int ret = RemoveKeyInProfileCertSnByRust(sn.c_str());
+    if (ret == CS_SUCCESS) {
+        return ret;
+    }
+    LOG_ERROR("Remove key in profile cert sn failed. ret = %{public}d", ret);
+    return CS_ERR_PROFILE;
+}
 #endif
 
 int32_t CodeSignUtils::EnforceCodeSignForFile(const std::string &path)

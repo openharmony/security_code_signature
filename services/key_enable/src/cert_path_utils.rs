@@ -64,6 +64,8 @@ pub enum ReleaseCertPathType {
     Developer = 0x3,
     /// release block code
     Block = 0x4,
+    /// release binary code
+    BINARY = 0x6,
     /// restrict code
     Restricted = 0xff,
 }

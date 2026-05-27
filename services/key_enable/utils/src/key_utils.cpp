@@ -28,6 +28,7 @@
 #define ENTERPRISE_RESIGN_OID "1.3.6.1.4.1.2011.2.376.1.9"
 #define ENTERPRISE_RESIGN_SN "EnterpriseAppResignCertID"
 #define ENTERPRISE_RESIGN_LN "Enterprise App Resign Cert ID"
+#define BINARY_CERT_OID "1.3.6.1.4.1.2011.2.376.1.8"
 
 constexpr int KEYCTL_RESTRICT_KEYRING = 29;
 
@@ -101,4 +102,40 @@ int32_t CheckCertHasEnterpriseResignExtension(const uint8_t *certDer, uint32_t c
         LOG_ERROR(LABEL, "Enterprise resign extension not found in certificate");
         return CS_ERR_PARAM_INVALID;
     }
+}
+
+int32_t CheckCertHasBinaryCertExtension(const uint8_t *certDer, uint32_t certSize)
+{
+    if (certDer == nullptr || certSize == 0) {
+        LOG_ERROR(LABEL, "Invalid certificate DER input");
+        return CS_ERR_PARAM_INVALID;
+    }
+
+    const unsigned char *certPtr = certDer;
+    X509 *cert = d2i_X509(nullptr, &certPtr, certSize);
+    if (cert == nullptr) {
+        LOG_ERROR(LABEL, "Failed to parse certificate from DER");
+        return CS_ERR_PARAM_INVALID;
+    }
+
+    int extCount = X509_get_ext_count(cert);
+    for (int i = 0; i < extCount; i++) {
+        X509_EXTENSION *ext = X509_get_ext(cert, i);
+        if (ext == nullptr) {
+            continue;
+        }
+        ASN1_OBJECT *obj = X509_EXTENSION_get_object(ext);
+        if (obj == nullptr) {
+            continue;
+        }
+        char oidBuf[128] = {0};
+        if (OBJ_obj2txt(oidBuf, sizeof(oidBuf), obj, 1) > 0 && strcmp(oidBuf, BINARY_CERT_OID) == 0) {
+            X509_free(cert);
+            LOG_INFO(LABEL, "Found binary cert extension in certificate");
+            return CS_SUCCESS;
+        }
+    }
+    X509_free(cert);
+    LOG_ERROR(LABEL, "Binary cert extension not found in certificate");
+    return CS_ERR_PARAM_INVALID;
 }

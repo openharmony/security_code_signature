@@ -325,6 +325,11 @@ ohos_rust_static_library("rust_key_enable_lib") {
   } else {
     rustenv += [ "support_openharmony_ca=off" ]
   }
+  if (code_signature_support_binary_enable) {
+    rustenv += [ "support_binary_enable=on" ]
+  } else {
+    rustenv += [ "support_binary_enable=off" ]
+  }
   crate_name = "key_enable"
   crate_type = "rlib"
   subsystem_name = "security"
@@ -419,6 +424,7 @@ ohos_unittest("key_enable_utils_unittest") {
     "c_utils:utils",
     "hilog:libhilog",
     "init:libbegetutil",
+    "openssl:libcrypto_shared",
   ]
 }
 

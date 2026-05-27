@@ -1403,6 +1403,95 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0082, TestSize.Level0)
     int32_t ret = codeSignBlock.ParseCodeSignBlock(hapRealPath, entryMap, FILE_SELF);
     EXPECT_EQ(ret, CS_ERR_BLOCK_SIZE);
 }
+
+/**
+ * @tc.name: CodeSignUtilsTest_0083
+ * @tc.desc: Remove key in profile by cert SN with empty SN
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0083, TestSize.Level0)
+{
+#ifdef SUPPORT_BINARY_ENABLE
+    std::string sn = "";
+    int32_t ret = CodeSignUtils::RemoveKeyInProfileCertSn(sn);
+#ifdef NO_USE_CLANG_COVERAGE
+    EXPECT_EQ(ret, CS_ERR_PROFILE);
+#else
+    EXPECT_EQ(ret, CS_SUCCESS);
+#endif
+
+    std::string sn2 = "notexists";
+    int32_t ret = CodeSignUtils::RemoveKeyInProfileCertSn(sn2);
+#ifdef NO_USE_CLANG_COVERAGE
+    EXPECT_EQ(ret, CS_ERR_PROFILE);
+#else
+    EXPECT_EQ(ret, CS_SUCCESS);
+#endif
+#endif
+}
+
+/**
+ * @tc.name: CodeSignUtilsTest_0084
+ * @tc.desc: Enable key in profile then remove by cert SN
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0084, TestSize.Level0)
+{
+    std::string bundleName = "com.example.myapplication";
+    std::string p7bPath = APP_BASE_PATH + "/demo_with_multi_lib/entry-default-signed-debug.p7b";
+    ByteBuffer profileBuffer;
+    bool flag = ReadSignatureFromFile(p7bPath, profileBuffer);
+    EXPECT_EQ(flag, true);
+    int32_t ret = CodeSignUtils::EnableKeyInProfile(bundleName, profileBuffer);
+    EXPECT_EQ(ret, CS_SUCCESS);
+
+#ifdef SUPPORT_BINARY_ENABLE
+    std::string sn = "68E0BFCC";
+    ret = CodeSignUtils::RemoveKeyInProfileCertSn(sn);
+    EXPECT_EQ(ret, CS_SUCCESS);
+#else
+    ret = CodeSignUtils::RemoveKeyInProfile(bundleName);
+    EXPECT_EQ(ret, CS_SUCCESS);
+#endif
+}
+
+/**
+ * @tc.name: CodeSignUtilsTest_0085
+ * @tc.desc: Enable key in profile then remove by cert SN
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0085, TestSize.Level0)
+{
+    std::string bundleName = "com.example.myapplication";
+    std::string p7bPath = APP_BASE_PATH + "/demo_with_multi_lib/entry-default-signed-debug.p7b";
+    ByteBuffer profileBuffer;
+    bool flag = ReadSignatureFromFile(p7bPath, profileBuffer);
+    EXPECT_EQ(flag, true);
+    int32_t ret = CodeSignUtils::EnableKeyInProfile(bundleName, profileBuffer);
+    EXPECT_EQ(ret, CS_SUCCESS);
+
+    std::string bundleName2 = "com.example.myapplication22";
+    p7bPath = APP_BASE_PATH + "/demo_with_multi_lib/entry-default-signed-debug2.p7b";
+    ByteBuffer profileBuffer2;
+    flag = ReadSignatureFromFile(p7bPath, profileBuffer2);
+    EXPECT_EQ(flag, true);
+    ret = CodeSignUtils::EnableKeyInProfile(bundleName2, profileBuffer2);
+    EXPECT_EQ(ret, CS_SUCCESS);
+
+#ifdef SUPPORT_BINARY_ENABLE
+    std::string sn = "68E0BFCC";
+    ret = CodeSignUtils::RemoveKeyInProfileCertSn(sn);
+    EXPECT_EQ(ret, CS_SUCCESS);
+#else
+    ret = CodeSignUtils::RemoveKeyInProfile(bundleName);
+    EXPECT_EQ(ret, CS_SUCCESS);
+    ret = CodeSignUtils::RemoveKeyInProfile(bundleName2);
+    EXPECT_EQ(ret, CS_SUCCESS);
+#endif
+}
 }  // namespace CodeSign
 }  // namespace Security
 }  // namespace OHOS
