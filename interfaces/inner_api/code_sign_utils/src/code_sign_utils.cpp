@@ -360,7 +360,7 @@ int32_t CodeSignUtils::RemoveKeyInProfileCertSn(const std::string &sn)
         return ret;
     }
     LOG_ERROR("Remove key in profile cert sn failed. ret = %{public}d", ret);
-    return CS_ERR_PROFILE;
+    return ret;
 }
 #endif
 

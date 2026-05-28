@@ -1416,18 +1416,14 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0083, TestSize.Level0)
     std::string sn = "";
     int32_t ret = CodeSignUtils::RemoveKeyInProfileCertSn(sn);
 #ifdef NO_USE_CLANG_COVERAGE
-    EXPECT_EQ(ret, CS_ERR_PROFILE);
+    EXPECT_EQ(ret, CS_ERR_PARAM_INVALID);
 #else
     EXPECT_EQ(ret, CS_SUCCESS);
 #endif
 
     std::string sn2 = "notexists";
-    int32_t ret = CodeSignUtils::RemoveKeyInProfileCertSn(sn2);
-#ifdef NO_USE_CLANG_COVERAGE
-    EXPECT_EQ(ret, CS_ERR_PROFILE);
-#else
+    ret = CodeSignUtils::RemoveKeyInProfileCertSn(sn2);
     EXPECT_EQ(ret, CS_SUCCESS);
-#endif
 #endif
 }
 

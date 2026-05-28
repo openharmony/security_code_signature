@@ -54,6 +54,19 @@ pub enum EnterpriseCertError {
     /// certificate chain verification failed error
     ChainVerifyFailed = -0x312,
 }
+/// Operate cert error
+pub enum OperateCertError {
+    /// param invalid error
+    ParamInvalid = -0x200,
+    /// file read error
+    FileReadError = -0x103,
+    /// file del error
+    FileDelError = -0x105,
+    /// invalid cert error
+    InvalidCert = -0x310,
+    /// ioctl error
+    IoctlFailed = -0x311,
+}
 /// release cert path type
 pub enum ReleaseCertPathType {
     /// release platform code
@@ -65,7 +78,7 @@ pub enum ReleaseCertPathType {
     /// release block code
     Block = 0x4,
     /// release binary code
-    BINARY = 0x6,
+    Binary = 0x6,
     /// restrict code
     Restricted = 0xff,
 }

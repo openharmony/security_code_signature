@@ -18,7 +18,7 @@ use super::cert_chain_utils::{PemCollection, verify_cert_chain};
 use super::cert_path_utils::{
     add_cert_path_info, remove_cert_path_info, common_format_fabricate_name, 
     DebugCertPathType, ReleaseCertPathType, EnterpriseCertPathType, TrustCertPath, EnterpriseResignCertParam,
-    add_enterprise_resign_cert, remove_enterprise_resign_cert, EnterpriseCertError
+    add_enterprise_resign_cert, remove_enterprise_resign_cert, EnterpriseCertError, OperateCertError
 };
 use super::cert_utils::{is_enterprise_device, get_trusted_certs};
 use super::cs_hisysevent::report_parse_profile_err;
@@ -61,7 +61,7 @@ const PROFILE_BUNDLE_INFO_DEBUG_KEY: &str = "development-certificate";
 const PROFILE_APP_DISTRIBUTION_TYPE_KEY: &str = "app-distribution-type";
 const PROFILE_APP_IDENTIFIER_KEY: &str = "app-identifier";
 const APP_DISTRIBUTION_TYPE_INTERNALTESTING: &str = "internaltesting";
-const APP_DISTRIBUTION_TYPE_BINARY: &str = "developer";
+const APP_DISTRIBUTION_TYPE_BINARY: &str = "developer_id";
 const APP_DISTRIBUTION_TYPE_ENTERPRISE: &str = "enterprise";
 const APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL: &str = "enterprise_normal";
 const APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM: &str = "enterprise_mdm";
@@ -88,6 +88,8 @@ pub enum HisyseventProfileError {
     AddEnterpriseCert = 4,
     /// remove enterprise code
     RemoveEnterpriseCert = 5,
+    /// remove cert code
+    RemoveCertPath = 6,
 }
 
 extern "C" {
@@ -127,7 +129,7 @@ pub extern "C" fn RemoveKeyInProfileByRust(bundle_name: *const c_char) -> i32 {
 pub extern "C" fn RemoveKeyInProfileCertSnByRust(sn: *const c_char) -> i32 {
     match remove_key_in_profile_cert_sn_internal(sn) {
         Ok(_) => SUCCESS_CODE,
-        Err(_) => ERROR_CODE,
+        Err(e) => e,
     }
 }
 
@@ -242,8 +244,8 @@ fn get_cert_details(profile_json: &JsonValue) -> Result<(String, String, u32, St
     };
     let signed_pem = X509::from_pem(signed_cert.as_bytes())?;
     if env!("support_binary_enable") == "on" && check_cert_has_oid(&signed_pem) {
-        info!(LOG_LABEL, "Found binary cert OID, adjusting profile type to BINARY");
-        profile_type = ReleaseCertPathType::BINARY as u32;
+        info!(LOG_LABEL, "Found binary cert OID, adjusting profile type to Binary");
+        profile_type = ReleaseCertPathType::Binary as u32;
     }
     let subject = format_x509_fabricate_name(signed_pem.subject_name());
     let issuer = format_x509_fabricate_name(signed_pem.issuer_name());
@@ -606,7 +608,7 @@ fn create_bundle_path(bundle_name: &str, profile_type: u32) -> Result<String, ()
         value if value == ReleaseCertPathType::Developer as u32 => {
             fmt_store_path(PROFILE_STORE_EL1_PUBLIC_PREFIX, bundle_name)
         }
-        value if value == ReleaseCertPathType::BINARY as u32 => {
+        value if value == ReleaseCertPathType::Binary as u32 => {
             fmt_store_path(PROFILE_STORE_EL1_PUBLIC_PREFIX, bundle_name)
         }
         _ => {
@@ -715,11 +717,12 @@ fn remove_key_in_profile_internal(bundle_name: *const c_char) -> Result<(), ()> 
     }
 }
 
-fn remove_key_in_profile_cert_sn_internal(sn: *const c_char) -> Result<(), ()> {
+fn remove_key_in_profile_cert_sn_internal(sn: *const c_char) -> Result<(), i32> {
     let _sn = c_char_to_string(sn);
     if _sn.is_empty() {
         error!(LOG_LABEL, "Empty serial number");
-        return Err(());
+        report_parse_profile_err("RemoveKeyInProfileCertSn empty sn", HisyseventProfileError::RemoveCertPath as i32);
+        return Err(OperateCertError::ParamInvalid as i32);
     }
 
     let profile_prefix = vec![
@@ -731,37 +734,32 @@ fn remove_key_in_profile_cert_sn_internal(sn: *const c_char) -> Result<(), ()> {
         PROFILE_STORE_EL1_PUBLIC_PREFIX,
     ];
 
-    let mut rm_succ = false;
     for prefix in profile_prefix {
-        if process_remove_by_cert_sn(prefix, &_sn) {
-            rm_succ = true;
+        if let Err(e) = process_remove_by_cert_sn(prefix, &_sn) {
+            error!(LOG_LABEL, "Failed to remove bundle profile info by cert SN: {}.", @public(_sn));
+            report_parse_profile_err("RemoveKeyInProfileCertSn failed", HisyseventProfileError::RemoveCertPath as i32);
+            return Err(e);
         }
     }
-    if rm_succ {
-        Ok(())
-    } else {
-        error!(LOG_LABEL, "Failed to remove bundle profile info by cert SN: {}.", @public(_sn));
-        Err(())
-    }
+    Ok(())
 }
 
-fn process_remove_by_cert_sn(prefix: &str, target_sn: &str) -> bool {
+fn process_remove_by_cert_sn(prefix: &str, target_sn: &str) -> Result<(), i32> {
     let profile_paths = get_profile_paths_from_prefix(prefix);
     if profile_paths.is_empty() {
-        return false;
+        return Ok(());
     }
-    let mut rm_succ = false;
-    for (bundle_path, filename) in profile_paths {
+    for (bundle_path, file_path) in profile_paths {
         let mut profile_data = Vec::new();
-        if load_bytes_from_file(&filename, &mut profile_data).is_err() {
-            error!(LOG_LABEL, "load profile data error for {}", @public(filename));
-            continue;
+        if load_bytes_from_file(&file_path, &mut profile_data).is_err() {
+            error!(LOG_LABEL, "load profile data error for {}", @public(file_path));
+            return Err(OperateCertError::FileReadError as i32);
         }
         let cert_sn = match extract_cert_sn_from_profile_data(&profile_data) {
             Ok(sn) => sn,
             Err(_) => {
-                error!(LOG_LABEL, "extract cert SN error for {}", @public(filename));
-                continue;
+                error!(LOG_LABEL, "extract cert SN error for {}", @public(file_path));
+                return Err(OperateCertError::InvalidCert as i32);
             }
         };
 
@@ -773,25 +771,24 @@ fn process_remove_by_cert_sn(prefix: &str, target_sn: &str) -> bool {
             Ok(tuple) => tuple,
             Err(_) => {
                 error!(LOG_LABEL, "parse profile data error for SN match!");
-                continue;
+                return Err(OperateCertError::InvalidCert as i32);
             }
         };
 
         if delete_file_path(&bundle_path).is_err() {
-            error!(LOG_LABEL, "remove profile data error!");
-            continue;
+            error!(LOG_LABEL, "remove bundle_path error! {}", @public(bundle_path));
+            return Err(OperateCertError::FileDelError as i32);
         }
         info!(LOG_LABEL, "remove bundle_path path {}!", @public(bundle_path));
 
         if remove_cert_path_info(subject, issuer, profile_type, app_id, DEFAULT_MAX_CERT_PATH_LEN).is_err() {
             error!(LOG_LABEL, "remove profile data error!");
-            continue;
+            return Err(OperateCertError::IoctlFailed as i32);
         }
         info!(LOG_LABEL, "finish remove cert path in ioctl!");
-        rm_succ = true;
     }
 
-    rm_succ
+    Ok(())
 }
 
 fn get_profile_paths_from_prefix(prefix: &str) -> Vec<(String, String)> {
@@ -803,9 +800,9 @@ fn get_profile_paths_from_prefix(prefix: &str) -> Vec<(String, String)> {
                 continue;
             }
             let bundle_path = path.to_string_lossy().to_string();
-            let filename = fmt_store_path(&bundle_path, PROFILE_STORE_TAIL);
-            if file_exists(&filename) {
-                paths.push((bundle_path, filename));
+            let file_path = fmt_store_path(&bundle_path, PROFILE_STORE_TAIL);
+            if file_exists(&file_path) {
+                paths.push((bundle_path, file_path));
             }
         }
     }
