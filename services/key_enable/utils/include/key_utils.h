@@ -49,6 +49,7 @@ KeySerial KeyctlRestrictKeyring(
 
 bool IsRdDevice();
 int32_t CheckCertHasEnterpriseResignExtension(const uint8_t *certDer, uint32_t certSize);
+int32_t CheckCertHasBinaryCertExtension(const uint8_t *certDer, uint32_t certSize);
 #ifdef __cplusplus
 }
 #endif

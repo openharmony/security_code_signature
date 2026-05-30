@@ -19,6 +19,11 @@
 #include <string>
 #include <vector>
 
+#include <openssl/evp.h>
+#include <openssl/x509.h>
+#include <openssl/objects.h>
+#include <openssl/asn1.h>
+
 #include "log.h"
 #include "errcode.h"
 #include "byte_buffer.h"
@@ -139,6 +144,98 @@ static bool ReadDataFromFile(const std::string &path, ByteBuffer &data)
         return false;
     }
     return true;
+}
+
+static EVP_PKEY *GenerateRsaKey()
+{
+    EVP_PKEY *pkey = nullptr;
+    EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, nullptr);
+    if (ctx == nullptr) {
+        return nullptr;
+    }
+    if (EVP_PKEY_keygen_init(ctx) <= 0 || EVP_PKEY_CTX_set_rsa_keygen_bits(ctx, 2048) <= 0 ||
+        EVP_PKEY_keygen(ctx, &pkey) <= 0) {
+        EVP_PKEY_CTX_free(ctx);
+        return nullptr;
+    }
+    EVP_PKEY_CTX_free(ctx);
+    return pkey;
+}
+
+static X509 *CreateTestCert(EVP_PKEY *pkey, const char *cnName)
+{
+    X509 *cert = X509_new();
+    if (cert == nullptr) {
+        return nullptr;
+    }
+    X509_set_version(cert, 2);
+    ASN1_INTEGER_set(X509_get_serialNumber(cert), 1);
+    X509_gmtime_adj(X509_get_notBefore(cert), 0);
+    X509_gmtime_adj(X509_get_notAfter(cert), 31536000L);
+    X509_set_pubkey(cert, pkey);
+    X509_NAME *name = X509_get_subject_name(cert);
+    X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC,
+        reinterpret_cast<unsigned char *>(const_cast<char *>(cnName)), -1, -1, 0);
+    X509_set_issuer_name(cert, name);
+    return cert;
+}
+
+static X509_EXTENSION *CreateExtension(const char *oid, const char *shortName,
+    const char *longName, const unsigned char *data, int dataLen)
+{
+    int nid = OBJ_txt2nid(oid);
+    if (nid == NID_undef) {
+        nid = OBJ_create(oid, shortName, longName);
+    }
+    if (nid == NID_undef) {
+        return nullptr;
+    }
+    ASN1_OCTET_STRING *octet = ASN1_OCTET_STRING_new();
+    if (octet == nullptr) {
+        return nullptr;
+    }
+    ASN1_OCTET_STRING_set(octet, data, dataLen);
+    X509_EXTENSION *ext = X509_EXTENSION_create_by_NID(nullptr, nid, 0, octet);
+    ASN1_OCTET_STRING_free(octet);
+    return ext;
+}
+
+static bool AddExtensionToCert(X509 *cert, X509_EXTENSION *ext)
+{
+    if (cert == nullptr || ext == nullptr) {
+        return false;
+    }
+    bool result = X509_add_ext(cert, ext, -1) > 0;
+    X509_EXTENSION_free(ext);
+    return result;
+}
+
+static std::vector<uint8_t> SignCertAndSerialize(X509 *&cert, EVP_PKEY *&pkey)
+{
+    std::vector<uint8_t> derData;
+    if (X509_sign(cert, pkey, EVP_sha256()) <= 0) {
+        X509_free(cert);
+        EVP_PKEY_free(pkey);
+        cert = nullptr;
+        pkey = nullptr;
+        return derData;
+    }
+    int len = i2d_X509(cert, nullptr);
+    if (len <= 0) {
+        X509_free(cert);
+        EVP_PKEY_free(pkey);
+        cert = nullptr;
+        pkey = nullptr;
+        return derData;
+    }
+    derData.resize(len);
+    unsigned char *p = derData.data();
+    i2d_X509(cert, &p);
+    X509_free(cert);
+    EVP_PKEY_free(pkey);
+    cert = nullptr;
+    pkey = nullptr;
+    return derData;
 }
 
 /**
@@ -381,6 +478,200 @@ HWTEST_F(KeyEnableUtilsTest, CheckCertHasEnterpriseResignExtension_0003, TestSiz
     ASSERT_TRUE(ReadDataFromFile(TEST_CA_CERT_PATH, certData));
     int32_t ret = CheckCertHasEnterpriseResignExtension(certData.GetBuffer(), certData.GetSize());
     ASSERT_EQ(ret, CS_ERR_PARAM_INVALID);
+}
+
+/**
+ * @tc.name: CheckCertHasEnterpriseResignExtension_0005
+ * @tc.desc: test with certificate containing other custom OID but not enterprise resign
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(KeyEnableUtilsTest, CheckCertHasEnterpriseResignExtension_0005, TestSize.Level0)
+{
+    EVP_PKEY *pkey = GenerateRsaKey();
+    ASSERT_NE(pkey, nullptr);
+    X509 *cert = CreateTestCert(pkey, "OtherOidTest");
+    ASSERT_NE(cert, nullptr);
+    X509_EXTENSION *ext = CreateExtension("1.3.6.1.4.1.2011.2.376.1.8", "BinaryCertID", "Binary Cert ID",
+        reinterpret_cast<const unsigned char *>("test"), 4);
+    ASSERT_NE(ext, nullptr);
+    ASSERT_TRUE(AddExtensionToCert(cert, ext));
+    std::vector<uint8_t> derData = SignCertAndSerialize(cert, pkey);
+    ASSERT_GT(derData.size(), 0);
+    int32_t ret = CheckCertHasEnterpriseResignExtension(derData.data(), derData.size());
+    EXPECT_EQ(ret, CS_ERR_PARAM_INVALID);
+}
+
+/**
+ * @tc.name: CheckCertHasEnterpriseResignExtension_0006
+ * @tc.desc: test with truncated DER data
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(KeyEnableUtilsTest, CheckCertHasEnterpriseResignExtension_0006, TestSize.Level0)
+{
+    EVP_PKEY *pkey = GenerateRsaKey();
+    ASSERT_NE(pkey, nullptr);
+    X509 *cert = CreateTestCert(pkey, "TruncTest");
+    ASSERT_NE(cert, nullptr);
+    std::vector<uint8_t> derData = SignCertAndSerialize(cert, pkey);
+    ASSERT_GT(derData.size(), 0);
+    uint32_t truncatedSize = derData.size() / 2;
+    int32_t ret = CheckCertHasEnterpriseResignExtension(derData.data(), truncatedSize);
+    EXPECT_EQ(ret, CS_ERR_PARAM_INVALID);
+}
+
+/**
+ * @tc.name: CheckCertHasEnterpriseResignExtension_0007
+ * @tc.desc: test with certificate containing enterprise resign extension
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(KeyEnableUtilsTest, CheckCertHasEnterpriseResignExtension_0007, TestSize.Level0)
+{
+    EVP_PKEY *pkey = GenerateRsaKey();
+    ASSERT_NE(pkey, nullptr);
+    X509 *cert = CreateTestCert(pkey, "EnterpriseTest");
+    ASSERT_NE(cert, nullptr);
+    X509_EXTENSION *ext = CreateExtension("1.3.6.1.4.1.2011.2.376.1.9", "EnterpriseAppResignCertID",
+        "Enterprise App Resign Cert ID", reinterpret_cast<const unsigned char *>("test"), 4);
+    ASSERT_NE(ext, nullptr);
+    ASSERT_TRUE(AddExtensionToCert(cert, ext));
+    std::vector<uint8_t> derData = SignCertAndSerialize(cert, pkey);
+    ASSERT_GT(derData.size(), 0);
+    int32_t ret = CheckCertHasEnterpriseResignExtension(derData.data(), derData.size());
+    EXPECT_EQ(ret, CS_SUCCESS);
+}
+
+/**
+ * @tc.name: CheckCertHasBinaryCertExtension_0001
+ * @tc.desc: test with nullptr and zero certificate size
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(KeyEnableUtilsTest, CheckCertHasBinaryCertExtension_0001, TestSize.Level0)
+{
+    int32_t ret = CheckCertHasBinaryCertExtension(nullptr, 100);
+    ASSERT_EQ(ret, CS_ERR_PARAM_INVALID);
+    uint8_t certData[] = {0x01, 0x02, 0x03};
+    ret = CheckCertHasBinaryCertExtension(certData, 0);
+    ASSERT_EQ(ret, CS_ERR_PARAM_INVALID);
+}
+
+/**
+ * @tc.name: CheckCertHasBinaryCertExtension_0002
+ * @tc.desc: test with invalid certificate data
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(KeyEnableUtilsTest, CheckCertHasBinaryCertExtension_0002, TestSize.Level0)
+{
+    uint8_t invalidCertData[] = {0x01, 0x02, 0x03, 0x04};
+    int32_t ret = CheckCertHasBinaryCertExtension(invalidCertData, sizeof(invalidCertData));
+    ASSERT_EQ(ret, CS_ERR_PARAM_INVALID);
+}
+
+/**
+ * @tc.name: CheckCertHasBinaryCertExtension_0003
+ * @tc.desc: test with valid certificate without binary cert extension
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(KeyEnableUtilsTest, CheckCertHasBinaryCertExtension_0003, TestSize.Level0)
+{
+    ByteBuffer certData;
+    ASSERT_TRUE(ReadDataFromFile(TEST_CA_CERT_PATH, certData));
+    int32_t ret = CheckCertHasBinaryCertExtension(certData.GetBuffer(), certData.GetSize());
+    ASSERT_EQ(ret, CS_ERR_PARAM_INVALID);
+}
+
+/**
+ * @tc.name: CheckCertHasBinaryCertExtension_0004
+ * @tc.desc: test with certificate containing binary cert extension
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(KeyEnableUtilsTest, CheckCertHasBinaryCertExtension_0004, TestSize.Level0)
+{
+    EVP_PKEY *pkey = GenerateRsaKey();
+    ASSERT_NE(pkey, nullptr);
+    X509 *cert = CreateTestCert(pkey, "BinaryCertTest");
+    ASSERT_NE(cert, nullptr);
+    X509_EXTENSION *ext = CreateExtension("1.3.6.1.4.1.2011.2.376.1.8", "BinaryCertID", "Binary Cert ID",
+        reinterpret_cast<const unsigned char *>("test"), 4);
+    ASSERT_NE(ext, nullptr);
+    ASSERT_TRUE(AddExtensionToCert(cert, ext));
+    std::vector<uint8_t> derData = SignCertAndSerialize(cert, pkey);
+    ASSERT_GT(derData.size(), 0);
+    int32_t ret = CheckCertHasBinaryCertExtension(derData.data(), derData.size());
+    EXPECT_EQ(ret, CS_SUCCESS);
+}
+
+/**
+ * @tc.name: CheckCertHasBinaryCertExtension_0005
+ * @tc.desc: test with certificate containing enterprise resign OID but not binary cert OID
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(KeyEnableUtilsTest, CheckCertHasBinaryCertExtension_0005, TestSize.Level0)
+{
+    EVP_PKEY *pkey = GenerateRsaKey();
+    ASSERT_NE(pkey, nullptr);
+    X509 *cert = CreateTestCert(pkey, "NoBinaryExtTest");
+    ASSERT_NE(cert, nullptr);
+    X509_EXTENSION *ext = CreateExtension("1.3.6.1.4.1.2011.2.376.1.9", "EnterpriseAppResignCertID",
+        "Enterprise App Resign Cert ID", reinterpret_cast<const unsigned char *>("test"), 4);
+    ASSERT_NE(ext, nullptr);
+    ASSERT_TRUE(AddExtensionToCert(cert, ext));
+    std::vector<uint8_t> derData = SignCertAndSerialize(cert, pkey);
+    ASSERT_GT(derData.size(), 0);
+    int32_t ret = CheckCertHasBinaryCertExtension(derData.data(), derData.size());
+    EXPECT_EQ(ret, CS_ERR_PARAM_INVALID);
+}
+
+/**
+ * @tc.name: CheckCertHasBinaryCertExtension_0006
+ * @tc.desc: test with truncated DER data
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(KeyEnableUtilsTest, CheckCertHasBinaryCertExtension_0006, TestSize.Level0)
+{
+    EVP_PKEY *pkey = GenerateRsaKey();
+    ASSERT_NE(pkey, nullptr);
+    X509 *cert = CreateTestCert(pkey, "TruncBinaryTest");
+    ASSERT_NE(cert, nullptr);
+    std::vector<uint8_t> derData = SignCertAndSerialize(cert, pkey);
+    ASSERT_GT(derData.size(), 0);
+    uint32_t truncatedSize = derData.size() / 2;
+    int32_t ret = CheckCertHasBinaryCertExtension(derData.data(), truncatedSize);
+    EXPECT_EQ(ret, CS_ERR_PARAM_INVALID);
+}
+
+/**
+ * @tc.name: CheckCertHasBinaryCertExtension_0007
+ * @tc.desc: test with certificate containing both binary cert and enterprise resign extensions
+ * @tc.type: Func
+ * @tc.require:
+ */
+HWTEST_F(KeyEnableUtilsTest, CheckCertHasBinaryCertExtension_0007, TestSize.Level0)
+{
+    EVP_PKEY *pkey = GenerateRsaKey();
+    ASSERT_NE(pkey, nullptr);
+    X509 *cert = CreateTestCert(pkey, "DualExtTest");
+    ASSERT_NE(cert, nullptr);
+    X509_EXTENSION *ext1 = CreateExtension("1.3.6.1.4.1.2011.2.376.1.9", "EnterpriseAppResignCertID",
+        "Enterprise App Resign Cert ID", reinterpret_cast<const unsigned char *>("ent"), 3);
+    ASSERT_NE(ext1, nullptr);
+    ASSERT_TRUE(AddExtensionToCert(cert, ext1));
+    X509_EXTENSION *ext2 = CreateExtension("1.3.6.1.4.1.2011.2.376.1.8", "BinaryCertID",
+        "Binary Cert ID", reinterpret_cast<const unsigned char *>("bin"), 3);
+    ASSERT_NE(ext2, nullptr);
+    ASSERT_TRUE(AddExtensionToCert(cert, ext2));
+    std::vector<uint8_t> derData = SignCertAndSerialize(cert, pkey);
+    ASSERT_GT(derData.size(), 0);
+    int32_t ret = CheckCertHasBinaryCertExtension(derData.data(), derData.size());
+    EXPECT_EQ(ret, CS_SUCCESS);
 }
 
 } // namespace CodeSign

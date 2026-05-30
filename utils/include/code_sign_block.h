@@ -131,6 +131,7 @@ public:
     static constexpr uint32_t CSB_EXTENSION_TYPE_PAGE_INFO = 2;
     static constexpr uint32_t CSB_SIGN_INFO_MAX_PAGEINFO_UNITSIZE = 7;
     static constexpr uint32_t CSB_EXTENSION_TYPE_PAGE_INFO_VERSION = 2;
+    static constexpr uint32_t BINARY_CERT_FLAGS = 0x1 << 5;
 
     int32_t ParseCodeSignBlock(const std::string &realPath, const EntryMap &entryMap, FileType fileType,
         uint32_t flag = 0);

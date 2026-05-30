@@ -45,6 +45,7 @@ typedef enum {
 enum CodeSignInfoFlag {
     IS_UNCOMPRESSED_NATIVE_LIBS = 0x01 << 0,
     IS_ENTERPRISE_RESIGN = 0x01 << 1,
+    IS_LOCAL_HSP_PLUGIN = 0x01 << 2,
 };
 
 class CodeSignUtils {
@@ -157,6 +158,13 @@ public:
     * @return err code, see err_code.h
     */
     static int32_t RemoveKey(const CertPathInfo &info);
+
+    /**
+     * @brief Remove key in profile content data and remove profile by cert SN
+     * @param bundleName bundleName
+     * @return err code, see err_code.h
+     */
+    static int32_t RemoveKeyInProfileCertSn(const std::string &sn);
 #endif
 
     /**
