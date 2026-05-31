@@ -30,6 +30,7 @@ public:
     ~LocalCodeSignProxy() {}
     int32_t InitLocalCertificate(const ByteBuffer &challenge, ByteBuffer &cert) override;
     int32_t SignLocalCode(const std::string &ownerID, const std::string &filePath, ByteBuffer &signature) override;
+    int32_t SignLocalCodeByFd(const std::string &ownerID, int32_t fd, ByteBuffer &signature) override;
 private:
     static inline BrokerDelegator<LocalCodeSignProxy> delegator_;
     int32_t ReadResultFromReply(MessageParcel &reply, ByteBuffer &buffer);

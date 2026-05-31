@@ -33,7 +33,7 @@ group("subcomponents") {
     "${code_signature_root_dir}/services/local_code_sign:local_code_sign_configs",
   ]
 
-  if (!ohos_indep_compiler_enable) {
+  if (!ohos_indep_compiler_enable && !build_ohos_sdk) {
     deps +=
         [ "${code_signature_root_dir}/services/key_enable:key_enable_targets" ]
   }

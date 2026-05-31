@@ -31,6 +31,7 @@ enum FileOperationErrCode {
     CS_ERR_FILE_READ = -0x103,
     CS_ERR_EXTRACT_FILES = -0x104,
     CS_ERR_FILE_DEL = -0x105,
+    CS_ERR_INVALID_FD = -0x106
 };
 
 enum SignErrCode {

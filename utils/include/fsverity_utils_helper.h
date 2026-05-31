@@ -37,6 +37,7 @@ class FsverityUtilsHelper {
 public:
     static FsverityUtilsHelper &GetInstance();
     bool GenerateFormattedDigest(const char *path, ByteBuffer &ret);
+    bool GenerateFormattedDigestFromFd(int32_t fd, ByteBuffer &ret);
     static void ErrorMsgLogCallback(const char *msg);
 
 private:
@@ -48,6 +49,7 @@ private:
 
     void Init();
     bool ComputeDigest(const char *path, struct libfsverity_digest **digest);
+    bool ComputeDigestFromFd(int32_t fd, struct libfsverity_digest **digest);
     bool FormatDigest(libfsverity_digest *digest, uint8_t *buffer);
 
     class FileReader {
@@ -62,6 +64,25 @@ private:
             if (fd_ <= 0) {
                 LOG_ERROR("Open file failed, path = %{public}s, errno = <%{public}d, %{public}s>",
                     path, errno, strerror(errno));
+                return false;
+            }
+            FDSAN_MARK(fd_);
+            return true;
+        }
+
+        bool OpenFromFd(int32_t fd)
+        {
+            if (fd_ > 0) {
+                LOG_ERROR("File is already opened.");
+                return false;
+            }
+            if (fd <= 0) {
+                LOG_ERROR("Invalid fd=%{public}d", fd);
+                return false;
+            }
+            fd_ = dup(fd);
+            if (fd_ <= 0) {
+                LOG_ERROR("dup fd failed, errno = <%{public}d, %{public}s>", errno, strerror(errno));
                 return false;
             }
             FDSAN_MARK(fd_);

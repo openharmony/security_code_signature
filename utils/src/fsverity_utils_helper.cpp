@@ -91,11 +91,49 @@ bool FsverityUtilsHelper::ComputeDigest(const char *path, struct libfsverity_dig
     return true;
 }
 
+bool FsverityUtilsHelper::ComputeDigestFromFd(int32_t fd, struct libfsverity_digest **digest)
+{
+    struct libfsverity_merkle_tree_params tree_params = {
+        .version = 1,
+        .hash_algorithm = FS_VERITY_HASH_ALG_SHA256,
+        .block_size = FSVERITY_HASH_PAGE_SIZE
+    };
+    FileReader reader;
+    if (!reader.OpenFromFd(fd)) {
+        return false;
+    }
+    if (!reader.GetFileSize(&tree_params.file_size)) {
+        return false;
+    }
+    if (libfsverity_compute_digest(&reader, FileReader::ReadFileCallback, &tree_params, digest)) {
+        LOG_ERROR("Compute digest from fd failed.");
+        return false;
+    }
+    return true;
+}
+
 bool FsverityUtilsHelper::GenerateFormattedDigest(const char *path, ByteBuffer &digestBuffer)
 {
     LOG_INFO("GenerateFormattedDigest called.");
     struct libfsverity_digest *digest = nullptr;
     if (!ComputeDigest(path, &digest)) {
+        return false;
+    }
+    uint32_t digestLen = sizeof(struct fsverity_formatted_digest) + digest->digest_size;
+    if (!digestBuffer.Resize(digestLen)) {
+        free(digest);
+        return false;
+    }
+    bool ret = FormatDigest(digest, digestBuffer.GetBuffer());
+    free(digest);
+    return ret;
+}
+
+bool FsverityUtilsHelper::GenerateFormattedDigestFromFd(int32_t fd, ByteBuffer &digestBuffer)
+{
+    LOG_INFO("GenerateFormattedDigestFromFd called, fd=%{public}d", fd);
+    struct libfsverity_digest *digest = nullptr;
+    if (!ComputeDigestFromFd(fd, &digest)) {
         return false;
     }
     uint32_t digestLen = sizeof(struct fsverity_formatted_digest) + digest->digest_size;

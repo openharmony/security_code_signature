@@ -80,6 +80,34 @@ int32_t LocalCodeSignProxy::SignLocalCode(const std::string &ownerID, const std:
     return ReadResultFromReply(reply, signature);
 }
 
+int32_t LocalCodeSignProxy::SignLocalCodeByFd(const std::string &ownerID, int32_t fd, ByteBuffer &signature)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        return CS_ERR_REMOTE_CONNECTION;
+    }
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_ERROR("Write interface token failed.");
+        return CS_ERR_IPC_WRITE_DATA;
+    }
+    if (!data.WriteFileDescriptor(fd)) {
+        LOG_ERROR("Write file descriptor failed.");
+        return CS_ERR_IPC_WRITE_DATA;
+    }
+    if (!data.WriteString(ownerID)) {
+        LOG_ERROR("Write ownerID string failed.");
+        return CS_ERR_IPC_WRITE_DATA;
+    }
+    if (remote->SendRequest(static_cast<uint32_t>(LocalCodeSignInterfaceCode::SIGN_LOCAL_CODE_BY_FD),
+        data, reply, option) != NO_ERROR) {
+        return CS_ERR_IPC_MSG_INVALID;
+    }
+    return ReadResultFromReply(reply, signature);
+}
+
 int32_t LocalCodeSignProxy::ReadResultFromReply(MessageParcel &reply, ByteBuffer &buffer)
 {
     int32_t result;

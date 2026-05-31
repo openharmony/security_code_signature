@@ -143,6 +143,25 @@ int32_t LocalCodeSignService::SignLocalCode(const std::string &ownerID, const st
     return PKCS7Generator::GenerateSignature(ownerID, LocalSignKey::GetInstance(), DEFAULT_HASH_ALGORITHM.c_str(),
         digest, signature);
 }
+
+int32_t LocalCodeSignService::SignLocalCodeByFd(const std::string &ownerID, int32_t fd, ByteBuffer &signature)
+{
+    if (ownerID.length() > MAX_OWNER_ID_LEN) {
+        LOG_ERROR("ownerID len %{public}zu should not exceed %{public}u", ownerID.length(), MAX_OWNER_ID_LEN);
+        return CS_ERR_INVALID_OWNER_ID;
+    }
+    if (ownerID == OWNERID_SYSTEM_TAG || ownerID == OWNERID_COMPAT_TAG) {
+        LOG_ERROR("ownerID %{public}s is not allowed for local signing", ownerID.c_str());
+        return CS_ERR_FORBIDDEN_OWNER_ID;
+    }
+    ByteBuffer digest;
+    if (!FsverityUtilsHelper::GetInstance().GenerateFormattedDigestFromFd(fd, digest)) {
+        LOG_ERROR("Generate formatted fsverity digest failed for fd=%{public}d", fd);
+        return CS_ERR_COMPUTE_DIGEST;
+    }
+    return PKCS7Generator::GenerateSignature(ownerID, LocalSignKey::GetInstance(), DEFAULT_HASH_ALGORITHM.c_str(),
+        digest, signature);
+}
 }
 }
 }

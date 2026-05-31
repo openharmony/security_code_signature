@@ -23,10 +23,26 @@
 #include "log.h"
 #include "message_parcel.h"
 #include "permission_utils.h"
+#include <sys/stat.h>
 
 namespace OHOS {
 namespace Security {
 namespace CodeSign {
+namespace {
+struct FdGuard {
+    int fd;
+    explicit FdGuard(int fd) : fd(fd) {}
+    ~FdGuard()
+    {
+        if (fd >= 0) {
+            close(fd);
+        }
+    }
+    FdGuard(const FdGuard&) = delete;
+    FdGuard& operator=(const FdGuard&) = delete;
+};
+} // namespace
+
 LocalCodeSignStub::LocalCodeSignStub()
 {
 }
@@ -49,6 +65,8 @@ int32_t LocalCodeSignStub::OnRemoteRequest(uint32_t code,
             return InitLocalCertificateInner(data, reply);
         case static_cast<uint32_t>(LocalCodeSignInterfaceCode::SIGN_LOCAL_CODE):
             return SignLocalCodeInner(data, reply);
+        case static_cast<uint32_t>(LocalCodeSignInterfaceCode::SIGN_LOCAL_CODE_BY_FD):
+            return SignLocalCodeByFdInner(data, reply);
         default:
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
@@ -103,6 +121,45 @@ int32_t LocalCodeSignStub::SignLocalCodeInner(MessageParcel &data, MessageParcel
     StartTrace(HITRACE_TAG_ACCESS_CONTROL, CODE_SIGN_ENABLE_START);
     ByteBuffer signature;
     int32_t result = SignLocalCode(ownerID, filePath, signature);
+    FinishTrace(HITRACE_TAG_ACCESS_CONTROL);
+    if (!reply.WriteInt32(result)) {
+        return CS_ERR_IPC_WRITE_DATA;
+    }
+    if (result != CS_SUCCESS) {
+        return result;
+    }
+    if (!reply.WriteUint32(signature.GetSize())) {
+        return CS_ERR_IPC_WRITE_DATA;
+    }
+    if (!reply.WriteBuffer(signature.GetBuffer(), signature.GetSize())) {
+        return CS_ERR_IPC_WRITE_DATA;
+    }
+    return CS_SUCCESS;
+}
+
+int32_t LocalCodeSignStub::SignLocalCodeByFdInner(MessageParcel &data, MessageParcel &reply)
+{
+    if (!PermissionUtils::IsValidCallerOfLocalCodeSign()) {
+        (void)reply.WriteInt32(CS_ERR_NO_PERMISSION);
+        return CS_ERR_NO_PERMISSION;
+    }
+    int fd = data.ReadFileDescriptor();
+    if (fd < 0) {
+        LOG_ERROR("Read file descriptor failed.");
+        (void)reply.WriteInt32(CS_ERR_IPC_READ_DATA);
+        return CS_ERR_IPC_READ_DATA;
+    }
+    FdGuard fdGuard(fd);
+    struct stat st;
+    if (fstat(fd, &st) != 0) {
+        LOG_ERROR("Invalid fd=%{public}d, fstat failed", fd);
+        (void)reply.WriteInt32(CS_ERR_INVALID_FD);
+        return CS_ERR_INVALID_FD;
+    }
+    std::string ownerID = data.ReadString();
+    StartTrace(HITRACE_TAG_ACCESS_CONTROL, CODE_SIGN_ENABLE_START);
+    ByteBuffer signature;
+    int32_t result = SignLocalCodeByFd(ownerID, fd, signature);
     FinishTrace(HITRACE_TAG_ACCESS_CONTROL);
     if (!reply.WriteInt32(result)) {
         return CS_ERR_IPC_WRITE_DATA;

@@ -31,6 +31,7 @@ public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Security.LocalCodeSignInterface");
     virtual int32_t InitLocalCertificate(const ByteBuffer &challenge, ByteBuffer &cert) = 0;
     virtual int32_t SignLocalCode(const std::string &ownerID, const std::string &filePath, ByteBuffer &signature) = 0;
+    virtual int32_t SignLocalCodeByFd(const std::string &ownerID, int32_t fd, ByteBuffer &signature) = 0;
 };
 }
 }

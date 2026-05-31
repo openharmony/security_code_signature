@@ -181,6 +181,23 @@ int32_t LocalCodeSignClient::SignLocalCode(const std::string &ownerID, const std
     return CS_SUCCESS;
 }
 
+int32_t LocalCodeSignClient::SignLocalCodeByFd(const std::string &ownerID, int32_t fd, ByteBuffer &signature)
+{
+    LOG_DEBUG("SignLocalCodeByFd called");
+    CheckLocalCodeSignProxy();
+    std::lock_guard<std::mutex> lock(proxyMutex_);
+    if (localCodeSignProxy_ == nullptr) {
+        return CS_ERR_SA_GET_PROXY;
+    }
+    int32_t ret = localCodeSignProxy_->SignLocalCodeByFd(ownerID, fd, signature);
+    if (ret != CS_SUCCESS) {
+        LOG_ERROR("SignLocalCodeByFd err, error code = %{public}d", ret);
+        return ret;
+    }
+    LOG_INFO("SignLocalCodeByFd successfully");
+    return CS_SUCCESS;
+}
+
 void LocalCodeSignClient::OnRemoteLocalCodeSignSvrDied(const wptr<IRemoteObject> &remote)
 {
     std::lock_guard<std::mutex> lock(proxyMutex_);
