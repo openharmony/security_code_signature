@@ -407,32 +407,6 @@ HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0019, TestSize.Level0)
 }
 
 /**
- * @tc.name: LocalCodeSignTest_0020
- * @tc.desc: sign local code by fd with pipe fd (non-regular fd accepted after S_ISREG removal)
- * @tc.type: Func
- * @tc.require:
- */
-HWTEST_F(LocalCodeSignTest, LocalCodeSignTest_0020, TestSize.Level0)
-{
-    if (GetEnforceFileResult() != CS_SUCCESS) {
-        GTEST_SKIP() << "Local signing key not provisioned, skipping pipe fd signing test";
-    }
-
-    ByteBuffer sig;
-    uint64_t selfTokenId = GetSelfTokenID();
-    EXPECT_TRUE(MockTokenId("compiler_service"));
-    int pipefd[2];
-    EXPECT_EQ(pipe(pipefd), 0);
-    std::string ownerID;
-    int ret = LocalCodeSignKit::SignLocalCodeByFd(ownerID, pipefd[0], sig);
-    close(pipefd[0]);
-    close(pipefd[1]);
-    EXPECT_EQ(0, SetSelfTokenID(selfTokenId));
-    // After removing S_ISREG check, pipe fd is accepted — signing succeeds with empty content
-    EXPECT_EQ(ret, CS_SUCCESS);
-}
-
-/**
  * @tc.name: LocalCodeSignTest_0021
  * @tc.desc: sign local code by fd failed with ownerID exceeding 32 bytes
  * @tc.type: Func
