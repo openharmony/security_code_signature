@@ -178,7 +178,10 @@ int32_t CodeSignEnableMultiTask::CheckOwnerId(const std::string &path, const std
 
     int32_t ret;
     ByteBuffer sigBuffer;
-    sigBuffer.CopyFrom(sigPtr, sigSize);
+    if (!sigBuffer.CopyFrom(sigPtr, sigSize)) {
+        LOG_ERROR("Copy signature data failed for ownerId check");
+        return CS_ERR_MEMORY;
+    }
     std::string retId;
     ret = SignerInfo::ParseOwnerIdFromSignature(sigBuffer, retId);
     if (ret != CS_SUCCESS) {
@@ -201,7 +204,10 @@ int32_t CodeSignEnableMultiTask::CheckPluginId(const std::string &path, const st
 
     int32_t ret;
     ByteBuffer sigBuffer;
-    sigBuffer.CopyFrom(sigPtr, sigSize);
+    if (!sigBuffer.CopyFrom(sigPtr, sigSize)) {
+        LOG_ERROR("Copy signature data failed for pluginId check");
+        return CS_ERR_MEMORY;
+    }
     std::string retId;
     ret = SignerInfo::ParsePluginIdFromSignature(sigBuffer, retId);
     if (ret != CS_SUCCESS) {

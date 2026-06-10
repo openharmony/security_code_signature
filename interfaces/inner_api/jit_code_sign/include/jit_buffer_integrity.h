@@ -171,7 +171,7 @@ static inline int32_t PatchData(JitCodeSigner *signer, void *address,
  */
 static inline int32_t ResetJitCode(void *jitMemory, int size)
 {
-    if (jitMemory == nullptr) {
+    if (jitMemory == nullptr || size <= 0) {
         return CS_ERR_JIT_MEMORY;
     }
 #ifndef JIT_FORT_DISABLE
@@ -201,7 +201,7 @@ static inline int32_t ResetJitCode(void *jitMemory, int size)
 static inline int32_t CopyToJitCode(
     JitCodeSigner *signer, void *jitMemory, void *tmpBuffer, int size)
 {
-    if (jitMemory == nullptr) {
+    if (jitMemory == nullptr || size <= 0) {
         return CS_ERR_JIT_MEMORY;
     }
     if (tmpBuffer == nullptr) {

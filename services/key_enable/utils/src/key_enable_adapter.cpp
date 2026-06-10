@@ -28,6 +28,9 @@ constexpr int32_t MAX_RETRY_FOR_LOCAL_KEY = 120; // about 1 min
 
 int32_t InitLocalCertificate(uint8_t *certData, uint32_t *certSize)
 {
+    if (certData == nullptr || certSize == nullptr) {
+        return CS_ERR_MEMORY;
+    }
     ByteBuffer cert;
     int32_t ret = LocalCodeSignKit::InitLocalCertificate(cert);
     int32_t retryCount = MAX_RETRY_FOR_LOCAL_KEY;
