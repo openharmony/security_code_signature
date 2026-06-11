@@ -24,6 +24,8 @@ ohos_static_library("libcode_sign_attr_utils") {
     defines += [ "SUPPORT_APP_ALLOW_LIST" ]
   }
 
+  branch_protector_ret = "pac_ret"
+
   sources = [
     "src/code_sign_attr_utils.c",
     "src/ownerid_utils.cpp",
