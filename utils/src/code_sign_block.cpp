@@ -119,11 +119,11 @@ int32_t CodeSignBlock::GetOneFileAndCodeSignInfo(std::string &targetFile,
     arg.sig_size = signInfo->signSize;
     arg.sig_ptr = reinterpret_cast<uintptr_t>(signInfo->signature);
     arg.data_size = signInfo->dataSize;
-    if (!signInfo->flags) {
-        return CS_SUCCESS;
-    }
     if (flag & IS_LOCAL_HSP_PLUGIN) {
         arg.flags |= BINARY_CERT_FLAGS;
+    }
+    if (!signInfo->flags) {
+        return CS_SUCCESS;
     }
 
     uint32_t extensionCount = 0;
