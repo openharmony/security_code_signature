@@ -19,6 +19,7 @@
 #ifndef LOG_DOMAIN
 #define LOG_DOMAIN 0xD005A06
 #endif
+
 #define FDSAN_MARK(fd) fdsan_exchange_owner_tag(fd, 0, LOG_DOMAIN)
 #define FDSAN_CLOSE(fd) fdsan_close_with_tag(fd, LOG_DOMAIN)
 
