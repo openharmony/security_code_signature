@@ -32,7 +32,6 @@
         "hitrace",
         "hisysevent",
         "ability_base",
-        "bounds_checking_function",
         "c_utils",
         "ipc",
         "samgr",
@@ -50,9 +49,9 @@
         "bounds_checking_function",
         "rust_rust-openssl",
         "selinux",
-        "rust_cxx",
         "elfio",
-        "bundle_framework"
+        "bundle_framework",
+        "rust_cxx"
       ],
       "third_party": []
     },

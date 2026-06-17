@@ -35,8 +35,8 @@ ohos_rust_executable("key_enable") {
     ]
     external_deps += [
       "c_utils:utils_rust",
-      "rust_rust-openssl:lib",
       "rust_cxx:lib",
+      "rust_rust-openssl:lib",
     ]
   }
   rustenv = []
@@ -71,8 +71,8 @@ ohos_rust_shared_ffi("key_enable_lib") {
     ]
     external_deps += [
       "c_utils:utils_rust",
-      "rust_rust-openssl:lib",
       "rust_cxx:lib",
+      "rust_rust-openssl:lib",
     ]
   }
   rustenv = []
