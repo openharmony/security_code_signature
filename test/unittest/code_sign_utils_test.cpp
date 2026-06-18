@@ -778,7 +778,8 @@ HWTEST_F(CodeSignUtilsTest, CodeSignUtilsTest_0030, TestSize.Level0)
     struct {
         ExtensionHeader header;
         PageInfoExtension pageInfo;
-    } block;
+        uint8_t data[50];
+    } block = {};
     block.header.type = CodeSignBlock::CSB_EXTENSION_TYPE_PAGE_INFO;
     block.header.size = sizeof(PageInfoExtension) + 50;
     block.pageInfo.sign_size = 30;

@@ -55,12 +55,14 @@ int32_t CodeSignBlock::ProcessExtension(uintptr_t &extensionAddr,
     auto extensionHeader = reinterpret_cast<const ExtensionHeader *>(extensionAddr);
     extensionAddr = extensionAddr + sizeof(ExtensionHeader);
     if (extensionAddr > blockAddrEnd) {
-        LOG_ERROR("Extension header size exceeds block boundary. ExtensionHeader size: %{public}zu bytes",
-            sizeof(ExtensionHeader));
+        LOG_ERROR("ExtensionHeader size exceeds block boundary. size: %{public}zu bytes", sizeof(ExtensionHeader));
         return CS_ERR_INVALID_EXTENSION_OFFSET;
     }
-    LOG_DEBUG("extensionHeader->type:%{public}d, extensionHeader->size:%{public}d", extensionHeader->type,
-        extensionHeader->size);
+    LOG_DEBUG("ExtensionHeader type:%{public}d, size:%{public}d", extensionHeader->type, extensionHeader->size);
+    if (extensionHeader->size > blockAddrEnd - extensionAddr) {
+        LOG_ERROR("Extension size exceeds block boundary. size: %{public}d", extensionHeader->size);
+        return CS_ERR_INVALID_EXTENSION_OFFSET;
+    }
     switch (extensionHeader->type) {
         case CSB_EXTENSION_TYPE_MERKLE_TREE: {
             auto merkleExtension = reinterpret_cast<const MerkleTreeExtension *>(extensionAddr);
