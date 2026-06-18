@@ -58,12 +58,12 @@ The code signature component provides the following functions:
 
 ### Usage Guidelines
 
-[hapsigner User Guide](https://gitee.com/openharmony/developtools_hapsigner/blob/master/README.md)
+[hapsigner User Guide](https://gitcode.com/openharmony/developtools_hapsigner/blob/master/README.md)
 
 ## Repositories Involved
 
-**[developtools\_hapsigner](https://gitee.com/openharmony/developtools_hapsigner/blob/master/README.md)**
+**[developtools\_hapsigner](https://gitcode.com/openharmony/developtools_hapsigner/blob/master/README.md)**
 
-**[kernel_linux_common_modules](https://gitee.com/openharmony/kernel_linux_common_modules)**
+**[kernel_linux_common_modules](https://gitcode.com/openharmony/kernel_linux_common_modules)**
 
-**[third\_party\_fsverity-utils](https://gitee.com/openharmony/third_party_fsverity-utils/blob/master/README.md)**
+**[third\_party\_fsverity-utils](https://gitcode.com/openharmony/third_party_fsverity-utils/blob/master/README.md)**
