@@ -50,11 +50,19 @@ void FsverityUtilsHelper::Init()
 
 void FsverityUtilsHelper::ErrorMsgLogCallback(const char *msg)
 {
+    if (msg == nullptr) {
+        LOG_ERROR("fsverity_utils error callback received null message");
+        return;
+    }
     LOG_ERROR("fsverity_utils error = %{public}s", msg);
 }
 
 bool FsverityUtilsHelper::FormatDigest(libfsverity_digest *digest, uint8_t *buffer)
 {
+    if (digest == nullptr || buffer == nullptr) {
+        LOG_ERROR("Invalid parameter, digest or buffer is null.");
+        return false;
+    }
     struct fsverity_formatted_digest *ret = reinterpret_cast<struct fsverity_formatted_digest *>(buffer);
     if (memcpy_s(ret->magic, FSVERITY_DIGEST_MAGIC_LENGTH, FSVERITY_DIGEST_MAGIC,
         FSVERITY_DIGEST_MAGIC_LENGTH) != EOK) {
@@ -115,8 +123,16 @@ bool FsverityUtilsHelper::ComputeDigestFromFd(int32_t fd, struct libfsverity_dig
 bool FsverityUtilsHelper::GenerateFormattedDigest(const char *path, ByteBuffer &digestBuffer)
 {
     LOG_INFO("GenerateFormattedDigest called.");
+    if (path == nullptr) {
+        LOG_ERROR("Invalid parameter, path is null.");
+        return false;
+    }
     struct libfsverity_digest *digest = nullptr;
     if (!ComputeDigest(path, &digest)) {
+        return false;
+    }
+    if (digest == nullptr) {
+        LOG_ERROR("ComputeDigest succeeded but digest is null.");
         return false;
     }
     uint32_t digestLen = sizeof(struct fsverity_formatted_digest) + digest->digest_size;
@@ -134,6 +150,10 @@ bool FsverityUtilsHelper::GenerateFormattedDigestFromFd(int32_t fd, ByteBuffer &
     LOG_INFO("GenerateFormattedDigestFromFd called, fd=%{public}d", fd);
     struct libfsverity_digest *digest = nullptr;
     if (!ComputeDigestFromFd(fd, &digest)) {
+        return false;
+    }
+    if (digest == nullptr) {
+        LOG_ERROR("ComputeDigestFromFd succeeded but digest is null.");
         return false;
     }
     uint32_t digestLen = sizeof(struct fsverity_formatted_digest) + digest->digest_size;
