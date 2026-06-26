@@ -56,6 +56,10 @@ private:
     public:
         bool Open(const char *path)
         {
+            if (path == nullptr) {
+                LOG_ERROR("Invalid parameter, path is null.");
+                return false;
+            }
             if (fd_ > 0) {
                 LOG_ERROR("File is already opened.");
                 return false;
@@ -91,6 +95,10 @@ private:
 
         bool GetFileSize(uint64_t *size)
         {
+            if (size == nullptr) {
+                LOG_ERROR("Invalid parameter, size is null.");
+                return false;
+            }
             struct stat st;
             if (fstat(fd_, &st) != 0) {
                 LOG_ERROR("Stat file failed, errno = <%{public}d, %{public}s>",
@@ -111,6 +119,9 @@ private:
 
         static int ReadFileCallback(void *f, void *buf, size_t count)
         {
+            if (f == nullptr || buf == nullptr) {
+                return CS_ERR_FILE_READ;
+            }
             FileReader *reader = static_cast<FileReader *>(f);
             return reader->ReadBytes(static_cast<uint8_t *>(buf), count);
         }
@@ -118,6 +129,9 @@ private:
     private:
         int ReadBytes(uint8_t *buf, size_t count)
         {
+            if (buf == nullptr) {
+                return CS_ERR_FILE_READ;
+            }
             if (fd_ <= 0) {
                 return CS_ERR_FILE_READ;
             }
