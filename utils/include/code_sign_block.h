@@ -141,7 +141,7 @@ public:
 private:
     int32_t ParseNativeLibSignInfo(const EntryMap &entryMap);
     int32_t ParseHapSignInfo(const std::string &path);
-    int32_t ParseCodeSignBlockBaseInfo(ReadBuffer codeSignBlock, uint32_t &blockSize);
+    int32_t ParseCodeSignBlockBaseInfo(uint32_t &blockSize);
     int32_t GetCodeSignBlockBuffer(const std::string &path, ReadBuffer &signBuffer, uint32_t &size, uint32_t flag = 0);
 
     static constexpr uint32_t CSB_HEADER_VERSION = 1;
@@ -244,6 +244,18 @@ private:
         return CS_SUCCESS;
     }
 
+    // Check if ptr + size is within [codeSignBlock_, codeSignBlock_ + codeSignSize_)
+    bool CheckPtrBounds(const void *ptr, size_t size) const
+    {
+        if (codeSignBlock_ == nullptr || codeSignSize_ == 0) {
+            return false;
+        }
+        auto ptrAddr = reinterpret_cast<uintptr_t>(ptr);
+        auto baseAddr = reinterpret_cast<uintptr_t>(codeSignBlock_);
+        auto endAddr = baseAddr + codeSignSize_;
+        return (ptrAddr >= baseAddr) && (ptrAddr <= endAddr) && (size <= (endAddr - ptrAddr));
+    }
+
     Verify::SignatureInfo signatureInfo_;
     const CodeSignBlockHeader *blockHeader_ = nullptr;
     const FsVerityInfo *fsVerityInfo_ = nullptr;
@@ -251,6 +263,8 @@ private:
     const NativeLibSignInfo *nativeLibSignInfo_ = nullptr;
     std::mutex signMapMutex_;
     SignMap signMap_;
+    ReadBuffer codeSignBlock_ = nullptr;
+    uint32_t codeSignSize_ = 0;
 };
 } // CodeSign namespace
 } // Security namespace

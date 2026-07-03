@@ -155,6 +155,7 @@ int32_t ElfCodeSignBlockV1::ParseSignData()
     }
     // parse merkle tree segment
     auto merkleTreeSeg = reinterpret_cast<const ElfMerkleTreeSegment *>(signBlockBuffer_.get() + off);
+    off += sizeof(ElfMerkleTreeSegment);
     if (merkleTreeSeg->type != CSB_MERKLE_TREE_TYPE) {
         return CS_ERR_MERKLE_TREE_TYPE;
     }
@@ -162,7 +163,7 @@ int32_t ElfCodeSignBlockV1::ParseSignData()
         return CS_ERR_MERKLE_TREE_SIZE;
     }
     // parse sign info segment
-    off += sizeof(ElfMerkleTreeSegment) + merkleTreeSeg->length;
+    off += merkleTreeSeg->length;
     if (off + sizeof(ElfSignInfoSegment) > signHeader_->blockSize) {
         return CS_ERR_SIGN_INFO_SIZE;
     }
@@ -173,14 +174,20 @@ int32_t ElfCodeSignBlockV1::ParseSignData()
     if (sizeof(uint32_t) * 2 + signInfo->length > signHeader_->blockSize - off) {
         return CS_ERR_SIGN_INFO_SIZE;
     }
+    if (signInfo->length < sizeof(ElfSignInfoSegment) - sizeof(uint32_t) * 2) {
+        return CS_ERR_SIGN_INFO_SIZE;
+    }
     if (signInfo->version != 1) {
         return CS_ERR_FSVERITY_VERSION;
     }
     if (signInfo->logBlockSize != CSB_FSVERITY_BLOCK_SIZE) {
         return CS_ERR_FSVERITY_BLOCK_SIZE;
     }
-    if (signInfo->signSize >= signInfo->length) {
+    if (signInfo->signSize > signInfo->length - sizeof(ElfSignInfoSegment) + sizeof(uint32_t) * 2) {
         return CS_ERR_SIGN_SIZE;
+    }
+    if (signInfo->saltSize > sizeof(signInfo->salt)) {
+        return CS_ERR_SALT_SIZE;
     }
     signInfoSeg_ = signInfo;
     return CS_SUCCESS;
