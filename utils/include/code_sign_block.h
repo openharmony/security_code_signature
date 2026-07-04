@@ -141,7 +141,7 @@ public:
 private:
     int32_t ParseNativeLibSignInfo(const EntryMap &entryMap);
     int32_t ParseHapSignInfo(const std::string &path);
-    int32_t ParseCodeSignBlockBaseInfo(uint32_t &blockSize);
+    int32_t ParseCodeSignBlockBaseInfo();
     int32_t GetCodeSignBlockBuffer(const std::string &path, ReadBuffer &signBuffer, uint32_t &size, uint32_t flag = 0);
 
     static constexpr uint32_t CSB_HEADER_VERSION = 1;
