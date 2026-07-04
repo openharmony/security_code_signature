@@ -101,12 +101,10 @@ int32_t ElfCodeSignBlock::CheckElfSignInfo(const uint64_t csBlockSize)
     if (signInfo_->type != CSB_FS_VERITY_DESCRIPTOR_TYPE) {
         return CS_ERR_SEGMENT_FSVERITY_TYPE;
     }
-    if (sizeof(uint32_t) * 2 + signInfo_->length > csBlockSize) {
-        LOG_ERROR("signInfo length is larger than cs block size");
+    if ((signInfo_->length < sizeof(ElfSignInfo) - sizeof(uint32_t) * 2) ||
+        (signInfo_->length > csBlockSize - sizeof(uint32_t) * 2)) {
+        LOG_ERROR("signInfo length is invalid");
         return CS_ERR_BLOCK_SIZE;
-    }
-    if (signInfo_->length < sizeof(ElfSignInfo) - sizeof(uint32_t) * 2) {
-        return CS_ERR_SIGN_INFO_SIZE;
     }
     if (signInfo_->version != 1) {
         return CS_ERR_FSVERITY_VERSION;
