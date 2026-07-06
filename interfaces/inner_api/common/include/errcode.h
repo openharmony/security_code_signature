@@ -117,6 +117,7 @@ enum SignBlockErrCode {
     CS_ERR_SIGN_INFO_OFFSET = -0x629,
     CS_ERR_MERKLE_TREE_TYPE = -0x630,
     CS_ERR_MERKLE_TREE_SIZE = -0x631,
+    CS_ERR_SALT_SIZE = -0x632,
 };
 
 enum JitCodeSignErrCode {

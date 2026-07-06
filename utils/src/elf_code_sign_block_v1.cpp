@@ -94,7 +94,7 @@ int32_t ElfCodeSignBlockV1::ReadFile(std::ifstream &fileStream, uintmax_t fileSi
 {
     // parse sign header
     fileStream.clear();
-    fileStream.seekg(-SIGN_BLOCK_HEADER_SIZE, std::ios::end);
+    fileStream.seekg(-static_cast<std::streamoff>(SIGN_BLOCK_HEADER_SIZE), std::ios::end);
     signHeaderBuffer_ = std::make_unique<uint8_t[]>(SIGN_BLOCK_HEADER_SIZE);
     fileStream.read(reinterpret_cast<char *>(signHeaderBuffer_.get()), SIGN_BLOCK_HEADER_SIZE);
     long readCount = fileStream.gcount();
@@ -119,8 +119,8 @@ int32_t ElfCodeSignBlockV1::ReadFile(std::ifstream &fileStream, uintmax_t fileSi
         return CS_ERR_BLOCK_SIZE;
     }
     fileStream.clear();
-    int len = SIGN_BLOCK_HEADER_SIZE + signHeader->blockSize;
-    fileStream.seekg(-len, std::ios::end);
+    uintmax_t len = static_cast<uintmax_t>(SIGN_BLOCK_HEADER_SIZE) + signHeader->blockSize;
+    fileStream.seekg(-static_cast<std::streamoff>(len), std::ios::end);
     signBlockBuffer_ = std::make_unique<uint8_t[]>(signHeader->blockSize);
     fileStream.read(reinterpret_cast<char *>(signBlockBuffer_.get()), signHeader->blockSize);
     readCount = fileStream.gcount();
@@ -132,10 +132,9 @@ int32_t ElfCodeSignBlockV1::ReadFile(std::ifstream &fileStream, uintmax_t fileSi
     return CS_SUCCESS;
 }
 
-int32_t ElfCodeSignBlockV1::ParseSignData()
+int32_t ElfCodeSignBlockV1::GetCsBlockHeader()
 {
     // parse block header
-    uint32_t off = 0;
     for (uint32_t i = 0; i < signHeader_->blockNum; i++) {
         uint32_t pos = i * sizeof(ElfBlockHeader);
         if (pos + sizeof(ElfBlockHeader) > signHeader_->blockSize) {
@@ -143,34 +142,49 @@ int32_t ElfCodeSignBlockV1::ParseSignData()
         }
         auto blockHeader = reinterpret_cast<const ElfBlockHeader *>(signBlockBuffer_.get() + pos);
         if (blockHeader->type == CSB_HEADER_TYPE) {
-            off = blockHeader->offset;
+            csBlockHeader_ = blockHeader;
             break;
         }
     }
-    if (off == 0 || off >= signHeader_->blockSize) {
+    if (csBlockHeader_ == nullptr || csBlockHeader_->offset == 0 ||
+        csBlockHeader_->offset >= signHeader_->blockSize ||
+        csBlockHeader_->size > signHeader_->blockSize - csBlockHeader_->offset) {
         return CS_ERR_SIGN_INFO_OFFSET;
     }
-    if (off + sizeof(ElfMerkleTreeSegment) > signHeader_->blockSize) {
+    return CS_SUCCESS;
+}
+
+int32_t ElfCodeSignBlockV1::ParseSignData()
+{
+    int32_t ret = GetCsBlockHeader();
+    if (ret != CS_SUCCESS) {
+        return ret;
+    }
+    uint32_t off = csBlockHeader_->offset;
+    uint32_t end = csBlockHeader_->offset + csBlockHeader_->size;
+    if (off + sizeof(ElfMerkleTreeSegment) > end) {
         return CS_ERR_MERKLE_TREE_SIZE;
     }
     // parse merkle tree segment
     auto merkleTreeSeg = reinterpret_cast<const ElfMerkleTreeSegment *>(signBlockBuffer_.get() + off);
+    off += sizeof(ElfMerkleTreeSegment);
     if (merkleTreeSeg->type != CSB_MERKLE_TREE_TYPE) {
         return CS_ERR_MERKLE_TREE_TYPE;
     }
-    if (merkleTreeSeg->length > (signHeader_->blockSize - off)) {
+    if (merkleTreeSeg->length > (end - off)) {
         return CS_ERR_MERKLE_TREE_SIZE;
     }
     // parse sign info segment
-    off += sizeof(ElfMerkleTreeSegment) + merkleTreeSeg->length;
-    if (off + sizeof(ElfSignInfoSegment) > signHeader_->blockSize) {
+    off += merkleTreeSeg->length;
+    if (off + sizeof(ElfSignInfoSegment) > end) {
         return CS_ERR_SIGN_INFO_SIZE;
     }
     auto signInfo = reinterpret_cast<const ElfSignInfoSegment *>(signBlockBuffer_.get() + off);
     if (signInfo->type != CSB_FS_VERITY_DESCRIPTOR_TYPE) {
         return CS_ERR_SEGMENT_FSVERITY_TYPE;
     }
-    if (sizeof(uint32_t) * 2 + signInfo->length > signHeader_->blockSize - off) {
+    if ((signInfo->length > end - off - sizeof(uint32_t) * 2) ||
+        (signInfo->length < sizeof(ElfSignInfoSegment) - sizeof(uint32_t) * 2)) {
         return CS_ERR_SIGN_INFO_SIZE;
     }
     if (signInfo->version != 1) {
@@ -179,8 +193,11 @@ int32_t ElfCodeSignBlockV1::ParseSignData()
     if (signInfo->logBlockSize != CSB_FSVERITY_BLOCK_SIZE) {
         return CS_ERR_FSVERITY_BLOCK_SIZE;
     }
-    if (signInfo->signSize >= signInfo->length) {
+    if (signInfo->signSize > signInfo->length - (sizeof(ElfSignInfoSegment) - sizeof(uint32_t) * 2)) {
         return CS_ERR_SIGN_SIZE;
+    }
+    if (signInfo->saltSize > sizeof(signInfo->salt)) {
+        return CS_ERR_SALT_SIZE;
     }
     signInfoSeg_ = signInfo;
     return CS_SUCCESS;

@@ -101,8 +101,9 @@ int32_t ElfCodeSignBlock::CheckElfSignInfo(const uint64_t csBlockSize)
     if (signInfo_->type != CSB_FS_VERITY_DESCRIPTOR_TYPE) {
         return CS_ERR_SEGMENT_FSVERITY_TYPE;
     }
-    if (signInfo_->length > csBlockSize) {
-        LOG_ERROR("signInfo length is larger than cs block size");
+    if ((signInfo_->length < sizeof(ElfSignInfo) - sizeof(uint32_t) * 2) ||
+        (signInfo_->length > csBlockSize - sizeof(uint32_t) * 2)) {
+        LOG_ERROR("signInfo length is invalid");
         return CS_ERR_BLOCK_SIZE;
     }
     if (signInfo_->version != 1) {
@@ -115,7 +116,15 @@ int32_t ElfCodeSignBlock::CheckElfSignInfo(const uint64_t csBlockSize)
         LOG_ERROR("csVersion is not equal to ELF_CS_VERSION");
         return CS_ERR_BLOCK_VERSION;
     }
-    if (signInfo_->signSize >= signInfo_->length || signInfo_->signSize == 0) {
+    if (signInfo_->saltSize > sizeof(signInfo_->salt)) {
+        LOG_ERROR("saltSize exceeds salt array size");
+        return CS_ERR_SALT_SIZE;
+    }
+    if (signInfo_->signSize == 0) {
+        return CS_ERR_SO_SIGN_SIZE;
+    }
+    if (signInfo_->signSize > signInfo_->length - (sizeof(ElfSignInfo) - sizeof(uint32_t) * 2)) {
+        LOG_ERROR("signSize exceeds signInfo length");
         return CS_ERR_SO_SIGN_SIZE;
     }
     return CS_SUCCESS;

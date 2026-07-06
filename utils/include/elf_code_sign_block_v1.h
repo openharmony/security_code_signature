@@ -90,17 +90,19 @@ private:
     static constexpr uint16_t CSB_HEADER_TYPE = 0x3;
     static constexpr uint32_t CSB_MERKLE_TREE_TYPE = 0x2;
     static constexpr uint32_t CSB_FS_VERITY_DESCRIPTOR_TYPE = 0x1;
-    static constexpr int SIGN_BLOCK_HEADER_SIZE = 32;
+    static constexpr uint32_t SIGN_BLOCK_HEADER_SIZE = 32;
     static constexpr uint32_t SIGN_BLOCK_NUM_MAX = 2;
     static constexpr uint32_t CSB_FSVERITY_BLOCK_SIZE = 12;
 
     int32_t ParseSignBlock(const std::string &realPath);
     int32_t ReadFile(std::ifstream &fileStream, uintmax_t fileSize);
+    int32_t GetCsBlockHeader();
     int32_t ParseSignData();
 
     std::unique_ptr<uint8_t[]> signHeaderBuffer_;
     std::unique_ptr<uint8_t[]> signBlockBuffer_;
     const ElfSignHeader *signHeader_ = nullptr;
+    const ElfBlockHeader *csBlockHeader_ = nullptr;
     const ElfSignInfoSegment *signInfoSeg_ = nullptr;
 };
 } // CodeSign namespace

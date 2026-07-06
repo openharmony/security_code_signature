@@ -65,6 +65,10 @@ int32_t CodeSignBlock::ProcessExtension(uintptr_t &extensionAddr,
     }
     switch (extensionHeader->type) {
         case CSB_EXTENSION_TYPE_MERKLE_TREE: {
+            if (extensionHeader->size < sizeof(MerkleTreeExtension)) {
+                LOG_ERROR("MerkleTreeExtension size too small: %{public}u", extensionHeader->size);
+                return CS_ERR_INVALID_EXTENSION_OFFSET;
+            }
             auto merkleExtension = reinterpret_cast<const MerkleTreeExtension *>(extensionAddr);
             arg.tree_offset = merkleExtension->treeOffset;
             arg.root_hash_ptr = reinterpret_cast<uintptr_t>(merkleExtension->rootHash);
@@ -72,6 +76,10 @@ int32_t CodeSignBlock::ProcessExtension(uintptr_t &extensionAddr,
             break;
         }
         case CSB_EXTENSION_TYPE_PAGE_INFO: {
+            if (extensionHeader->size < sizeof(PageInfoExtension)) {
+                LOG_ERROR("PageInfoExtension size too small: %{public}u", extensionHeader->size);
+                return CS_ERR_INVALID_PAGE_INFO_EXTENSION;
+            }
             auto pageInfoExtension = reinterpret_cast<const PageInfoExtension *>(extensionAddr);
             arg.sig_size = pageInfoExtension->sign_size;
             if (arg.sig_size > extensionHeader->size - sizeof(PageInfoExtension)) {
@@ -111,6 +119,14 @@ int32_t CodeSignBlock::GetOneFileAndCodeSignInfo(std::string &targetFile,
     }
 
     auto signInfo = reinterpret_cast<const SignInfo *>(signInfoAddr);
+    if (signInfo->saltSize > sizeof(signInfo->salt)) {
+        LOG_ERROR("saltSize exceeds salt array size");
+        return CS_ERR_SALT_SIZE;
+    }
+    if (!CheckPtrBounds(reinterpret_cast<const void *>(signInfo->signature), signInfo->signSize)) {
+        LOG_ERROR("Signature data exceeds code sign block boundary");
+        return CS_ERR_INVALID_SIGNATURE;
+    }
     auto verity = GetFsVerityInfo();
     arg.version = 1;
     arg.cs_version = verity->version;
@@ -158,10 +174,20 @@ int32_t CodeSignBlock::ParseNativeLibSignInfo(const EntryMap &entryMap)
     }
 
     std::lock_guard<std::mutex> guard(signMapMutex_);
+    if (!CheckPtrBounds(soInfo, soInfo->length)) {
+        LOG_ERROR("NativeLibSignInfo length exceeds code sign block boundary");
+        return CS_ERR_SO_FILE_OFFSET;
+    }
     size_t signMapPreSize = signMap_.size();
     auto entryInfo = soInfo->info;
     auto entryInfoEnd = soInfo->info + soInfo->sectionNum;
     auto dataInfo = CONST_STATIC_CAST(char, soInfo);
+    // Check that the EntryInfo flexible array is within bounds
+    if (!CheckPtrBounds(soInfo->info, static_cast<size_t>(soInfo->sectionNum) * sizeof(EntryInfo))) {
+        LOG_ERROR("EntryInfo array exceeds code sign block boundary");
+        return CS_ERR_SO_FILE_OFFSET;
+    }
+
     do {
         if (entryInfo->fileNameOffset >= soInfo->length) {
             return CS_ERR_SO_FILE_OFFSET;
@@ -207,45 +233,77 @@ int32_t CodeSignBlock::ParseHapSignInfo(const std::string &path)
     return CS_SUCCESS;
 }
 
-int32_t CodeSignBlock::ParseCodeSignBlockBaseInfo(ReadBuffer codeSignBlock, uint32_t &blockSize)
+int32_t CodeSignBlock::ParseCodeSignBlockBaseInfo()
 {
-    int32_t ret = SetCodeSignBlockHeader(CONST_STATIC_CAST(CodeSignBlockHeader, codeSignBlock), blockSize);
+    if (codeSignBlock_ == nullptr || codeSignSize_ == 0) {
+        LOG_ERROR("Code sign block buffer is not set");
+        return CS_ERR_BLOCK_SIZE;
+    }
+    if (!CheckPtrBounds(codeSignBlock_, sizeof(CodeSignBlockHeader))) {
+        LOG_ERROR("CodeSignBlockHeader exceeds code sign block boundary");
+        return CS_ERR_BLOCK_SIZE;
+    }
+    int32_t ret = SetCodeSignBlockHeader(CONST_STATIC_CAST(CodeSignBlockHeader, codeSignBlock_), codeSignSize_);
     if (ret != CS_SUCCESS) {
         return ret;
     }
 
-    auto segHeader = CONST_STATIC_CAST(SegmentHeader, codeSignBlock + sizeof(CodeSignBlockHeader));
+    if (!CheckPtrBounds(codeSignBlock_ + sizeof(CodeSignBlockHeader), sizeof(SegmentHeader))) {
+        LOG_ERROR("SegmentHeader exceeds code sign block boundary");
+        return CS_ERR_SEGMENT_FSVERITY_OFFSET;
+    }
+    auto segHeader = CONST_STATIC_CAST(SegmentHeader, codeSignBlock_ + sizeof(CodeSignBlockHeader));
     if (segHeader->type != CSB_FSVERITY_INFO_SEG) {
         return CS_ERR_SEGMENT_FSVERITY_TYPE;
     }
-    if ((segHeader->offset >= blockSize) || (sizeof(FsVerityInfo) >= (blockSize - segHeader->offset))) {
+    if ((segHeader->offset >= codeSignSize_) || (sizeof(FsVerityInfo) >= (codeSignSize_ - segHeader->offset))) {
         return CS_ERR_SEGMENT_FSVERITY_OFFSET;
     }
-    ret = SetFsVerityInfo(CONST_STATIC_CAST(FsVerityInfo, codeSignBlock + segHeader->offset));
+    if (!CheckPtrBounds(codeSignBlock_ + segHeader->offset, sizeof(FsVerityInfo))) {
+        LOG_ERROR("FsVerityInfo exceeds code sign block boundary");
+        return CS_ERR_SEGMENT_FSVERITY_OFFSET;
+    }
+    ret = SetFsVerityInfo(CONST_STATIC_CAST(FsVerityInfo, codeSignBlock_ + segHeader->offset));
     if (ret != CS_SUCCESS) {
         return ret;
     }
     segHeader++;
 
+    if (!CheckPtrBounds(reinterpret_cast<const void *>(segHeader), sizeof(SegmentHeader))) {
+        LOG_ERROR("Second SegmentHeader exceeds code sign block boundary");
+        return CS_ERR_SEGMENT_HAP_OFFSET;
+    }
     if (segHeader->type != CSB_HAP_META_SEG) {
         return CS_ERR_SEGMENT_HAP_TYPE;
     }
-    if ((segHeader->offset >= blockSize) || (sizeof(HapSignInfo) >= (blockSize - segHeader->offset))) {
+    if ((segHeader->offset >= codeSignSize_) || (sizeof(HapSignInfo) >= (codeSignSize_ - segHeader->offset))) {
         return CS_ERR_SEGMENT_HAP_OFFSET;
     }
-    ret = SetHapSignInfo(CONST_STATIC_CAST(HapSignInfo, codeSignBlock + segHeader->offset));
+    if (!CheckPtrBounds(codeSignBlock_ + segHeader->offset, sizeof(HapSignInfo))) {
+        LOG_ERROR("HapSignInfo exceeds code sign block boundary");
+        return CS_ERR_SEGMENT_HAP_OFFSET;
+    }
+    ret = SetHapSignInfo(CONST_STATIC_CAST(HapSignInfo, codeSignBlock_ + segHeader->offset));
     if (ret != CS_SUCCESS) {
         return ret;
     }
     segHeader++;
 
+    if (!CheckPtrBounds(reinterpret_cast<const void *>(segHeader), sizeof(SegmentHeader))) {
+        LOG_ERROR("Third SegmentHeader exceeds code sign block boundary");
+        return CS_ERR_SEGMENT_SO_OFFSET;
+    }
     if (segHeader->type != CSB_NATIVE_LIB_INFO_SEG) {
         return CS_ERR_SEGMENT_SO_TYPE;
     }
-    if ((segHeader->offset >= blockSize) || (sizeof(NativeLibSignInfo) > (blockSize - segHeader->offset))) {
+    if ((segHeader->offset >= codeSignSize_) || (sizeof(NativeLibSignInfo) > (codeSignSize_ - segHeader->offset))) {
         return CS_ERR_SEGMENT_SO_OFFSET;
     }
-    return SetNativeLibSignInfo(CONST_STATIC_CAST(NativeLibSignInfo, codeSignBlock + segHeader->offset));
+    if (!CheckPtrBounds(codeSignBlock_ + segHeader->offset, sizeof(NativeLibSignInfo))) {
+        LOG_ERROR("NativeLibSignInfo exceeds code sign block boundary");
+        return CS_ERR_SEGMENT_SO_OFFSET;
+    }
+    return SetNativeLibSignInfo(CONST_STATIC_CAST(NativeLibSignInfo, codeSignBlock_ + segHeader->offset));
 }
 
 int32_t CodeSignBlock::GetCodeSignBlockBuffer(const std::string &path, ReadBuffer &signBuffer, uint32_t &size,
@@ -319,7 +377,10 @@ int32_t CodeSignBlock::ParseCodeSignBlock(const std::string &realPath,
         return ret;
     }
 
-    ret = ParseCodeSignBlockBaseInfo(codeSignBlock, codeSignSize);
+    // Store as class variables for bounds checking across methods
+    codeSignBlock_ = codeSignBlock;
+    codeSignSize_ = codeSignSize;
+    ret = ParseCodeSignBlockBaseInfo();
     if (ret != CS_SUCCESS) {
         return ret;
     }
