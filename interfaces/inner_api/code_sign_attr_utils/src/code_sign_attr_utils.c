@@ -176,9 +176,7 @@ int InitXpmWithParam(const struct XpmInitParam *initParam)
     }
 
     // enable jitfort
-    if (initParam->enableJitFort != 0) {
-        (void)XpmIoctl(fd, XPM_SET_JITFORT_ENABLE, NULL);
-    }
+    (void)XpmIoctl(fd, XPM_SET_JITFORT_ENABLE, NULL);
 
     // close /dev/xpm
     FDSAN_CLOSE(fd);
