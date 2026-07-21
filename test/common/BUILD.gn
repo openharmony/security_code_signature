@@ -51,6 +51,7 @@ ohos_source_set("code_sign_test_common_source_set") {
     "access_token:libaccesstoken_sdk",
     "access_token:libtokenid_sdk",
     "access_token:libtokensetproc_shared",
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",

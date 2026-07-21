@@ -74,6 +74,7 @@ ohos_shared_library("libcode_sign_utils") {
   external_deps = [
     "ability_base:extractortool",
     "appverify:libhapverify",
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
