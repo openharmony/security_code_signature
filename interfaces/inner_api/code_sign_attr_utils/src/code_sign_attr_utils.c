@@ -45,35 +45,30 @@ struct XpmOwnerIdParam {
     enum XPMDistributionEnum distributionType;
 };
 
+static const struct {
+    const char *str;
+    enum XPMDistributionEnum value;
+} DISTRIBUTION_TYPE_MAP[] = {
+    { XPM_DISTRIBUTION_STR_APP_GALLERY,       XPM_DISTRIBUTION_APP_GALLERY },
+    { XPM_DISTRIBUTION_STR_OS_INTEGRATION,    XPM_DISTRIBUTION_OS_INTEGRATION },
+    { XPM_DISTRIBUTION_STR_INTERNALTESTING,   XPM_DISTRIBUTION_INTERNALTESTING },
+    { XPM_DISTRIBUTION_STR_CROWDTESTING,      XPM_DISTRIBUTION_CROWDTESTING },
+    { XPM_DISTRIBUTION_STR_ENTERPRISE,        XPM_DISTRIBUTION_ENTERPRISE },
+    { XPM_DISTRIBUTION_STR_ENTERPRISE_NORMAL, XPM_DISTRIBUTION_ENTERPRISE_NORMAL },
+    { XPM_DISTRIBUTION_STR_ENTERPRISE_MDM,    XPM_DISTRIBUTION_ENTERPRISE_MDM },
+    { XPM_DISTRIBUTION_STR_NONE,              XPM_DISTRIBUTION_DEFAULT },
+};
+
 static enum XPMDistributionEnum GetAppDistributionTypeEnum(const char *appDistributionType)
 {
     if (appDistributionType == NULL) {
         return XPM_DISTRIBUTION_DEFAULT;
     }
 
-    if (strcmp(appDistributionType, XPM_DISTRIBUTION_STR_APP_GALLERY) == 0) {
-        return XPM_DISTRIBUTION_APP_GALLERY;
-    }
-    if (strcmp(appDistributionType, XPM_DISTRIBUTION_STR_OS_INTEGRATION) == 0) {
-        return XPM_DISTRIBUTION_OS_INTEGRATION;
-    }
-    if (strcmp(appDistributionType, XPM_DISTRIBUTION_STR_INTERNALTESTING) == 0) {
-        return XPM_DISTRIBUTION_INTERNALTESTING;
-    }
-    if (strcmp(appDistributionType, XPM_DISTRIBUTION_STR_CROWDTESTING) == 0) {
-        return XPM_DISTRIBUTION_CROWDTESTING;
-    }
-    if (strcmp(appDistributionType, XPM_DISTRIBUTION_STR_ENTERPRISE) == 0) {
-        return XPM_DISTRIBUTION_ENTERPRISE;
-    }
-    if (strcmp(appDistributionType, XPM_DISTRIBUTION_STR_ENTERPRISE_NORMAL) == 0) {
-        return XPM_DISTRIBUTION_ENTERPRISE_NORMAL;
-    }
-    if (strcmp(appDistributionType, XPM_DISTRIBUTION_STR_ENTERPRISE_MDM) == 0) {
-        return XPM_DISTRIBUTION_ENTERPRISE_MDM;
-    }
-    if (strcmp(appDistributionType, XPM_DISTRIBUTION_STR_NONE) == 0) {
-        return XPM_DISTRIBUTION_DEFAULT;
+    for (size_t i = 0; i < sizeof(DISTRIBUTION_TYPE_MAP) / sizeof(DISTRIBUTION_TYPE_MAP[0]); i++) {
+        if (strcmp(appDistributionType, DISTRIBUTION_TYPE_MAP[i].str) == 0) {
+            return DISTRIBUTION_TYPE_MAP[i].value;
+        }
     }
     return XPM_DISTRIBUTION_DEFAULT;
 }
