@@ -80,7 +80,7 @@ ohos_shared_library("libcode_sign_utils") {
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
     "openssl:libcrypto_shared",
-    "zlib:libz",
+    "zlib:shared_libz",
   ]
   if (code_signature_support_binary_enable) {
     sources +=
