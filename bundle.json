@@ -51,7 +51,8 @@
         "selinux",
         "elfio",
         "bundle_framework",
-        "rust_cxx"
+        "rust_cxx",
+        "zlib"
       ],
       "third_party": []
     },
