@@ -15,9 +15,6 @@
   global:
     extern "C++" {
       *CodeSignUtils*;
-      *CodeSignBlock*;
-      *FsverityUtilsHelper*;
-      *PKCS7Generator*;
     };
     EnforceCodeSign*;
   local:
