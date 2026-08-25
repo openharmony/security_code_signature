@@ -63,6 +63,7 @@ ohos_rust_executable("key_enable") {
 
 ohos_rust_shared_ffi("key_enable_lib") {
   sources = [ "src/lib.rs" ]
+  version_script = "libkey_enable.versionscript"
   deps = common_deps
   external_deps = common_external_deps
   if (!ohos_indep_compiler_enable) {
