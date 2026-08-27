@@ -15,8 +15,6 @@
   global:
     extern "C++" {
       *LocalCodeSignKit*;
-      *LocalCodeSignLoadCallback*;
-      *LocalCodeSignClient*;
     };
   local:
     *;

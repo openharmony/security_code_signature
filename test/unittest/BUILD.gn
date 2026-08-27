@@ -62,6 +62,8 @@ ohos_unittest("code_sign_utils_unittest") {
   sources = [
     "code_sign_utils_test.cpp",
     "${code_signature_root_dir}/utils/src/file_helper.cpp",
+    "${code_signature_root_dir}/utils/src/code_sign_block.cpp",
+    "${code_signature_root_dir}/utils/src/elf_code_sign_block_v1.cpp",
   ]
 
   deps = [
@@ -84,10 +86,13 @@ ohos_unittest("code_sign_utils_unittest") {
   ]
 
   external_deps = [
+    "ability_base:extractortool",
     "appverify:libhapverify",
     "c_utils:utils",
     "elfio:elfio",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
   ]
 }
@@ -140,7 +145,12 @@ ohos_unittest("local_code_sign_unittest") {
   branch_protector_ret = "pac_ret"
   module_out_path = "code_signature/code_signature"
   resource_config_file = "resources/ohos_test.xml"
-  sources = [ "local_code_sign_test.cpp" ]
+  sources = [
+    "local_code_sign_test.cpp",
+    "${code_signature_root_dir}/interfaces/inner_api/local_code_sign/src/local_code_sign_client.cpp",
+    "${code_signature_root_dir}/interfaces/inner_api/local_code_sign/src/local_code_sign_load_callback.cpp",
+    "${code_signature_root_dir}/interfaces/inner_api/local_code_sign/src/local_code_sign_proxy.cpp",
+  ]
   deps = [
     "${code_signature_root_dir}/interfaces/inner_api/code_sign_utils:libcode_sign_utils",
     "${code_signature_root_dir}/interfaces/inner_api/local_code_sign:liblocal_code_sign_sdk",
@@ -161,6 +171,8 @@ ohos_unittest("local_code_sign_unittest") {
     "access_token:libtoken_setproc",
     "c_utils:utils",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "huks:libhukssdk",
     "ipc:ipc_core",
     "openssl:libcrypto_shared",
     "safwk:system_ability_fwk",
@@ -179,8 +191,10 @@ ohos_unittest("local_code_sign_utils_unittest") {
     "mock/src/hks_api.cpp",
     "mock/src/hks_api_mock_helper.cpp",
   ]
-  deps = [ "${code_signature_root_dir}/interfaces/inner_api/code_sign_utils:libcode_sign_utils" ]
-
+  deps = [
+    "${code_signature_root_dir}/interfaces/inner_api/code_sign_utils:libcode_sign_utils",
+    "${code_signature_root_dir}/utils:fsverity_sign_src_set",
+  ]
   include_dirs = [
     "mock/include",
     "utils/include",
@@ -214,8 +228,10 @@ ohos_unittest("local_code_sign_utils_mock_unittest") {
     "mock/src/hks_api_mock_helper.cpp",
     "mock/src/hks_api_mock_test.cpp",
   ]
-  deps = [ "${code_signature_root_dir}/interfaces/inner_api/code_sign_utils:libcode_sign_utils" ]
-
+  deps = [
+    "${code_signature_root_dir}/interfaces/inner_api/code_sign_utils:libcode_sign_utils",
+    "${code_signature_root_dir}/utils:fsverity_sign_src_set",
+  ]
   include_dirs = [
     "mock/include",
     "utils/include",
