@@ -88,6 +88,7 @@ ohos_unittest("code_sign_utils_unittest") {
   external_deps = [
     "ability_base:extractortool",
     "appverify:libhapverify",
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "elfio:elfio",
     "hilog:libhilog",
@@ -111,6 +112,7 @@ ohos_unittest("code_sign_attr_utils_unittest") {
   ]
 
   external_deps = [
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "hilog:libhilog",
   ]
@@ -130,6 +132,7 @@ ohos_unittest("code_sign_utils_in_c_unittest") {
   ]
 
   external_deps = [
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "hilog:libhilog",
   ]
@@ -169,6 +172,7 @@ ohos_unittest("local_code_sign_unittest") {
     "access_token:libaccesstoken_sdk",
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
@@ -203,6 +207,7 @@ ohos_unittest("local_code_sign_utils_unittest") {
 
   configs = [ "${code_signature_root_dir}:common_utils_config" ]
   external_deps = [
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "fsverity-utils:libfsverity_utils",
     "hilog:libhilog",
@@ -241,6 +246,7 @@ ohos_unittest("local_code_sign_utils_mock_unittest") {
 
   configs = [ "${code_signature_root_dir}:common_utils_config" ]
   external_deps = [
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "fsverity-utils:libfsverity_utils",
     "hilog:libhilog",
@@ -277,6 +283,7 @@ ohos_unittest("sign_and_enforce_unittest") {
     "access_token:libaccesstoken_sdk",
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
@@ -308,6 +315,7 @@ ohos_unittest("multi_thread_local_sign_unittest") {
     "access_token:libaccesstoken_sdk",
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
@@ -389,6 +397,7 @@ ohos_unittest("enable_verity_ioctl_unittest") {
     "${code_signature_root_dir}/interfaces/inner_api/code_sign_attr_utils:libcode_sign_attr_utils",
   ]
   external_deps = [
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "hilog:libhilog",
     "selinux:libselinux",
@@ -413,6 +422,7 @@ ohos_unittest("jit_code_sign_unittest") {
     "${code_signature_root_dir}/interfaces/inner_api/jit_code_sign:libjit_code_sign",
   ]
   external_deps = [
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "hilog:libhilog",
   ]
@@ -438,6 +448,7 @@ ohos_unittest("key_enable_utils_unittest") {
     "${code_signature_root_dir}/services/key_enable/utils:libkey_enable_utils",
   ]
   external_deps = [
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "hilog:libhilog",
     "init:libbegetutil",
@@ -470,6 +481,7 @@ ohos_unittest("cert_chain_verifier_unittest") {
     "access_token:libaccesstoken_sdk",
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
@@ -494,6 +506,7 @@ ohos_unittest("openssl_utils_unittest") {
     "${code_signature_root_dir}:common_public_config",
   ]
   external_deps = [
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "hilog:libhilog",
     "openssl:libcrypto_shared",
