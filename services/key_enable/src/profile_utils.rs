@@ -288,8 +288,8 @@ fn verify_signers(
     let stack_of_certs = Stack::<X509>::new()?;
     let signers_result = pkcs7.signers(&stack_of_certs, Pkcs7Flags::empty())?;
     for signer in signers_result {
-        let subject_name = format_x509name_to_string(signer.subject_name());
-        let issuer_name = format_x509name_to_string(signer.issuer_name());
+        let subject_name = format_x509name_to_string(signer.subject_name())?;
+        let issuer_name = format_x509name_to_string(signer.issuer_name())?;
         if !profile_signer.contains(&(&subject_name, &issuer_name)) {
             return Err("Verification failed.".into());
         }
@@ -297,7 +297,7 @@ fn verify_signers(
     Ok(())
 }
 
-fn format_x509name_to_string(name: &X509NameRef) -> String {
+fn format_x509name_to_string(name: &X509NameRef) -> Result<String, Box<dyn Error>> {
     let mut parts = Vec::new();
 
     for entry in name.entries() {
@@ -308,10 +308,15 @@ fn format_x509name_to_string(name: &X509NameRef) -> String {
             openssl::nid::Nid::ORGANIZATIONALUNITNAME => "OU",
             _ => continue,
         };
-        let value = entry.data().as_utf8().unwrap();
+        let value = match entry.data().as_utf8() {
+            Ok(v) => v,
+            Err(_) => {
+                return Err("Failed to decode X509 name entry as UTF-8".into());
+            }
+        };
         parts.push(format!("{}={}", tag, value));
     }
-    parts.join(", ")
+    Ok(parts.join(", "))
 }
 
 fn format_x509_fabricate_name(name: &X509NameRef) -> String {
@@ -409,7 +414,16 @@ pub fn add_profile_cert_path(
     root_cert: &PemCollection,
     cert_paths: &TrustCertPath,
 ) -> Result<(), ProfileError> {
-    let x509_store = root_cert.to_x509_store().unwrap();
+    let x509_store = match root_cert.to_x509_store() {
+        Ok(store) => {
+            info!(LOG_LABEL, "Successfully built trusted root certificate store for profile cert path");
+            store
+        },
+        Err(e) => {
+            error!(LOG_LABEL, "Failed to build trusted root certificate store for profile cert path: {}", @public(e));
+            return Err(ProfileError::AddCertPathError);
+        }
+    };
     if process_profile(false, &x509_store, cert_paths.get_profile_info().as_slice()).is_err() {
         return Err(ProfileError::AddCertPathError);
     }
@@ -987,8 +1001,20 @@ fn process_cert_data(cert_data: &[u8], root_store: &X509Store) -> Result<(String
         }
     };
 
-    let leaf_subject = format_x509name_to_string(leaf_cert.subject_name());
-    let leaf_issuer = format_x509name_to_string(leaf_cert.issuer_name());
+    let leaf_subject = match format_x509name_to_string(leaf_cert.subject_name()) {
+        Ok(s) => s,
+        Err(_) => {
+            error!(LOG_LABEL, "Failed to decode enterprise cert subject name");
+            return Err(EnterpriseCertError::InvalidCert as i32);
+        }
+    };
+    let leaf_issuer = match format_x509name_to_string(leaf_cert.issuer_name()) {
+        Ok(s) => s,
+        Err(_) => {
+            error!(LOG_LABEL, "Failed to decode enterprise cert issuer name");
+            return Err(EnterpriseCertError::InvalidCert as i32);
+        }
+    };
     info!(LOG_LABEL, "Leaf certificate - Subject: {}, Issuer: {}",
         @public(leaf_subject.clone()), @public(leaf_issuer.clone()));
     info!(LOG_LABEL, "Found {} intermediate CA certificate(s) in chain",

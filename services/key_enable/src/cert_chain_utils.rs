@@ -61,7 +61,7 @@ impl PemCollection {
         let x509_certs = self.to_x509()?;
         let mut store_builder = X509StoreBuilder::new()?;
         for cert in x509_certs {
-            store_builder.add_cert(cert).unwrap();
+            store_builder.add_cert(cert)?;
         }
         store_builder.set_flags(X509VerifyFlags::NO_CHECK_TIME)?;
         store_builder.set_purpose(X509PurposeId::ANY)?;

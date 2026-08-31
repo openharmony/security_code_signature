@@ -210,6 +210,7 @@ static bool ParseASN1Sequence(uint8_t *data, int size, const ByteBuffer &challen
             break;
         }
     }
+    sk_ASN1_TYPE_pop_free(types, ASN1_TYPE_free);
     return ret;
 }
 

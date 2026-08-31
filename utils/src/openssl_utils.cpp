@@ -87,9 +87,15 @@ STACK_OF(X509) *MakeStackOfCerts(const std::vector<ByteBuffer> &certChain)
 
     for (const ByteBuffer &cert: certChain) {
         X509 *tmp = LoadCertFromBuffer(cert.GetBuffer(), cert.GetSize());
-
-        if ((tmp == nullptr) || (!sk_X509_push(certs, tmp))) {
-            // including each cert in certs and stack of certs
+        if (tmp == nullptr) {
+            sk_X509_pop_free(certs, X509_free);
+            certs = nullptr;
+            ERR_LOG_WITH_OPEN_SSL_MSG("Load cert failed.");
+            break;
+        }
+        if (!sk_X509_push(certs, tmp)) {
+            X509_free(tmp);
+            tmp = nullptr;
             sk_X509_pop_free(certs, X509_free);
             certs = nullptr;
             ERR_LOG_WITH_OPEN_SSL_MSG("Push cert failed.");
