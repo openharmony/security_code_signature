@@ -91,7 +91,7 @@ int32_t CodeSignEnableMultiTask::ExecuteEnableCodeSignTask(const std::string &ow
     SortTaskData();
 
     LOG_INFO("Tasks num = %{public}zu", enableData_.size());
-    int32_t taskRet = CS_SUCCESS;
+    auto taskRet = std::make_shared<int32_t>(CS_SUCCESS);
     for (uint32_t i = 0; i < enableData_.size(); i++) {
         LOG_DEBUG("index: %{public}d, name:%{public}s, %{public}lld",
             i, enableData_[i].first.c_str(), enableData_[i].second.data_size);
@@ -105,8 +105,8 @@ int32_t CodeSignEnableMultiTask::ExecuteEnableCodeSignTask(const std::string &ow
         LOG_ERROR("enable code sign timeout, finished tasks = %{public}u", taskCallBack_);
         return CS_ERR_ENABLE_TIMEOUT;
     }
-    if (taskRet != CS_SUCCESS) {
-        return taskRet;
+    if (*taskRet != CS_SUCCESS) {
+        return *taskRet;
     }
     int32_t ret = CS_SUCCESS;
     for (const auto &data : enableData_) {
@@ -128,15 +128,15 @@ void CodeSignEnableMultiTask::SortTaskData()
     sort(enableData_.begin(), enableData_.end(), compareFileDataSize);
 }
 
-void CodeSignEnableMultiTask::ExecuteEnableCodeSignTask(uint32_t &index, int32_t &taskRet,
+void CodeSignEnableMultiTask::ExecuteEnableCodeSignTask(uint32_t &index, std::shared_ptr<int32_t> taskRet,
     const std::string &ownerId, const std::string &pluginId,
     const std::string &path, CallbackFunc &func)
 {
-    auto enableCodeSignTask = [this, index, &ownerId, &pluginId, &path, &func, &taskRet]() {
+    auto enableCodeSignTask = [this, index, &ownerId, &pluginId, &path, &func, taskRet]() {
         LOG_DEBUG("ExecuteEnableCodeSignTask task called");
         {
             std::unique_lock<std::mutex> lock(cvLock_);
-            if (taskRet != CS_SUCCESS) {
+            if (*taskRet != CS_SUCCESS) {
                 this->taskCallBack_++;
                 if (this->taskCallBack_ == this->enableData_.size()) {
                     this->taskfinish_.notify_one();
@@ -158,8 +158,8 @@ void CodeSignEnableMultiTask::ExecuteEnableCodeSignTask(uint32_t &index, int32_t
         LOG_DEBUG("Task return info index: %{public}d, ret: %{public}d", index, ret);
 
         std::unique_lock<std::mutex> lock(cvLock_);
-        if (taskRet == CS_SUCCESS) {
-            taskRet = ret;
+        if (*taskRet == CS_SUCCESS) {
+            *taskRet = ret;
         }
         this->taskCallBack_++;
         if (this->taskCallBack_ == this->enableData_.size()) {
