@@ -15,6 +15,7 @@
 
 #include "permission_utils.h"
 
+#include "parse_atm_init_int64.h"
 #include "accesstoken_kit.h"
 #include "cs_hisysevent.h"
 #include "parameter.h"
@@ -54,7 +55,9 @@ bool PermissionUtils::HasATMInitilized()
 {
     char value[VALUE_MAX_LEN] = {0};
     int32_t ret = GetParameter(ACCESS_TOKEN_SERVICE_INIT_KEY, "", value, VALUE_MAX_LEN - 1);
-    if ((ret < 0) || (static_cast<uint64_t>(std::atoll(value)) != 0)) {
+    int64_t parsed = 0;
+    const bool parsedOk = ParseAtmInitInt64(std::string(value), parsed);
+    if ((ret < 0) || (parsedOk && static_cast<uint64_t>(parsed) != 0)) {
         g_isAtmInited = true;
         return true;
     }
