@@ -16,6 +16,7 @@
 #include "local_code_sign_service.h"
 
 #include "code_sign_attr_utils.h"
+#include "cs_hisysevent.h"
 #include "directory_ex.h"
 #include "fsverity_utils_helper.h"
 #include "ipc_skeleton.h"
@@ -55,11 +56,13 @@ void LocalCodeSignService::OnStart()
         }
         if (!Init()) {
             LOG_ERROR("Init LocalCodeSignService failed.");
+            ReportLoadSAError(CS_ERR_MEMORY);
             return;
         }
         bool ret = Publish(DelayedSingleton<LocalCodeSignService>::GetInstance().get());
         if (!ret) {
             LOG_ERROR("Publish service failed.");
+            ReportLoadSAError(CS_ERR_SA_LOAD_FAILED);
             return;
         }
         state_ = ServiceRunningState::STATE_RUNNING;

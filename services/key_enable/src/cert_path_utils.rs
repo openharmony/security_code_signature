@@ -234,6 +234,7 @@ impl TrustCertPath {
             Ok(v) => v,
             Err(e) => {
                 error!(LOG_LABEL, "Error JSON MODE_KEY from file {:?}", e);
+                cs_hisysevent::report_parse_profile_err("MODE_KEY", cs_hisysevent::HisyseventProfileError::ParseCertPathJson as i32);
                 return Err(());
             }
         };
@@ -242,6 +243,7 @@ impl TrustCertPath {
             Ok(v) => v,
             Err(e) => {
                 error!(LOG_LABEL, "Error JSON TYPE_KEY from file {:?}", e);
+                cs_hisysevent::report_parse_profile_err("TYPE_KEY", cs_hisysevent::HisyseventProfileError::ParseCertPathJson as i32);
                 return Err(());
             }
         };
@@ -250,6 +252,7 @@ impl TrustCertPath {
             Ok(v) => v,
             Err(e) => {
                 error!(LOG_LABEL, "Error JSON Path Type from file {:?}", e);
+                cs_hisysevent::report_parse_profile_err("PathType", cs_hisysevent::HisyseventProfileError::ParseCertPathJson as i32);
                 return Err(());
             }
         };
@@ -258,6 +261,7 @@ impl TrustCertPath {
             Ok(v) => v,
             Err(e) => {
                 error!(LOG_LABEL, "Error JSON SUBJECT_KEY from file {:?}", e);
+                cs_hisysevent::report_parse_profile_err("SUBJECT_KEY", cs_hisysevent::HisyseventProfileError::ParseCertPathJson as i32);
                 return Err(());
             }
         };
@@ -266,6 +270,7 @@ impl TrustCertPath {
             Ok(v) => v,
             Err(e) => {
                 error!(LOG_LABEL, "Error JSON ISSUER_KEY from file {:?}", e);
+                cs_hisysevent::report_parse_profile_err("ISSUER_KEY", cs_hisysevent::HisyseventProfileError::ParseCertPathJson as i32);
                 return Err(());
             }
         };
@@ -274,6 +279,7 @@ impl TrustCertPath {
             Ok(v) => v,
             Err(e) => {
                 error!(LOG_LABEL, "Error JSON MAX_CERT_PATH from file {:?}", e);
+                cs_hisysevent::report_parse_profile_err("MAX_CERT_PATH", cs_hisysevent::HisyseventProfileError::ParseCertPathJson as i32);
                 return Err(());
             }
         };
@@ -312,6 +318,7 @@ impl TrustCertPath {
                     LOG_LABEL,
                     "Error loading JSON from file {}: {:?}", file_path, e
                 );
+                cs_hisysevent::report_parse_profile_err(file_path, cs_hisysevent::HisyseventProfileError::ParseCertPathJson as i32);
                 return;
             }
         };
@@ -323,6 +330,7 @@ impl TrustCertPath {
                     LOG_LABEL,
                     "Cannot get preset key TRUST_PROFILE_PATH_KEY from file "
                 );
+                cs_hisysevent::report_parse_profile_err(file_path, cs_hisysevent::HisyseventProfileError::MissingPresetKey as i32);
                 return;
             }
         };
@@ -334,6 +342,7 @@ impl TrustCertPath {
                     LOG_LABEL,
                     "Cannot get preset key TRUST_CERT_PATH_KEY from file "
                 );
+                cs_hisysevent::report_parse_profile_err(file_path, cs_hisysevent::HisyseventProfileError::MissingPresetKey as i32);
                 return;
             }
         };
@@ -665,6 +674,7 @@ where
     info!(LOG_LABEL, "start {}", @public(op_name));
     if cert.subject.is_empty() || cert.issuer.is_empty() {
         error!(LOG_LABEL, "Empty subject or issuer");
+        cs_hisysevent::report_parse_profile_err(op_name, cs_hisysevent::HisyseventProfileError::EmptySubjectIssuer as i32);
         return Err(EnterpriseCertError::InvalidCert);
     }
 

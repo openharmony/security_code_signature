@@ -21,7 +21,7 @@ use super::cert_path_utils::{
     add_enterprise_resign_cert, remove_enterprise_resign_cert, EnterpriseCertError, OperateCertError
 };
 use super::cert_utils::{is_enterprise_device, get_trusted_certs};
-use super::cs_hisysevent::report_parse_profile_err;
+use super::cs_hisysevent::{report_parse_profile_err, HisyseventProfileError};
 use super::file_utils::{
     create_file_path, delete_file_path, file_exists, fmt_store_path,
     load_bytes_from_file, write_bytes_to_file, change_default_mode_file, change_default_mode_directory
@@ -75,21 +75,6 @@ const EMPTY_APP_ID: &str = "";
 pub enum ProfileError {
     /// add cert path error
     AddCertPathError,
-}
-/// profile error report to hisysevent
-pub enum HisyseventProfileError {
-    /// release platform code
-    VerifySigner = 1,
-    /// release authed code
-    ParsePkcs7 = 2,
-    /// release developer code
-    AddCertPath = 3,
-    /// add enterprise code
-    AddEnterpriseCert = 4,
-    /// remove enterprise code
-    RemoveEnterpriseCert = 5,
-    /// remove cert code
-    RemoveCertPath = 6,
 }
 
 extern "C" {
@@ -461,6 +446,7 @@ fn process_profile(
         let mut pkcs7_data = Vec::new();
         if load_bytes_from_file(&path, &mut pkcs7_data).is_err() {
             error!(LOG_LABEL, "load profile failed {}!", @public(path));
+            report_parse_profile_err(&path, HisyseventProfileError::LoadProfileFailed as i32);
             continue;
         }
         info!(LOG_LABEL, "load profile success {}!", @public(path));
@@ -468,6 +454,7 @@ fn process_profile(
             Ok(pk7) => pk7,
             Err(_) => {
                 error!(LOG_LABEL, "load profile to pkcs7 obj failed {}!", @public(path));
+                report_parse_profile_err(&path, HisyseventProfileError::LoadPkcs7Profile as i32);
                 continue;
             }
         };
@@ -510,6 +497,7 @@ fn process_enterprise_certs(root_cert: &PemCollection) -> Result<(), ProfileErro
         },
         Err(e) => {
             error!(LOG_LABEL, "Failed to build trusted root certificate store for enterprise certs: {}", @public(e));
+            report_parse_profile_err("enterprise_root_store", HisyseventProfileError::BuildRootStoreFailed as i32);
             return Err(ProfileError::AddCertPathError);
         }
     };
@@ -603,6 +591,7 @@ fn check_cert_has_oid(cert: &X509) -> bool {
         Ok(bytes) => bytes,
         Err(e) => {
             error!(LOG_LABEL, "Failed to convert cert to DER: {}", @public(e));
+            report_parse_profile_err("cert_to_der", HisyseventProfileError::ConvertCertToDer as i32);
             return false;
         }
     };
@@ -947,6 +936,7 @@ fn check_enterprise_resign_extension(cert: &X509) -> Result<(), EnterpriseCertEr
         Ok(bytes) => bytes,
         Err(e) => {
             error!(LOG_LABEL, "Failed to convert certificate to DER: {}", @public(e));
+            report_parse_profile_err("cert_to_der", HisyseventProfileError::ConvertCertToDer as i32);
             return Err(EnterpriseCertError::InvalidCert);
         }
     };
@@ -962,6 +952,7 @@ fn check_enterprise_resign_extension(cert: &X509) -> Result<(), EnterpriseCertEr
         Ok(())
     } else {
         error!(LOG_LABEL, "Enterprise resign extension not found in leaf certificate");
+        report_parse_profile_err("enterprise_resign_ext", HisyseventProfileError::EnterpriseResignExtMissing as i32);
         Err(EnterpriseCertError::InvalidCert)
     }
 }
@@ -975,6 +966,7 @@ fn process_cert_data(cert_data: &[u8], root_store: &X509Store) -> Result<(String
         },
         Err(e) => {
             error!(LOG_LABEL, "Failed to load certificate stack from PEM data: {}", @public(e));
+            report_parse_profile_err("pem_stack", HisyseventProfileError::ParsePemStack as i32);
             return Err(EnterpriseCertError::InvalidCert as i32);
         }
     };
@@ -982,6 +974,7 @@ fn process_cert_data(cert_data: &[u8], root_store: &X509Store) -> Result<(String
     // 2. Validate certificate chain is not empty
     if certs.is_empty() {
         error!(LOG_LABEL, "Certificate chain is empty after parsing PEM data");
+        report_parse_profile_err("empty_chain", HisyseventProfileError::EnterpriseCertInvalid as i32);
         return Err(EnterpriseCertError::InvalidCert as i32);
     }
 
@@ -989,6 +982,7 @@ fn process_cert_data(cert_data: &[u8], root_store: &X509Store) -> Result<(String
     if certs.len() != ENTERPRISE_RESIGN_CHAIN_LENGTH {
         error!(LOG_LABEL, "Enterprise resign cert chain must contain exactly 3 certificates, got {}",
             @public(certs.len()));
+        report_parse_profile_err("invalid_chain_length", HisyseventProfileError::EnterpriseCertInvalid as i32);
         return Err(EnterpriseCertError::InvalidCert as i32);
     }
 
@@ -997,6 +991,7 @@ fn process_cert_data(cert_data: &[u8], root_store: &X509Store) -> Result<(String
         Some((leaf, intermediates)) => (leaf, intermediates),
         None => {
             error!(LOG_LABEL, "Failed to identify leaf certificate in chain");
+            report_parse_profile_err("leaf_cert", HisyseventProfileError::EnterpriseCertInvalid as i32);
             return Err(EnterpriseCertError::InvalidCert as i32);
         }
     };
@@ -1061,6 +1056,7 @@ where
     info!(LOG_LABEL, "start {}", @public(op_name));
     if !is_enterprise_device() {
         error!(LOG_LABEL, "Not enterprise device, enterprise resign cert not allowed");
+        report_parse_profile_err("not_enterprise_device", HisyseventProfileError::NotEnterpriseDevice as i32);
         return Err(EnterpriseCertError::NotEnterpriseDevice as i32);
     }
     let (subject, issuer, profile_type, app_id) = process_cert_data(cert_data, root_store)?;

@@ -136,13 +136,13 @@ public:
     int32_t ParseCodeSignBlock(const std::string &realPath, const EntryMap &entryMap, FileType fileType,
         uint32_t flag = 0);
     int32_t GetOneFileAndCodeSignInfo(std::string &targetFile, struct code_sign_enable_arg &arg, uint32_t flag);
-    int32_t ProcessExtension(uintptr_t &extensionAddr, const uintptr_t blockAddrEnd, struct code_sign_enable_arg &arg);
 
 private:
     int32_t ParseNativeLibSignInfo(const EntryMap &entryMap);
     int32_t ParseHapSignInfo(const std::string &path);
     int32_t ParseCodeSignBlockBaseInfo();
-    int32_t GetCodeSignBlockBuffer(const std::string &path, ReadBuffer &signBuffer, uint32_t &size, uint32_t flag = 0);
+    int32_t GetCodeSignBlockBuffer(ReadBuffer &signBuffer, uint32_t &size, uint32_t flag = 0);
+    int32_t ProcessExtension(uintptr_t &extensionAddr, const uintptr_t blockAddrEnd, struct code_sign_enable_arg &arg);
 
     static constexpr uint32_t CSB_HEADER_VERSION = 1;
     static constexpr uint32_t CSB_HEADER_FLAG_MERKLE_TREE = 0x1;

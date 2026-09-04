@@ -215,6 +215,7 @@ int32_t CodeSignUtils::EnforceCodeSignForAppWithOwnerId(const std::string &path,
         static_cast<unsigned char*>(profileBuffer.GetBuffer()), true, info);
     if (ret != Verify::VERIFY_SUCCESS) {
         LOG_ERROR("Profile verify failed. ret = %{public}d", ret);
+        ReportEnableError(path, ret);
         return CS_ERR_PROFILE;
     }
 #else
@@ -222,6 +223,7 @@ int32_t CodeSignUtils::EnforceCodeSignForAppWithOwnerId(const std::string &path,
     int ret = Verify::ParseHapProfile(path, hapVerifyResult);
     if (ret != Verify::VERIFY_SUCCESS) {
         LOG_ERROR("ParseHapProfile ret = %{public}d", ret);
+        ReportEnableError(path, ret);
         return CS_ERR_PROFILE;
     }
     Verify::ProvisionInfo info = hapVerifyResult.GetProvisionInfo();
@@ -302,6 +304,7 @@ int32_t CodeSignUtils::EnableKeyInProfile(const std::string &bundleName, const B
         static_cast<unsigned char*>(profileBuffer.GetBuffer()), false, info);
     if (ret != Verify::VERIFY_SUCCESS) {
         LOG_ERROR("Profile verify failed. ret = %{public}d", ret);
+        ReportEnableError(bundleName, ret);
         return CS_ERR_PROFILE;
     }
 #endif

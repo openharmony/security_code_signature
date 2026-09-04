@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use super::cs_hisysevent;
 use hilog_rust::{error, hilog, info, HiLogLabel, LogType};
 use openssl::x509::store::{X509Store, X509StoreBuilder};
 use openssl::x509::verify::X509VerifyFlags;
@@ -85,6 +86,9 @@ impl PemCollection {
                     LOG_LABEL,
                     "Error loading JSON from file {}: {}", file_path, e
                 );
+                cs_hisysevent::report_add_key_err("trusted_certs",
+                    cs_hisysevent::HisyseventKeyError::LoadTrustedCerts as i32,
+                );
                 return;
             }
         };
@@ -126,6 +130,7 @@ pub fn verify_cert_chain(
 
     if !verified {
         error!(LOG_LABEL, "Certificate chain verification failed: {}", @public(store_ctx.error()));
+        cs_hisysevent::report_add_key_err("cert_chain_verify", cs_hisysevent::HisyseventKeyError::ChainVerifyFailed as i32);
         return Err(openssl::error::ErrorStack::get());
     }
 
