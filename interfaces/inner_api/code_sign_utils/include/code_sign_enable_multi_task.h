@@ -18,6 +18,7 @@
 
 #include <condition_variable>
 #include <cstdint>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <utility>
@@ -60,7 +61,7 @@ public:
 private:
     static int32_t IsFsVerityEnabled(const std::string &path);
     void SortTaskData();
-    void ExecuteEnableCodeSignTask(uint32_t &index, int32_t &taskRet, const std::string &ownerId,
+    void ExecuteEnableCodeSignTask(uint32_t &index, std::shared_ptr<int32_t> taskRet, const std::string &ownerId,
         const std::string &pluginId, const std::string &path, CallbackFunc &func);
     int32_t CheckOwnerId(const std::string &path, const std::string &ownerId,
         const uint8_t *sigPtr, uint32_t sigSize);

@@ -336,8 +336,7 @@ int32_t CodeSignBlock::GetCodeSignBlockBuffer(const std::string &path, ReadBuffe
         return CS_CODE_SIGN_NOT_EXISTS;
     }
 
-    size_t length = 0;
-    do {
+    for (size_t length = 0; length < blobSize;) {
         if (length + sizeof(PropertyBlobHeader) > blobSize) {
             LOG_ERROR("PropertyBlobHeader size or blobSize is invalid.");
             return CS_ERR_BLOCK_SIZE;
@@ -351,8 +350,11 @@ int32_t CodeSignBlock::GetCodeSignBlockBuffer(const std::string &path, ReadBuffe
             }
             break;
         }
+        if (blobHeader->size > blobSize - length - sizeof(PropertyBlobHeader)) {
+            return CS_ERR_BLOCK_SIZE;
+        }
         length += blobHeader->size + sizeof(PropertyBlobHeader);
-    } while (length < blobSize);
+    }
 
     if ((signBlockBuffer == nullptr) || !signBlockSize) {
         LOG_ERROR("Find code sign block failed. blobType = %{public}u", HAP_CODE_SIGN_BLOCK_ID);
