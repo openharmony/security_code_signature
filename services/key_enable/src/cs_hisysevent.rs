@@ -13,7 +13,15 @@
  * limitations under the License.
  */
 
+use hilog_rust::{error, hilog, HiLogLabel, LogType};
 use hisysevent::EventType;
+use std::ffi::{c_char, CString};
+
+const LOG_LABEL: HiLogLabel = HiLogLabel {
+    log_type: LogType::LogCore,
+    domain: 0xd005a06,
+    tag: "CODE_SIGN",
+};
 
 /// profile error report to hisysevent
 pub enum HisyseventProfileError {
@@ -85,27 +93,29 @@ pub enum HisyseventKeyError {
     ChainVerifyFailed = 14,
 }
 
-/// report add key err by hisysevent
-pub fn report_add_key_err(cert_type: &str, errcode: i32) {
+/// report add key err: log error message and report to hisysevent
+pub fn report_add_key_err(msg: &str, errcode: i32) {
+    error!(LOG_LABEL, "{}", @public(msg));
     hisysevent::write(
         "CODE_SIGN",
         "CS_ADD_KEY",
         EventType::Fault,
         &[
-            hisysevent::build_str_param!("STRING_SINGLE", cert_type),
+            hisysevent::build_str_param!("STRING_SINGLE", msg),
             hisysevent::build_number_param!("INT32_SINGLE", errcode),
         ],
     );
 }
 
-/// report parse local profile err by hisysevent
-pub fn report_parse_profile_err(profile_path: &str, errcode: i32) {
+/// report parse profile err: log error message and report to hisysevent
+pub fn report_parse_profile_err(msg: &str, errcode: i32) {
+    error!(LOG_LABEL, "{}", @public(msg));
     hisysevent::write(
         "CODE_SIGN",
         "CS_ERR_PROFILE",
         EventType::Security,
         &[
-            hisysevent::build_str_param!("STRING_SINGLE", profile_path),
+            hisysevent::build_str_param!("STRING_SINGLE", msg),
             hisysevent::build_number_param!("INT32_SINGLE", errcode),
         ],
     );

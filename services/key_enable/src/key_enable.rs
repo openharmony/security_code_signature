@@ -83,8 +83,10 @@ fn get_local_key() -> Option<Vec<u8>> {
             cert_data.set_len(cert_size);
             Some(cert_data)
         } else {
-            error!(LOG_LABEL, "InitLocalCertificate failed {}", @public(ret));
-            report_add_key_err("local_cert", HisyseventKeyError::InitLocalCert as i32);
+            report_add_key_err(
+                &format!("InitLocalCertificate failed {}", ret),
+                HisyseventKeyError::InitLocalCert as i32,
+            );
             None
         }
     }
@@ -103,8 +105,10 @@ fn parse_key_info(line: String) -> Option<KeySerial> {
         match KeySerial::from_str_radix(attrs[0], 16) {
             Ok(x) => Some(x),
             Err(error) => {
-                error!(LOG_LABEL, "Convert KeySerial failed: {}", error);
-                report_add_key_err("keyring_id", HisyseventKeyError::ParseKeySerial as i32);
+                report_add_key_err(
+                    &format!("Convert KeySerial failed: {}", error),
+                    HisyseventKeyError::ParseKeySerial as i32,
+                );
                 None
             }
         }
@@ -143,8 +147,7 @@ fn add_key_list(key_id: KeySerial, certs: Vec<Vec<u8>>, key_name_prefix: &str) -
 /// parse proc_key_file to get keyring id
 fn get_keyring_id() -> Result<KeySerial, ()> {
     let file = File::open(PROC_KEY_FILE_PATH).map_err(|_| {
-        error!(LOG_LABEL, "Open /proc/keys failed");
-        report_add_key_err("keyring_id", HisyseventKeyError::OpenProcKeys as i32);
+        report_add_key_err("Open /proc/keys failed", HisyseventKeyError::OpenProcKeys as i32);
     })?;
     let lines = BufReader::new(file).lines();
     for line in lines.flatten() {
@@ -154,8 +157,7 @@ fn get_keyring_id() -> Result<KeySerial, ()> {
             }
         }
     }
-    error!(LOG_LABEL, "Get .fs-verity keyring id failed.");
-    report_add_key_err("keyring_id", HisyseventKeyError::KeyringNotFound as i32);
+    report_add_key_err("Get .fs-verity keyring id failed", HisyseventKeyError::KeyringNotFound as i32);
     Err(())
 }
 
@@ -166,17 +168,16 @@ fn add_trusted_keys(key_id: KeySerial, root_cert: &PemCollection) {
         Ok(der) => der,
         Err(e) => {
             print_openssl_error_stack(e);
-            report_add_key_err("trusted_certs", HisyseventKeyError::OpensslToDer as i32);
+            report_add_key_err("Failed to convert trusted certs to DER", HisyseventKeyError::OpensslToDer as i32);
             Vec::new()
         }
     };
     if certs.is_empty() {
-        error!(LOG_LABEL, "empty trusted certs!");
-        report_add_key_err("trusted_certs", HisyseventKeyError::EmptyTrustedCerts as i32);
+        report_add_key_err("empty trusted certs", HisyseventKeyError::EmptyTrustedCerts as i32);
     }
     let ret = add_key_list(key_id, certs, CODE_SIGN_KEY_NAME_PREFIX);
     if ret < 0 {
-        report_add_key_err("code_sign_keys", ret);
+        report_add_key_err(&format!("Failed to add code sign keys, ret = {}", ret), ret);
     }
 }
 
@@ -194,13 +195,12 @@ fn activate_trusted_certs(root_cert: &PemCollection) {
         Ok(der) => der,
         Err(e) => {
             print_openssl_error_stack(e);
-            report_add_key_err("trusted_certs", HisyseventKeyError::OpensslToDer as i32);
+            report_add_key_err("Failed to convert trusted certs to DER", HisyseventKeyError::OpensslToDer as i32);
             Vec::new()
         }
     };
     if certs.is_empty() {
-        error!(LOG_LABEL, "empty trusted certs!");
-        report_add_key_err("trusted_certs", HisyseventKeyError::EmptyTrustedCerts as i32);
+        report_add_key_err("empty trusted certs", HisyseventKeyError::EmptyTrustedCerts as i32);
     }
     activate_cert_list(certs, CertStatus::BeforeUnlock, CertType::Other);
 }
@@ -233,8 +233,10 @@ fn add_profile_cert_path_thread(
             if check_and_add_cert_path(&root_cert, &cert_paths) {
                 break;
             } else if start_time.elapsed() >= Duration::from_secs(PROFILE_SEARCH_SLEEP_OUT_TIME) {
-                error!(LOG_LABEL, "Timeout while waiting for PROFILE_STORE_EL1.");
-                report_parse_profile_err("PROFILE_STORE_EL1 timeout", HisyseventProfileError::AddCertPath as i32);
+                report_parse_profile_err(
+                    "Timeout while waiting for PROFILE_STORE_EL1",
+                    HisyseventProfileError::AddCertPath as i32,
+                );
                 break;
             } else {
                 thread::sleep(Duration::from_millis(PROFILE_SEARCH_SLEEP_TIME));
@@ -250,11 +252,10 @@ fn add_local_key(key_id: KeySerial) -> Option<Vec<u8>> {
         info!(LOG_LABEL, "Add local keys");
         let ret = add_key(key_id, LOCAL_KEY_NAME, cert_data);
         if ret < 0 {
-            report_add_key_err("local_key", ret);
-            error!(LOG_LABEL, "Enable local key failed");
+            report_add_key_err(&format!("Enable local key failed, ret = {}", ret), ret);
         }
     } else {
-        report_add_key_err("local_key", HisyseventKeyError::LocalKeyEmpty as i32);
+        report_add_key_err("Get local key empty", HisyseventKeyError::LocalKeyEmpty as i32);
         info!(LOG_LABEL, "Get local key empty.");
     }
     local_key
@@ -265,8 +266,7 @@ fn restrict_keys(key_id: KeySerial) {
     info!(LOG_LABEL, "Restricting keys");
     unsafe {
         if KeyctlRestrictKeyring(key_id, ptr::null(), ptr::null()) < 0 {
-            error!(LOG_LABEL, "Restrict keyring err");
-            report_add_key_err("restrict_keys", HisyseventKeyError::RestrictKeys as i32);
+            report_add_key_err("Restrict keyring err", HisyseventKeyError::RestrictKeys as i32);
         }
     }
 }
@@ -283,8 +283,10 @@ fn enable_local_keys_after_user_unlock(key_id: KeySerial) {
     // Wait for boot completion before adding local key
     info!(LOG_LABEL, "Waiting for boot completion before adding local key...");
     if !unsafe { WaitForBootCompletion() } {
-        error!(LOG_LABEL, "WaitForBootCompletion timed out, proceeding with local key");
-        report_add_key_err("local_key", HisyseventKeyError::BootCompletionTimeout as i32);
+        report_add_key_err(
+            "WaitForBootCompletion timed out, proceeding with local key",
+            HisyseventKeyError::BootCompletionTimeout as i32,
+        );
     } else {
         info!(LOG_LABEL, "Boot completed, adding local key");
     }
@@ -292,8 +294,10 @@ fn enable_local_keys_after_user_unlock(key_id: KeySerial) {
     let local_key = add_local_key(key_id);
     restrict_keys(key_id);
     if !unsafe { CheckUserUnlock() } {
-        error!(LOG_LABEL, "User unlocked timeout, skipping local key activation");
-        report_add_key_err("local_key", HisyseventKeyError::LocalKeyTimeout as i32);
+        report_add_key_err(
+            "User unlocked timeout, skipping local key activation",
+            HisyseventKeyError::LocalKeyTimeout as i32,
+        );
         return;
     }
     // activate local code sign key
@@ -307,8 +311,7 @@ pub fn enable_all_keys() {
     let key_id = match get_keyring_id() {
         Ok(id) => id,
         Err(_) => {
-            error!(LOG_LABEL, "Failed to get keyring ID.");
-            report_add_key_err("keyring_id", HisyseventKeyError::GetKeyringId as i32);
+            report_add_key_err("Failed to get keyring ID", HisyseventKeyError::GetKeyringId as i32);
             return;
         },
     };
@@ -327,8 +330,10 @@ pub fn enable_all_keys() {
     enable_local_keys_after_user_unlock(key_id);
 
     if let Err(e) = cert_thread.join() {
-        error!(LOG_LABEL, "add cert path thread panicked: {:?}", e);
-        report_add_key_err("cert_path_thread", HisyseventKeyError::CertPathThreadPanic as i32);
+        report_add_key_err(
+            &format!("add cert path thread panicked: {:?}", e),
+            HisyseventKeyError::CertPathThreadPanic as i32,
+        );
     }
     info!(LOG_LABEL, "Fnished enable all keys.");
 }

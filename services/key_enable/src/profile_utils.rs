@@ -445,22 +445,28 @@ fn process_profile(
     for path in profiles_paths {
         let mut pkcs7_data = Vec::new();
         if load_bytes_from_file(&path, &mut pkcs7_data).is_err() {
-            error!(LOG_LABEL, "load profile failed {}!", @public(path));
-            report_parse_profile_err(&path, HisyseventProfileError::LoadProfileFailed as i32);
+            report_parse_profile_err(
+                &format!("load profile failed {}", path),
+                HisyseventProfileError::LoadProfileFailed as i32,
+            );
             continue;
         }
         info!(LOG_LABEL, "load profile success {}!", @public(path));
         let pkcs7 = match Pkcs7::from_der(&pkcs7_data) {
             Ok(pk7) => pk7,
             Err(_) => {
-                error!(LOG_LABEL, "load profile to pkcs7 obj failed {}!", @public(path));
-                report_parse_profile_err(&path, HisyseventProfileError::LoadPkcs7Profile as i32);
+                report_parse_profile_err(
+                    &format!("load profile to pkcs7 obj failed {}", path),
+                    HisyseventProfileError::LoadPkcs7Profile as i32,
+                );
                 continue;
             }
         };
         if verify_signers(&pkcs7, profile_info).is_err() {
-            error!(LOG_LABEL, "Invalid signer profile file {}", @public(path));
-            report_parse_profile_err(&path, HisyseventProfileError::VerifySigner as i32);
+            report_parse_profile_err(
+                &format!("Invalid signer profile file {}", path),
+                HisyseventProfileError::VerifySigner as i32,
+            );
             continue;
         }
         let check_udid = unsafe { !IsRdDevice() };
@@ -468,18 +474,18 @@ fn process_profile(
             match parse_pkcs7_data(&pkcs7, x509_store, Pkcs7Flags::empty(), check_udid) {
                 Ok(tuple) => tuple,
                 Err(e) => {
-                    error!(LOG_LABEL, "Error parsing PKCS7 data: {}, profile file {}",
-                        @public(e), @public(path));
-                    report_parse_profile_err(&path, HisyseventProfileError::ParsePkcs7 as i32);
+                    report_parse_profile_err(
+                        &format!("Error parsing PKCS7 data: {}, profile file {}", e, path),
+                        HisyseventProfileError::ParsePkcs7 as i32,
+                    );
                     continue;
                 }
             };
         if add_cert_path_info(subject, issuer, profile_type, app_id, DEFAULT_MAX_CERT_PATH_LEN).is_err() {
-            error!(
-                LOG_LABEL,
-                "Failed to add profile cert path info into ioctl for {}", @public(path)
+            report_parse_profile_err(
+                &format!("Failed to add profile cert path info into ioctl for {}", path),
+                HisyseventProfileError::AddCertPath as i32,
             );
-            report_parse_profile_err(&path, HisyseventProfileError::AddCertPath as i32);
             continue;
         }
     }
@@ -496,8 +502,10 @@ fn process_enterprise_certs(root_cert: &PemCollection) -> Result<(), ProfileErro
             store
         },
         Err(e) => {
-            error!(LOG_LABEL, "Failed to build trusted root certificate store for enterprise certs: {}", @public(e));
-            report_parse_profile_err("enterprise_root_store", HisyseventProfileError::BuildRootStoreFailed as i32);
+            report_parse_profile_err(
+                &format!("Failed to build trusted root certificate store for enterprise certs: {}", e),
+                HisyseventProfileError::BuildRootStoreFailed as i32,
+            );
             return Err(ProfileError::AddCertPathError);
         }
     };
@@ -505,14 +513,18 @@ fn process_enterprise_certs(root_cert: &PemCollection) -> Result<(), ProfileErro
     for path in cert_paths {
         let mut cert_data = Vec::new();
         if load_bytes_from_file(&path, &mut cert_data).is_err() {
-            error!(LOG_LABEL, "load cert failed {}", @public(path));
-            report_parse_profile_err(&path, HisyseventProfileError::AddEnterpriseCert as i32);
+            report_parse_profile_err(
+                &format!("load cert failed {}", path),
+                HisyseventProfileError::AddEnterpriseCert as i32,
+            );
             continue;
         }
         info!(LOG_LABEL, "load cert success {}", @public(path));
         if add_enterprise_resign_data(&cert_data, &root_store).is_err() {
-            error!(LOG_LABEL, "Failed to add enterprise cert for {}", @public(path));
-            report_parse_profile_err(&path, HisyseventProfileError::AddEnterpriseCert as i32);
+            report_parse_profile_err(
+                &format!("Failed to add enterprise cert for {}", path),
+                HisyseventProfileError::AddEnterpriseCert as i32,
+            );
             continue;
         }
     }
@@ -590,8 +602,10 @@ fn check_cert_has_oid(cert: &X509) -> bool {
     let der = match cert.to_der() {
         Ok(bytes) => bytes,
         Err(e) => {
-            error!(LOG_LABEL, "Failed to convert cert to DER: {}", @public(e));
-            report_parse_profile_err("cert_to_der", HisyseventProfileError::ConvertCertToDer as i32);
+            report_parse_profile_err(
+                &format!("Failed to convert cert to DER: {}", e),
+                HisyseventProfileError::ConvertCertToDer as i32,
+            );
             return false;
         }
     };
@@ -723,8 +737,10 @@ fn remove_key_in_profile_internal(bundle_name: *const c_char) -> Result<(), ()> 
 fn remove_key_in_profile_cert_sn_internal(sn: *const c_char) -> Result<(), i32> {
     let _sn = c_char_to_string(sn);
     if _sn.is_empty() {
-        error!(LOG_LABEL, "Empty serial number");
-        report_parse_profile_err("RemoveKeyInProfileCertSn empty sn", HisyseventProfileError::RemoveCertPath as i32);
+        report_parse_profile_err(
+            "RemoveKeyInProfileCertSn empty serial number",
+            HisyseventProfileError::RemoveCertPath as i32,
+        );
         return Err(OperateCertError::ParamInvalid as i32);
     }
 
@@ -739,8 +755,10 @@ fn remove_key_in_profile_cert_sn_internal(sn: *const c_char) -> Result<(), i32> 
 
     for prefix in profile_prefix {
         if let Err(e) = process_remove_by_cert_sn(prefix, &_sn) {
-            error!(LOG_LABEL, "Failed to remove bundle profile info by cert SN: {}.", @public(_sn));
-            report_parse_profile_err("RemoveKeyInProfileCertSn failed", HisyseventProfileError::RemoveCertPath as i32);
+            report_parse_profile_err(
+                &format!("Failed to remove bundle profile info by cert SN: {}", _sn),
+                HisyseventProfileError::RemoveCertPath as i32,
+            );
             return Err(e);
         }
     }
@@ -857,7 +875,10 @@ fn enable_key_for_enterprise_resign_internal(cert: *const u8, cert_size: u32) ->
         add_enterprise_resign_data
     );
     if res.is_err() {
-        report_parse_profile_err("API call", HisyseventProfileError::AddEnterpriseCert as i32);
+        report_parse_profile_err(
+            "EnableKeyForEnterpriseResign failed",
+            HisyseventProfileError::AddEnterpriseCert as i32,
+        );
     }
     res
 }
@@ -869,7 +890,10 @@ fn remove_key_for_enterprise_resign_internal(cert: *const u8, cert_size: u32) ->
         remove_enterprise_resign_data
     );
     if res.is_err() {
-        report_parse_profile_err("API call", HisyseventProfileError::RemoveEnterpriseCert as i32);
+        report_parse_profile_err(
+            "RemoveKeyForEnterpriseResign failed",
+            HisyseventProfileError::RemoveEnterpriseCert as i32,
+        );
     }
     res
 }
@@ -935,8 +959,10 @@ fn check_enterprise_resign_extension(cert: &X509) -> Result<(), EnterpriseCertEr
     let der = match cert.to_der() {
         Ok(bytes) => bytes,
         Err(e) => {
-            error!(LOG_LABEL, "Failed to convert certificate to DER: {}", @public(e));
-            report_parse_profile_err("cert_to_der", HisyseventProfileError::ConvertCertToDer as i32);
+            report_parse_profile_err(
+                &format!("Failed to convert certificate to DER: {}", e),
+                HisyseventProfileError::ConvertCertToDer as i32,
+            );
             return Err(EnterpriseCertError::InvalidCert);
         }
     };
@@ -951,8 +977,10 @@ fn check_enterprise_resign_extension(cert: &X509) -> Result<(), EnterpriseCertEr
         info!(LOG_LABEL, "Found enterprise resign extension in leaf certificate");
         Ok(())
     } else {
-        error!(LOG_LABEL, "Enterprise resign extension not found in leaf certificate");
-        report_parse_profile_err("enterprise_resign_ext", HisyseventProfileError::EnterpriseResignExtMissing as i32);
+        report_parse_profile_err(
+            "Enterprise resign extension not found in leaf certificate",
+            HisyseventProfileError::EnterpriseResignExtMissing as i32,
+        );
         Err(EnterpriseCertError::InvalidCert)
     }
 }
@@ -965,24 +993,29 @@ fn process_cert_data(cert_data: &[u8], root_store: &X509Store) -> Result<(String
             certs
         },
         Err(e) => {
-            error!(LOG_LABEL, "Failed to load certificate stack from PEM data: {}", @public(e));
-            report_parse_profile_err("pem_stack", HisyseventProfileError::ParsePemStack as i32);
+            report_parse_profile_err(
+                &format!("Failed to load certificate stack from PEM data: {}", e),
+                HisyseventProfileError::ParsePemStack as i32,
+            );
             return Err(EnterpriseCertError::InvalidCert as i32);
         }
     };
 
     // 2. Validate certificate chain is not empty
     if certs.is_empty() {
-        error!(LOG_LABEL, "Certificate chain is empty after parsing PEM data");
-        report_parse_profile_err("empty_chain", HisyseventProfileError::EnterpriseCertInvalid as i32);
+        report_parse_profile_err(
+            "Certificate chain is empty after parsing PEM data",
+            HisyseventProfileError::EnterpriseCertInvalid as i32,
+        );
         return Err(EnterpriseCertError::InvalidCert as i32);
     }
 
     // 2.1 Validate certificate chain length must be exactly 3
     if certs.len() != ENTERPRISE_RESIGN_CHAIN_LENGTH {
-        error!(LOG_LABEL, "Enterprise resign cert chain must contain exactly 3 certificates, got {}",
-            @public(certs.len()));
-        report_parse_profile_err("invalid_chain_length", HisyseventProfileError::EnterpriseCertInvalid as i32);
+        report_parse_profile_err(
+            &format!("Enterprise resign cert chain must contain exactly 3 certificates, got {}", certs.len()),
+            HisyseventProfileError::EnterpriseCertInvalid as i32,
+        );
         return Err(EnterpriseCertError::InvalidCert as i32);
     }
 
@@ -990,8 +1023,10 @@ fn process_cert_data(cert_data: &[u8], root_store: &X509Store) -> Result<(String
     let (leaf_cert, intermediate_certs) = match get_leaf_certificate(&certs) {
         Some((leaf, intermediates)) => (leaf, intermediates),
         None => {
-            error!(LOG_LABEL, "Failed to identify leaf certificate in chain");
-            report_parse_profile_err("leaf_cert", HisyseventProfileError::EnterpriseCertInvalid as i32);
+            report_parse_profile_err(
+                "Failed to identify leaf certificate in chain",
+                HisyseventProfileError::EnterpriseCertInvalid as i32,
+            );
             return Err(EnterpriseCertError::InvalidCert as i32);
         }
     };
@@ -1055,8 +1090,10 @@ where
     F: Fn(EnterpriseResignCertParam) -> Result<(), EnterpriseCertError> {
     info!(LOG_LABEL, "start {}", @public(op_name));
     if !is_enterprise_device() {
-        error!(LOG_LABEL, "Not enterprise device, enterprise resign cert not allowed");
-        report_parse_profile_err("not_enterprise_device", HisyseventProfileError::NotEnterpriseDevice as i32);
+        report_parse_profile_err(
+            "Not enterprise device, enterprise resign cert not allowed",
+            HisyseventProfileError::NotEnterpriseDevice as i32,
+        );
         return Err(EnterpriseCertError::NotEnterpriseDevice as i32);
     }
     let (subject, issuer, profile_type, app_id) = process_cert_data(cert_data, root_store)?;

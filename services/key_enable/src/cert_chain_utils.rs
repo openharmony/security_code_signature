@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use super::cs_hisysevent;
-use hilog_rust::{error, hilog, info, HiLogLabel, LogType};
+use super::cs_hisysevent::{report_add_key_err, HisyseventKeyError};
+use hilog_rust::{hilog, info, HiLogLabel, LogType};
 use openssl::x509::store::{X509Store, X509StoreBuilder};
 use openssl::x509::verify::X509VerifyFlags;
 use openssl::x509::{X509, X509PurposeId, X509StoreContext};
@@ -82,12 +82,9 @@ impl PemCollection {
         let value = match JsonValue::from_file(file_path) {
             Ok(v) => v,
             Err(e) => {
-                error!(
-                    LOG_LABEL,
-                    "Error loading JSON from file {}: {}", file_path, e
-                );
-                cs_hisysevent::report_add_key_err("trusted_certs",
-                    cs_hisysevent::HisyseventKeyError::LoadTrustedCerts as i32,
+                report_add_key_err(
+                    &format!("Error loading JSON from file {}: {}", file_path, e),
+                    HisyseventKeyError::LoadTrustedCerts as i32,
                 );
                 return;
             }
@@ -129,8 +126,10 @@ pub fn verify_cert_chain(
     )?;
 
     if !verified {
-        error!(LOG_LABEL, "Certificate chain verification failed: {}", @public(store_ctx.error()));
-        cs_hisysevent::report_add_key_err("cert_chain_verify", cs_hisysevent::HisyseventKeyError::ChainVerifyFailed as i32);
+        report_add_key_err(
+            &format!("Certificate chain verification failed: {}", store_ctx.error()),
+            HisyseventKeyError::ChainVerifyFailed as i32,
+        );
         return Err(openssl::error::ErrorStack::get());
     }
 
