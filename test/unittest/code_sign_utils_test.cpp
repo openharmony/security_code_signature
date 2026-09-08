@@ -23,10 +23,10 @@
 #include <parameters.h>
 
 #define private public
+#include "code_sign_block.h"
 #include "elf_code_sign_block.h"
 #undef private
 #include "code_sign_utils.h"
-#include "code_sign_block.h"
 #include "directory_ex.h"
 #include "enable_key_utils.h"
 #include "file_helper.h"

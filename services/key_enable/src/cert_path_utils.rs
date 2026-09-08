@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use super::cs_hisysevent;
+use super::cs_hisysevent::{report_add_key_err, report_parse_profile_err, HisyseventProfileError};
 use super::profile_utils::IsDeveloperModeOn;
 use hilog_rust::{error, hilog, info, HiLogLabel, LogType};
 use std::ffi::{c_char, CString};
@@ -233,7 +233,10 @@ impl TrustCertPath {
         let cert_mode = match cert_profile[MODE_KEY].try_as_string() {
             Ok(v) => v,
             Err(e) => {
-                error!(LOG_LABEL, "Error JSON MODE_KEY from file {:?}", e);
+                report_parse_profile_err(
+                    &format!("Error JSON MODE_KEY from file {:?}", e),
+                    HisyseventProfileError::ParseCertPathJson as i32,
+                );
                 return Err(());
             }
         };
@@ -241,7 +244,10 @@ impl TrustCertPath {
         let cert_type = match cert_profile[TYPE_KEY].try_as_string() {
             Ok(v) => v,
             Err(e) => {
-                error!(LOG_LABEL, "Error JSON TYPE_KEY from file {:?}", e);
+                report_parse_profile_err(
+                    &format!("Error JSON TYPE_KEY from file {:?}", e),
+                    HisyseventProfileError::ParseCertPathJson as i32,
+                );
                 return Err(());
             }
         };
@@ -249,7 +255,10 @@ impl TrustCertPath {
         let path_type = match path_type_resolver(cert_mode, cert_type) {
             Ok(v) => v,
             Err(e) => {
-                error!(LOG_LABEL, "Error JSON Path Type from file {:?}", e);
+                report_parse_profile_err(
+                    &format!("Error JSON Path Type from file {:?}", e),
+                    HisyseventProfileError::ParseCertPathJson as i32,
+                );
                 return Err(());
             }
         };
@@ -257,7 +266,10 @@ impl TrustCertPath {
         let signing_cert = match cert_profile[SUBJECT_KEY].try_as_string() {
             Ok(v) => v,
             Err(e) => {
-                error!(LOG_LABEL, "Error JSON SUBJECT_KEY from file {:?}", e);
+                report_parse_profile_err(
+                    &format!("Error JSON SUBJECT_KEY from file {:?}", e),
+                    HisyseventProfileError::ParseCertPathJson as i32,
+                );
                 return Err(());
             }
         };
@@ -265,7 +277,10 @@ impl TrustCertPath {
         let issuer = match cert_profile[ISSUER_KEY].try_as_string() {
             Ok(v) => v,
             Err(e) => {
-                error!(LOG_LABEL, "Error JSON ISSUER_KEY from file {:?}", e);
+                report_parse_profile_err(
+                    &format!("Error JSON ISSUER_KEY from file {:?}", e),
+                    HisyseventProfileError::ParseCertPathJson as i32,
+                );
                 return Err(());
             }
         };
@@ -273,7 +288,10 @@ impl TrustCertPath {
         let path_len = match cert_profile[MAX_CERT_PATH].try_as_number().and_then(|n| n.try_as_i64()) {
             Ok(v) => v,
             Err(e) => {
-                error!(LOG_LABEL, "Error JSON MAX_CERT_PATH from file {:?}", e);
+                report_parse_profile_err(
+                    &format!("Error JSON MAX_CERT_PATH from file {:?}", e),
+                    HisyseventProfileError::ParseCertPathJson as i32,
+                );
                 return Err(());
             }
         };
@@ -308,9 +326,9 @@ impl TrustCertPath {
         let value = match JsonValue::from_file(file_path) {
             Ok(v) => v,
             Err(e) => {
-                error!(
-                    LOG_LABEL,
-                    "Error loading JSON from file {}: {:?}", file_path, e
+                report_parse_profile_err(
+                    &format!("Error loading JSON from file {}: {:?}", file_path, e),
+                    HisyseventProfileError::ParseCertPathJson as i32,
                 );
                 return;
             }
@@ -319,9 +337,9 @@ impl TrustCertPath {
         let certs_profile_issuer = match value[TRUST_PROFILE_PATH_KEY].try_as_array() {
             Ok(array) => array,
             Err(_) => {
-                error!(
-                    LOG_LABEL,
-                    "Cannot get preset key TRUST_PROFILE_PATH_KEY from file "
+                report_parse_profile_err(
+                    &format!("Cannot get preset key TRUST_PROFILE_PATH_KEY from file {}", file_path),
+                    HisyseventProfileError::MissingPresetKey as i32,
                 );
                 return;
             }
@@ -330,9 +348,9 @@ impl TrustCertPath {
         let cert_path_array = match value[TRUST_CERT_PATH_KEY].try_as_array() {
             Ok(array) => array,
             Err(_) => {
-                error!(
-                    LOG_LABEL,
-                    "Cannot get preset key TRUST_CERT_PATH_KEY from file "
+                report_parse_profile_err(
+                    &format!("Cannot get preset key TRUST_CERT_PATH_KEY from file {}", file_path),
+                    HisyseventProfileError::MissingPresetKey as i32,
                 );
                 return;
             }
@@ -508,7 +526,7 @@ where
     let ret = operation(&cert_path_info);
     info!(LOG_LABEL, "ioctl return:{}", @public(ret));
     if ret < 0 {
-        cs_hisysevent::report_add_key_err(op_name, ret);
+        report_add_key_err(&format!("{} failed, ret = {}", op_name, ret), ret);
         return Err(CertPathError::CertPathOperationError);
     }
     Ok(())
@@ -601,7 +619,7 @@ pub fn activate_cert(cert_data: &Vec<u8>, cert_status: CertStatus, cert_type: Ce
     let ret = unsafe { ActivateCert(&cert_activation_info) };
     info!(LOG_LABEL, "ioctl return:{}", @public(ret));
     if ret < 0 {
-        cs_hisysevent::report_add_key_err("activate_cert", ret);
+        report_add_key_err(&format!("Activate cert failed, ret = {}", ret), ret);
         return Err(CertPathError::ActivateCertError);
     }
     Ok(())
@@ -664,7 +682,10 @@ where
     F: Fn(&EnterpriseResignCertInfo) -> i32 {
     info!(LOG_LABEL, "start {}", @public(op_name));
     if cert.subject.is_empty() || cert.issuer.is_empty() {
-        error!(LOG_LABEL, "Empty subject or issuer");
+        report_parse_profile_err(
+            &format!("Empty subject or issuer in {}", op_name),
+            HisyseventProfileError::EmptySubjectIssuer as i32,
+        );
         return Err(EnterpriseCertError::InvalidCert);
     }
 
@@ -687,8 +708,7 @@ where
     };
     let ret = operation(&info);
     if ret < 0 {
-        error!(LOG_LABEL, "{} failed, ret = {}", @public(op_name), @public(ret));
-        cs_hisysevent::report_add_key_err(op_name, ret);
+        report_add_key_err(&format!("{} failed, ret = {}", op_name, ret), ret);
         return Err(EnterpriseCertError::IoctlFailed);
     }
     Ok(())

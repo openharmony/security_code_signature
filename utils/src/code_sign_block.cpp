@@ -306,19 +306,12 @@ int32_t CodeSignBlock::ParseCodeSignBlockBaseInfo()
     return SetNativeLibSignInfo(CONST_STATIC_CAST(NativeLibSignInfo, codeSignBlock_ + segHeader->offset));
 }
 
-int32_t CodeSignBlock::GetCodeSignBlockBuffer(const std::string &path, ReadBuffer &signBuffer, uint32_t &size,
-    uint32_t flag)
+int32_t CodeSignBlock::GetCodeSignBlockBuffer(ReadBuffer &signBuffer, uint32_t &size, uint32_t flag)
 {
     ReadBuffer blobBuffer = nullptr;
     uint32_t blobSize = 0;
     ReadBuffer signBlockBuffer = nullptr;
     uint32_t signBlockSize = 0;
-
-    int32_t ret = Verify::ParseHapSignatureInfo(path, signatureInfo_);
-    if (ret != Verify::VERIFY_SUCCESS) {
-        LOG_ERROR("Verify sign block failed. errno = %{public}d ", ret);
-        return CS_ERR_FILE_INVALID;
-    }
 
     uint32_t targetBlobType = (flag & IS_ENTERPRISE_RESIGN) ? ENTERPRISE_CODE_RE_SIGN_BLOB : CSB_PROPERTY_BLOB;
     for (const auto &value : signatureInfo_.optionBlocks) {
@@ -373,7 +366,14 @@ int32_t CodeSignBlock::ParseCodeSignBlock(const std::string &realPath,
     ReadBuffer codeSignBlock = nullptr;
     uint32_t codeSignSize;
 
-    ret = GetCodeSignBlockBuffer(realPath, codeSignBlock, codeSignSize, flag);
+    ret = Verify::ParseHapSignatureInfo(realPath, signatureInfo_);
+    if (ret != Verify::VERIFY_SUCCESS) {
+        LOG_ERROR("Verify sign block failed. errno = %{public}d ", ret);
+        ReportParseCodeSig(realPath, ret);
+        return CS_ERR_FILE_INVALID;
+    }
+
+    ret = GetCodeSignBlockBuffer(codeSignBlock, codeSignSize, flag);
     if (ret != CS_SUCCESS) {
         LOG_ERROR("Get code sign block buffer failed. errno = %{public}d ", ret);
         return ret;

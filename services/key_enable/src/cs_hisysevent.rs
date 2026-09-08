@@ -13,29 +13,109 @@
  * limitations under the License.
  */
 
+use hilog_rust::{error, hilog, HiLogLabel, LogType};
 use hisysevent::EventType;
+use std::ffi::{c_char, CString};
 
-/// report add key err by hisysevent
-pub fn report_add_key_err(cert_type: &str, errcode: i32) {
+const LOG_LABEL: HiLogLabel = HiLogLabel {
+    log_type: LogType::LogCore,
+    domain: 0xd005a06,
+    tag: "CODE_SIGN",
+};
+
+/// profile error report to hisysevent
+pub enum HisyseventProfileError {
+    /// verify signer code
+    VerifySigner = 1,
+    /// parse pkcs7 code
+    ParsePkcs7 = 2,
+    /// add cert path code
+    AddCertPath = 3,
+    /// add enterprise code
+    AddEnterpriseCert = 4,
+    /// remove enterprise code
+    RemoveEnterpriseCert = 5,
+    /// remove cert path code
+    RemoveCertPath = 6,
+    /// parse cert path json (field/load) failed
+    ParseCertPathJson = 7,
+    /// missing preset key in cert path json
+    MissingPresetKey = 8,
+    /// empty subject or issuer for enterprise resign cert
+    EmptySubjectIssuer = 9,
+    /// load profile file failed
+    LoadProfileFailed = 10,
+    /// load pkcs7 from profile failed
+    LoadPkcs7Profile = 11,
+    /// build trusted root store failed
+    BuildRootStoreFailed = 12,
+    /// convert cert to der failed
+    ConvertCertToDer = 13,
+    /// enterprise resign extension missing
+    EnterpriseResignExtMissing = 14,
+    /// parse pem cert stack failed
+    ParsePemStack = 15,
+    /// enterprise cert structure invalid (empty/length/leaf)
+    EnterpriseCertInvalid = 16,
+    /// not enterprise device
+    NotEnterpriseDevice = 17,
+}
+
+/// key error report to hisysevent
+pub enum HisyseventKeyError {
+    /// local key empty
+    LocalKeyEmpty = 1,
+    /// local key timeout
+    LocalKeyTimeout = 2,
+    /// restrict_keys failed
+    RestrictKeys = 3,
+    /// get keyring id failed
+    GetKeyringId = 4,
+    /// load trusted certs from json file failed
+    LoadTrustedCerts = 5,
+    /// init local certificate failed
+    InitLocalCert = 6,
+    /// parse key serial failed
+    ParseKeySerial = 7,
+    /// open /proc/keys failed
+    OpenProcKeys = 8,
+    /// fs-verity keyring not found
+    KeyringNotFound = 9,
+    /// openssl to_der failed
+    OpensslToDer = 10,
+    /// trusted certs empty
+    EmptyTrustedCerts = 11,
+    /// wait for boot completion timeout
+    BootCompletionTimeout = 12,
+    /// cert path thread panicked
+    CertPathThreadPanic = 13,
+    /// certificate chain verification failed
+    ChainVerifyFailed = 14,
+}
+
+/// report add key err: log error message and report to hisysevent
+pub fn report_add_key_err(msg: &str, errcode: i32) {
+    error!(LOG_LABEL, "{}", @public(msg));
     hisysevent::write(
         "CODE_SIGN",
         "CS_ADD_KEY",
         EventType::Fault,
         &[
-            hisysevent::build_str_param!("STRING_SINGLE", cert_type),
+            hisysevent::build_str_param!("STRING_SINGLE", msg),
             hisysevent::build_number_param!("INT32_SINGLE", errcode),
         ],
     );
 }
 
-/// report parse local profile err by hisysevent
-pub fn report_parse_profile_err(profile_path: &str, errcode: i32) {
+/// report parse profile err: log error message and report to hisysevent
+pub fn report_parse_profile_err(msg: &str, errcode: i32) {
+    error!(LOG_LABEL, "{}", @public(msg));
     hisysevent::write(
         "CODE_SIGN",
         "CS_ERR_PROFILE",
         EventType::Security,
         &[
-            hisysevent::build_str_param!("STRING_SINGLE", profile_path),
+            hisysevent::build_str_param!("STRING_SINGLE", msg),
             hisysevent::build_number_param!("INT32_SINGLE", errcode),
         ],
     );
