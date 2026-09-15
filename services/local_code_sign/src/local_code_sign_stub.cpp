@@ -19,6 +19,7 @@
 #include "cs_hisysevent.h"
 #include "cs_hitrace.h"
 #include "errcode.h"
+#include "fdsan.h"
 #include "ipc_skeleton.h"
 #include "log.h"
 #include "message_parcel.h"
@@ -31,11 +32,16 @@ namespace CodeSign {
 namespace {
 struct FdGuard {
     int fd;
-    explicit FdGuard(int fd) : fd(fd) {}
+    explicit FdGuard(int fd) : fd(fd)
+    {
+        if (fd >= 0) {
+            FDSAN_MARK(fd);
+        }
+    }
     ~FdGuard()
     {
         if (fd >= 0) {
-            close(fd);
+            FDSAN_CLOSE(fd);
         }
     }
     FdGuard(const FdGuard&) = delete;
