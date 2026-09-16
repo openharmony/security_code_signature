@@ -132,6 +132,7 @@ public:
     static constexpr uint32_t CSB_SIGN_INFO_MAX_PAGEINFO_UNITSIZE = 7;
     static constexpr uint32_t CSB_EXTENSION_TYPE_PAGE_INFO_VERSION = 2;
     static constexpr uint32_t BINARY_CERT_FLAGS = 0x1 << 5;
+    static constexpr uint32_t SIDE_LOADING_FLAGS = 0x1 << 6;
 
     int32_t ParseCodeSignBlock(const std::string &realPath, const EntryMap &entryMap, FileType fileType,
         uint32_t flag = 0);
@@ -143,6 +144,7 @@ private:
     int32_t ParseCodeSignBlockBaseInfo();
     int32_t GetCodeSignBlockBuffer(ReadBuffer &signBuffer, uint32_t &size, uint32_t flag = 0);
     int32_t ProcessExtension(uintptr_t &extensionAddr, const uintptr_t blockAddrEnd, struct code_sign_enable_arg &arg);
+    void SetCodeSignArg(const SignInfo *signInfo, struct code_sign_enable_arg &arg, uint32_t flag);
 
     static constexpr uint32_t CSB_HEADER_VERSION = 1;
     static constexpr uint32_t CSB_HEADER_FLAG_MERKLE_TREE = 0x1;

@@ -46,6 +46,7 @@ enum CodeSignInfoFlag {
     IS_UNCOMPRESSED_NATIVE_LIBS = 0x01 << 0,
     IS_ENTERPRISE_RESIGN = 0x01 << 1,
     IS_LOCAL_HSP_PLUGIN = 0x01 << 2,
+    IS_SIDE_LOADING_APP = 0x01 << 3,
 };
 
 class CodeSignUtils {
