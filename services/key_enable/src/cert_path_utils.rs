@@ -14,7 +14,7 @@
  */
 use super::cs_hisysevent::{report_add_key_err, report_parse_profile_err, HisyseventProfileError};
 use super::profile_utils::IsDeveloperModeOn;
-use hilog_rust::{error, hilog, info, HiLogLabel, LogType};
+use hilog_rust::{error, hilog, info, warn, HiLogLabel, LogType};
 use std::ffi::{c_char, CString};
 use ylong_json::JsonValue;
 
@@ -79,6 +79,8 @@ pub enum ReleaseCertPathType {
     Block = 0x4,
     /// release binary code
     Binary = 0x6,
+    /// release binary developer code
+    BinaryDeveloper = 0x7,
     /// restrict code
     Restricted = 0xff,
 }
@@ -539,6 +541,23 @@ pub fn add_cert_path_info(
     app_id: String,
     path_length: u32,
 ) -> Result<(), CertPathError> {
+    // Kernel processes BinaryDeveloper and Binary together, compatible with local HSP plugin
+    if cert_path_type == ReleaseCertPathType::Binary as u32 {
+        info!(LOG_LABEL, "binary cert type detected, trying BinaryDeveloper first");
+        let first_result = cert_path_operation(
+            subject.clone(),
+            issuer.clone(),
+            ReleaseCertPathType::BinaryDeveloper as u32,
+            app_id.clone(),
+            path_length,
+            |info| unsafe { AddCertPath(info) },
+            "add cert_path (binary first try BinaryDeveloper)",
+        );
+        if first_result.is_ok() {
+            return Ok(());
+        }
+        warn!(LOG_LABEL, "binary cert path with BinaryDeveloper failed, retrying with Binary type");
+    }
     cert_path_operation(
         subject,
         issuer,
@@ -558,6 +577,23 @@ pub fn remove_cert_path_info(
     app_id: String,
     path_length: u32,
 ) -> Result<(), CertPathError> {
+    // Kernel processes BinaryDeveloper and Binary together, compatible with local HSP plugin
+    if cert_path_type == ReleaseCertPathType::Binary as u32 {
+        info!(LOG_LABEL, "binary cert type detected, trying BinaryDeveloper first for remove");
+        let first_result = cert_path_operation(
+            subject.clone(),
+            issuer.clone(),
+            ReleaseCertPathType::BinaryDeveloper as u32,
+            app_id.clone(),
+            path_length,
+            |info| unsafe { RemoveCertPath(info) },
+            "remove cert_path (binary first try BinaryDeveloper)",
+        );
+        if first_result.is_ok() {
+            return Ok(());
+        }
+        warn!(LOG_LABEL, "binary cert path with BinaryDeveloper remove failed, retrying with Binary type");
+    }
     cert_path_operation(
         subject,
         issuer,
