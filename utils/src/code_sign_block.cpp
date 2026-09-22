@@ -105,6 +105,26 @@ int32_t CodeSignBlock::ProcessExtension(uintptr_t &extensionAddr,
     return CS_SUCCESS;
 }
 
+void CodeSignBlock::SetCodeSignArg(const SignInfo *signInfo, struct code_sign_enable_arg &arg, uint32_t flag)
+{
+    auto verity = GetFsVerityInfo();
+    arg.version = 1;
+    arg.cs_version = verity->version;
+    arg.hash_algorithm = verity->hashAlgorithm;
+    arg.block_size = 1 << verity->logBlockSize;
+    arg.salt_ptr = reinterpret_cast<uintptr_t>(signInfo->salt);
+    arg.salt_size = signInfo->saltSize;
+    arg.sig_size = signInfo->signSize;
+    arg.sig_ptr = reinterpret_cast<uintptr_t>(signInfo->signature);
+    arg.data_size = signInfo->dataSize;
+    if (flag & IS_LOCAL_HSP_PLUGIN) {
+        arg.flags |= BINARY_CERT_FLAGS;
+    }
+    if (flag & IS_SIDE_LOADING_APP) {
+        arg.flags |= SIDE_LOADING_FLAGS;
+    }
+}
+
 int32_t CodeSignBlock::GetOneFileAndCodeSignInfo(std::string &targetFile,
     struct code_sign_enable_arg &arg, uint32_t flag)
 {
@@ -127,19 +147,7 @@ int32_t CodeSignBlock::GetOneFileAndCodeSignInfo(std::string &targetFile,
         LOG_ERROR("Signature data exceeds code sign block boundary");
         return CS_ERR_INVALID_SIGNATURE;
     }
-    auto verity = GetFsVerityInfo();
-    arg.version = 1;
-    arg.cs_version = verity->version;
-    arg.hash_algorithm = verity->hashAlgorithm;
-    arg.block_size = 1 << verity->logBlockSize;
-    arg.salt_ptr = reinterpret_cast<uintptr_t>(signInfo->salt);
-    arg.salt_size = signInfo->saltSize;
-    arg.sig_size = signInfo->signSize;
-    arg.sig_ptr = reinterpret_cast<uintptr_t>(signInfo->signature);
-    arg.data_size = signInfo->dataSize;
-    if (flag & IS_LOCAL_HSP_PLUGIN) {
-        arg.flags |= BINARY_CERT_FLAGS;
-    }
+    SetCodeSignArg(signInfo, arg, flag);
     if (!signInfo->flags) {
         return CS_SUCCESS;
     }
