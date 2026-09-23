@@ -150,6 +150,7 @@ HWTEST_F(CodeSignAttrUtilsTest, CodeSignAttrUtilsTest_0004, TestSize.Level0)
         XPM_DISTRIBUTION_STR_INTERNALTESTING,
         XPM_DISTRIBUTION_STR_OS_INTEGRATION,
         XPM_DISTRIBUTION_STR_CROWDTESTING,
+        XPM_DISTRIBUTION_STR_DEVELOPER,
     };
 
     struct XpmInitParam initParam = CreateInitParam(PROCESS_OWNERID_APP);
