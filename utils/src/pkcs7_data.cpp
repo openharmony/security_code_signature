@@ -52,11 +52,8 @@ bool PKCS7Data::InitPKCS7Data(const std::vector<ByteBuffer> &certChain)
         certs = MakeStackOfCerts(certChain);
     }
     p7_ = PKCS7_sign(nullptr, nullptr, certs, nullptr, static_cast<int>(flags));
-    if (p7_ == nullptr) {
-        sk_X509_pop_free(certs, X509_free);
-        return false;
-    }
-    return true;
+    sk_X509_pop_free(certs, X509_free);
+    return (p7_ != nullptr);
 }
 
 bool PKCS7Data::GetPKCS7Data(ByteBuffer &pkcs7Data)
